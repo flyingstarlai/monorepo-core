@@ -47,7 +47,12 @@ export const useCreateUser = () => {
   });
 };
 
-export const useUpdateUser = () => {
+export const useUpdateUser = (options?: {
+  onSuccess?: (
+    user: User,
+    variables: { id: string; data: UpdateUserData },
+  ) => void;
+}) => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -61,9 +66,15 @@ export const useUpdateUser = () => {
       const response = await api.put(`/users/${id}`, data);
       return response.data as User;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (updatedUser, variables) => {
+      // Invalidate queries first to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user', variables.id] });
+
+      // Call custom success callback if provided
+      if (options?.onSuccess) {
+        options.onSuccess(updatedUser, variables);
+      }
     },
   });
 };

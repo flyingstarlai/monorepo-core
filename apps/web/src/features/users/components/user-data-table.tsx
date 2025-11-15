@@ -11,7 +11,7 @@ import type {
   SortingState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -106,11 +106,31 @@ export function UserDataTable({
     }
   };
 
+  // Debounce function to prevent rapid API calls
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  };
+
+  const debouncedSearchChange = useCallback(
+    debounce((value: string) => {
+      if (onFiltersChange) {
+        onFiltersChange({ ...filters, search: value || undefined });
+      }
+    }, 300),
+    [filters, onFiltersChange],
+  );
+
   const handleSearchChange = (value: string) => {
-    setGlobalFilter(value);
-    if (onFiltersChange) {
-      onFiltersChange({ ...filters, search: value || undefined });
-    }
+    setGlobalFilter(value); // Update UI immediately for responsive typing
+    debouncedSearchChange(value); // Debounced parent update
   };
 
   const handleRoleFilterChange = (value: string) => {
@@ -187,6 +207,7 @@ export function UserDataTable({
                   value={globalFilter ?? ''}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10 w-48 h-9 text-sm"
+                  key="search-input" // Stable key to prevent re-renders
                 />
               </div>
 

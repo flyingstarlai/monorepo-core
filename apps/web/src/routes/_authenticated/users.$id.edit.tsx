@@ -17,7 +17,12 @@ function UserEdit() {
   const { user: currentUser } = useAuthContext();
   const navigate = useNavigate();
   const { id } = Route.useParams();
-  const updateUserMutation = useUpdateUser();
+  const updateUserMutation = useUpdateUser({
+    onSuccess: (updatedUser, variables) => {
+      // Navigate after successful update and query invalidation
+      navigate({ to: '/users/$id', params: { id: variables.id } });
+    },
+  });
 
   // Fetch user data for editing
   const { data: user, isLoading, error } = useUser(id);
@@ -25,7 +30,7 @@ function UserEdit() {
   const handleSubmit = async (data: UpdateUserData) => {
     try {
       await updateUserMutation.mutateAsync({ id, data });
-      navigate({ to: '/users/$id', params: { id } });
+      // Navigation is now handled by onSuccess callback in the mutation
     } catch (error) {
       console.error('Update user failed:', error);
     }

@@ -129,7 +129,7 @@ export function UserProfile() {
                 placeholder="請輸入您的全名"
               />
               <p className="text-sm text-slate-500 mt-2">
-                只有您的全名可以編輯。請聯繫管理員以更改其他資訊。
+                只有您的全名可以編輯。請聯繫系統管理員以更改其他資訊。
               </p>
             </div>
           </div>

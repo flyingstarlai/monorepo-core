@@ -58,7 +58,7 @@ function UsersCreate() {
         title="建立新用戶"
         description={
           user?.role === 'manager'
-            ? '作為管理員，您只能建立具有「用戶」角色的用戶。'
+            ? '作為維護員，您只能建立具有「一般用戶」角色的用戶。'
             : '建立一個具有適當權限的新用戶。'
         }
       />

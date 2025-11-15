@@ -143,9 +143,9 @@ export class RoleService {
    */
   static getRoleDisplayName(role: UserRole): string {
     const displayNames: Record<UserRole, string> = {
-      admin: 'Administrator',
-      manager: 'Manager',
-      user: 'User',
+      admin: '系統管理員',
+      manager: '維護員',
+      user: '一般用戶',
     };
     return displayNames[role] || role;
   }
@@ -155,11 +155,11 @@ export class RoleService {
    */
   static getRoleDescription(role: UserRole): string {
     const descriptions: Record<UserRole, string> = {
-      admin: 'Full system access - can manage all users and settings',
-      manager: 'Can manage users but with limited permissions',
-      user: 'Basic user access - can manage own profile',
+      admin: '完整系統權限 - 可管理所有用戶和設定',
+      manager: '可管理用戶但權限受限',
+      user: '基本用戶權限 - 只能管理個人資料',
     };
-    return descriptions[role] || 'Unknown role';
+    return descriptions[role] || '未知角色';
   }
 
   /**

@@ -347,13 +347,15 @@ export function UserForm({
                             </SelectTrigger>
                             <SelectContent>
                               {availableRoles.includes('user') && (
-                                <SelectItem value="user">用戶</SelectItem>
+                                <SelectItem value="user">一般用戶</SelectItem>
                               )}
                               {availableRoles.includes('manager') && (
-                                <SelectItem value="manager">管理員</SelectItem>
+                                <SelectItem value="manager">維護員</SelectItem>
                               )}
                               {availableRoles.includes('admin') && (
-                                <SelectItem value="admin">管理員</SelectItem>
+                                <SelectItem value="admin">
+                                  系統管理員
+                                </SelectItem>
                               )}
                             </SelectContent>
                           </Select>
@@ -362,7 +364,7 @@ export function UserForm({
                           )}
                           {!canEditRole && isEdit && (
                             <FieldDescription>
-                              只有管理員可以更改用戶角色
+                              只有系統管理員可以更改用戶角色
                             </FieldDescription>
                           )}
                         </Field>

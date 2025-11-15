@@ -200,9 +200,9 @@ export function UserDataTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">所有角色</SelectItem>
-                  <SelectItem value="admin">管理員</SelectItem>
-                  <SelectItem value="manager">管理員</SelectItem>
-                  <SelectItem value="user">用戶</SelectItem>
+                  <SelectItem value="admin">系統管理員</SelectItem>
+                  <SelectItem value="manager">維護員</SelectItem>
+                  <SelectItem value="user">一般用戶</SelectItem>
                 </SelectContent>
               </Select>
 

@@ -1,0 +1,35 @@
+{
+  "name": "app-starter",
+  "version": "0.0.0",
+  "private": true,
+  "description": "App Starter - A modern web application starter template",
+  "author": "",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "docker:build": "./scripts/build-all.sh",
+    "docker:build:api": "./scripts/build-api.sh",
+    "docker:build:web": "./scripts/build-web.sh",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:dev": "docker-compose up",
+    "docker:prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "docker:clean": "docker-compose down -v --remove-orphans"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "prettier": "^3.2.5",
+    "turbo": "^2.6.1"
+  },
+  "packageManager": "pnpm@8.15.5",
+  "engines": {
+    "node": ">=20"
+  }
+}

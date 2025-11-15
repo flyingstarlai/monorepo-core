@@ -1,0 +1,20 @@
+{
+  "type": "mssql",
+  "host": "60.248.245.253",
+  "port": 1433,
+  "username": "sa",
+  "password": "dsc",
+  "database": "TC_DEV",
+  "synchronize": false,
+  "logging": true,
+  "entities": ["src/users/entities/*.ts"],
+  "migrations": ["src/migrations/*.ts"],
+  "cli": {
+    "entitiesDir": "src/users/entities",
+    "migrationsDir": "src/migrations"
+  },
+  "options": {
+    "encrypt": false,
+    "trustServerCertificate": true
+  }
+}

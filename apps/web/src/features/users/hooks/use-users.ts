@@ -67,9 +67,9 @@ export const useUpdateUser = (options?: {
       return response.data as User;
     },
     onSuccess: (updatedUser, variables) => {
-      // Invalidate queries first to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['user', variables.id] });
+      // Update cache directly with fresh data
+      queryClient.setQueryData(['user', variables.id], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ['users'] }); // Only invalidate list
 
       // Call custom success callback if provided
       if (options?.onSuccess) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useFactoryDepartments } from '../hooks/use-users';
 import type { FactoryDepartment } from '../types/user.types';
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,10 @@ interface DepartmentSearchDrawerProps {
 }
 
 export function DepartmentSearchDrawer({
-  isOpen,
-  onClose,
-  onDepartmentSelect,
-}: DepartmentSearchDrawerProps) {
+                                         isOpen,
+                                         onClose,
+                                         onDepartmentSelect,
+                                       }: DepartmentSearchDrawerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const {
     data: factoryDepartments = [],
@@ -40,7 +41,7 @@ export function DepartmentSearchDrawer({
       department.deptName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Handle keyboard events
+  // Handle keyboard events (Escape closes drawer)
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -58,7 +59,7 @@ export function DepartmentSearchDrawer({
   };
 
   const handleRowKeyDown = (
-    e: React.KeyboardEvent,
+    e: ReactKeyboardEvent<HTMLTableRowElement>,
     department: FactoryDepartment,
   ) => {
     if (e.key === 'Enter') {
@@ -79,9 +80,9 @@ export function DepartmentSearchDrawer({
       />
 
       {/* Drawer */}
-      <div className="relative ml-auto h-full w-full max-w-2xl bg-white shadow-xl flex flex-col">
+      <div className="relative ml-auto flex h-full w-full max-w-2xl flex-col bg-white shadow-xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between border-b p-4">
           <h2 className="text-lg font-semibold">工廠部門查詢</h2>
           <Button
             variant="ghost"
@@ -94,9 +95,9 @@ export function DepartmentSearchDrawer({
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b">
+        <div className="border-b p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <Input
               placeholder="搜尋工廠部門..."
               value={searchTerm}
@@ -104,7 +105,8 @@ export function DepartmentSearchDrawer({
               className="pl-10"
               autoFocus
             />
-          <p className="text-sm text-gray-500 mt-2">
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
             按 <Kbd>Enter</Kbd> 選擇部門，<Kbd>Escape</Kbd> 關閉
           </p>
         </div>
@@ -112,18 +114,14 @@ export function DepartmentSearchDrawer({
         {/* Content */}
         <div className="flex-1 overflow-hidden">
           {isLoading && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-sm text-gray-500">
-                載入工廠部門中...
-              </div>
+            <div className="flex h-full items-center justify-center">
+              <div className="text-sm text-gray-500">載入工廠部門中...</div>
             </div>
           )}
 
           {error && (
-            <div className="flex flex-col items-center justify-center h-full p-4">
-              <div className="text-sm text-red-600 mb-4">
-                載入工廠部門失敗
-              </div>
+            <div className="flex h-full flex-col items-center justify-center p-4">
+              <div className="mb-4 text-sm text-red-600">載入工廠部門失敗</div>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
                 重試
               </Button>
@@ -133,7 +131,7 @@ export function DepartmentSearchDrawer({
           {!isLoading && !error && (
             <div className="h-full overflow-auto">
               {filteredDepartments.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex h-full items-center justify-center">
                   <div className="text-sm text-gray-500">
                     {searchTerm
                       ? '找不到符合您搜尋的工廠部門'

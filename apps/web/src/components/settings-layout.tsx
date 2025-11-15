@@ -4,12 +4,12 @@ import { User, Shield } from 'lucide-react';
 
 const settingsNavItems = [
   {
-    title: 'Profile',
+    title: '個人資料',
     href: '/settings/profile',
     icon: User,
   },
   {
-    title: 'Account',
+    title: '帳戶',
     href: '/settings/account',
     icon: Shield,
   },
@@ -21,10 +21,8 @@ export function SettingsLayout() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-600 mt-2">
-          Manage your profile and account settings.
-        </p>
+        <h1 className="text-3xl font-bold text-slate-900">設定</h1>
+        <p className="text-slate-600 mt-2">管理您的個人資料和帳戶設定。</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">

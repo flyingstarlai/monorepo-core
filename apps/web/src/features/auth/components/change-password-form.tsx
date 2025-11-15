@@ -23,12 +23,12 @@ import { X } from 'lucide-react';
 // Zod schema for password validation
 const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(3, 'Password must be at least 3 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your new password'),
+    currentPassword: z.string().min(1, '目前密碼為必填項目'),
+    newPassword: z.string().min(3, '密碼長度至少需要3個字元'),
+    confirmPassword: z.string().min(1, '請確認您的新密碼'),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
+    message: '密碼不匹配',
     path: ['confirmPassword'],
   });
 
@@ -60,13 +60,11 @@ export function ChangePasswordForm({
           currentPassword: value.currentPassword,
           newPassword: value.newPassword,
         });
-        toast.success('Password changed successfully');
+        toast.success('密碼更改成功');
         form.reset();
         onSuccess?.();
       } catch (error) {
-        toast.error(
-          'Failed to change password. Please check your current password and try again.',
-        );
+        toast.error('更改密碼失敗。請檢查您目前的密碼並重試。');
       }
     },
   });
@@ -74,17 +72,17 @@ export function ChangePasswordForm({
   return (
     <LoadingOverlay
       isLoading={changePassword.isPending}
-      message="Changing password..."
+      message="更改密碼中..."
     >
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-lg font-medium text-slate-900">
-                Change Password
+                更改密碼
               </CardTitle>
               <CardDescription className="text-slate-600">
-                Enter your current password and choose a new one
+                請輸入您目前的密碼並選擇一個新密碼
               </CardDescription>
             </div>
             {onCancel && (
@@ -115,9 +113,7 @@ export function ChangePasswordForm({
                     field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Current Password
-                      </FieldLabel>
+                      <FieldLabel htmlFor={field.name}>目前密碼</FieldLabel>
                       <Input
                         id={field.name}
                         type="password"
@@ -125,7 +121,7 @@ export function ChangePasswordForm({
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
                         aria-invalid={isInvalid}
-                        placeholder="Enter current password"
+                        placeholder="請輸入目前密碼"
                         required
                       />
                       {isInvalid && (
@@ -143,7 +139,7 @@ export function ChangePasswordForm({
                     field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>New Password</FieldLabel>
+                      <FieldLabel htmlFor={field.name}>新密碼</FieldLabel>
                       <Input
                         id={field.name}
                         type="password"
@@ -151,7 +147,7 @@ export function ChangePasswordForm({
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
                         aria-invalid={isInvalid}
-                        placeholder="Enter new password"
+                        placeholder="請輸入新密碼"
                         required
                       />
                       {isInvalid && (
@@ -169,9 +165,7 @@ export function ChangePasswordForm({
                     field.state.meta.isTouched && !field.state.meta.isValid;
                   return (
                     <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Confirm New Password
-                      </FieldLabel>
+                      <FieldLabel htmlFor={field.name}>確認新密碼</FieldLabel>
                       <Input
                         id={field.name}
                         type="password"
@@ -179,7 +173,7 @@ export function ChangePasswordForm({
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
                         aria-invalid={isInvalid}
-                        placeholder="Confirm new password"
+                        placeholder="確認新密碼"
                         required
                       />
                       {isInvalid && (
@@ -199,7 +193,7 @@ export function ChangePasswordForm({
                   onClick={onCancel}
                   disabled={changePassword.isPending}
                 >
-                  Cancel
+                  取消
                 </Button>
               )}
               <Button
@@ -207,7 +201,7 @@ export function ChangePasswordForm({
                 disabled={changePassword.isPending}
                 className="flex-1"
               >
-                Change Password
+                更改密碼
               </Button>
             </div>
           </form>

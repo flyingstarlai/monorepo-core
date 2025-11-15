@@ -46,7 +46,7 @@ function UsersCreate() {
           className="flex items-center space-x-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to Users</span>
+          <span>返回用戶列表</span>
         </Button>
       </Link>
 
@@ -55,11 +55,11 @@ function UsersCreate() {
         onSubmit={handleSubmit}
         isLoading={createUserMutation.isPending}
         currentUserRole={user?.role}
-        title="Create New User"
+        title="建立新用戶"
         description={
           user?.role === 'manager'
-            ? 'As a manager, you can only create users with "user" role.'
-            : 'Create a new user with appropriate permissions.'
+            ? '作為管理員，您只能建立具有「用戶」角色的用戶。'
+            : '建立一個具有適當權限的新用戶。'
         }
       />
     </div>

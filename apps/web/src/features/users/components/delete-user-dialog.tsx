@@ -55,11 +55,10 @@ export function DeleteUserDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
-            <span>Delete User</span>
+            <span>刪除用戶</span>
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this user? This action cannot be
-            undone.
+            您確定要刪除此用戶嗎？此操作無法撤銷。
           </DialogDescription>
         </DialogHeader>
 
@@ -67,28 +66,27 @@ export function DeleteUserDialog({
           <Alert className="border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-700">
-              You are about to delete <strong>{user.fullName}</strong> (@
-              {user.username}). This will permanently remove their account and
-              all associated data.
+              您即將刪除 <strong>{user.fullName}</strong> (@
+              {user.username})。這將永久移除他們的帳戶和所有相關資料。
             </AlertDescription>
           </Alert>
 
           <div className="mt-4 p-3 bg-slate-50 rounded-md">
             <h4 className="font-medium text-sm text-slate-900 mb-2">
-              User Details:
+              用戶詳情：
             </h4>
             <div className="space-y-1 text-sm text-slate-600">
               <p>
-                <strong>Name:</strong> {user.fullName}
+                <strong>姓名：</strong> {user.fullName}
               </p>
               <p>
-                <strong>Username:</strong> {user.username}
+                <strong>用戶名：</strong> {user.username}
               </p>
               <p>
-                <strong>Department:</strong> {user.deptName}
+                <strong>部門：</strong> {user.deptName}
               </p>
               <p>
-                <strong>Role:</strong> {user.role}
+                <strong>角色：</strong> {user.role}
               </p>
             </div>
           </div>
@@ -101,7 +99,7 @@ export function DeleteUserDialog({
             onClick={onClose}
             disabled={isLoading}
           >
-            Cancel
+            取消
           </Button>
           <Button
             type="button"
@@ -109,7 +107,7 @@ export function DeleteUserDialog({
             onClick={handleConfirm}
             disabled={isLoading}
           >
-            {isLoading ? 'Deleting...' : 'Delete User'}
+            {isLoading ? '刪除中...' : '刪除用戶'}
           </Button>
         </DialogFooter>
       </DialogContent>

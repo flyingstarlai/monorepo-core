@@ -82,11 +82,11 @@ export function UserCard({
                   {user.role}
                 </Badge>
                 <Badge variant={getStatusVariant(user.isActive)}>
-                  {user.isActive ? 'Active' : 'Inactive'}
+                  {user.isActive ? '啟用' : '停用'}
                 </Badge>
               </div>
               <div className="text-xs text-slate-400 mt-1">
-                Last login: {formatLastLogin(user.lastLoginAt)}
+                最後登入：{formatLastLogin(user.lastLoginAt)}
               </div>
             </div>
           </div>

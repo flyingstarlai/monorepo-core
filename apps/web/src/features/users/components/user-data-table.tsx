@@ -172,7 +172,7 @@ export function UserDataTable({
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-muted-foreground" />
-              <span className="font-semibold">Users</span>
+              <span className="font-semibold">用戶</span>
               <Badge variant="secondary" className="text-xs">
                 {total}
               </Badge>
@@ -183,7 +183,7 @@ export function UserDataTable({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder="搜尋用戶..."
                   value={globalFilter ?? ''}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10 w-48 h-9 text-sm"
@@ -196,13 +196,13 @@ export function UserDataTable({
                 onValueChange={handleRoleFilterChange}
               >
                 <SelectTrigger className="w-32 h-9 text-sm">
-                  <SelectValue placeholder="Role" />
+                  <SelectValue placeholder="角色" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="all">所有角色</SelectItem>
+                  <SelectItem value="admin">管理員</SelectItem>
+                  <SelectItem value="manager">管理員</SelectItem>
+                  <SelectItem value="user">用戶</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -216,12 +216,12 @@ export function UserDataTable({
                 onValueChange={handleStatusFilterChange}
               >
                 <SelectTrigger className="w-32 h-9 text-sm">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder="狀態" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="true">Active</SelectItem>
-                  <SelectItem value="false">Inactive</SelectItem>
+                  <SelectItem value="all">所有狀態</SelectItem>
+                  <SelectItem value="true">啟用</SelectItem>
+                  <SelectItem value="false">停用</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -233,7 +233,7 @@ export function UserDataTable({
                 className="h-9 text-sm"
               >
                 <Filter className="h-4 w-4 mr-1" />
-                Clear
+                清除
               </Button>
             </div>
           </div>
@@ -309,7 +309,7 @@ export function UserDataTable({
                     >
                       <div className="flex flex-col items-center space-y-2">
                         <Users className="h-8 w-8 text-muted-foreground/50" />
-                        <span>No users found</span>
+                        <span>找不到用戶</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -322,8 +322,8 @@ export function UserDataTable({
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <span>
-                Showing {(currentPage - 1) * limit + 1} to{' '}
-                {Math.min(currentPage * limit, total)} of {total} results
+                顯示 {(currentPage - 1) * limit + 1} 到{' '}
+                {Math.min(currentPage * limit, total)} 共 {total} 個結果
               </span>
               <Select
                 value={limit.toString()}
@@ -355,7 +355,7 @@ export function UserDataTable({
                 className="h-8 px-3 text-xs"
               >
                 <ChevronLeft className="h-3 w-3 mr-1" />
-                Previous
+                上一頁
               </Button>
 
               <div className="flex items-center space-x-1">
@@ -392,7 +392,7 @@ export function UserDataTable({
                 disabled={!table.getCanNextPage()}
                 className="h-8 px-3 text-xs"
               >
-                Next
+                下一頁
                 <ChevronRight className="h-3 w-3 ml-1" />
               </Button>
             </div>

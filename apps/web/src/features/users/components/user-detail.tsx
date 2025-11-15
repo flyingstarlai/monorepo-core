@@ -59,7 +59,7 @@ export function UserDetail({
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back to Users</span>
+              <span>返回用戶列表</span>
             </Button>
           </Link>
         </div>
@@ -93,7 +93,7 @@ export function UserDetail({
       <Card className="">
         <CardHeader className="">
           <CardTitle className="text-lg font-medium text-slate-900">
-            User Profile
+            用戶資料
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -106,7 +106,7 @@ export function UserDetail({
             {/* Basic Info */}
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
-                {user.fullName || 'Unknown User'}
+                {user.fullName || '未知用戶'}
               </h1>
               <p className="text-slate-600 mb-4">
                 @{user.username || 'unknown'}
@@ -124,7 +124,7 @@ export function UserDetail({
                   {user.role || 'user'}
                 </Badge>
                 <Badge variant={getStatusVariant(user.isActive)}>
-                  {user.isActive ? 'Active' : 'Inactive'}
+                  {user.isActive ? '啟用' : '停用'}
                 </Badge>
               </div>
             </div>
@@ -138,33 +138,29 @@ export function UserDetail({
         <Card className="">
           <CardHeader className="">
             <CardTitle className="text-lg font-medium text-slate-900">
-              Personal Information
+              個人資訊
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">
-                Full Name
-              </label>
+              <label className="text-sm font-medium text-slate-700">全名</label>
               <p className="text-lg font-medium text-slate-900">
-                {user.fullName || 'Not specified'}
+                {user.fullName || '未指定'}
               </p>
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Username
+                用戶名
               </label>
               <p className="text-lg font-medium text-slate-900">
-                {user.username || 'Not specified'}
+                {user.username || '未指定'}
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">
-                Status
-              </label>
+              <label className="text-sm font-medium text-slate-700">狀態</label>
               <div className="mt-1">
                 <Badge variant={getStatusVariant(user.isActive)}>
-                  {user.isActive ? 'Active' : 'Inactive'}
+                  {user.isActive ? '啟用' : '停用'}
                 </Badge>
               </div>
             </div>
@@ -175,28 +171,26 @@ export function UserDetail({
         <Card className="">
           <CardHeader className="">
             <CardTitle className="text-lg font-medium text-slate-900">
-              Department Information
+              部門資訊
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
             <div>
-              <label className="text-sm font-medium text-slate-700">
-                Department
-              </label>
+              <label className="text-sm font-medium text-slate-700">部門</label>
               <p className="text-lg font-medium text-slate-900">
-                {user.deptName || 'Not specified'}
+                {user.deptName || '未指定'}
               </p>
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Department Code
+                部門代碼
               </label>
               <p className="text-lg font-medium text-slate-900">
                 {user.deptNo}
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Role</label>
+              <label className="text-sm font-medium text-slate-700">角色</label>
               <div className="mt-1">
                 <Badge
                   variant={getRoleVariant(user.role)}
@@ -218,14 +212,14 @@ export function UserDetail({
       <Card className="">
         <CardHeader className="">
           <CardTitle className="text-lg font-medium text-slate-900">
-            Account Activity
+            帳戶活動
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Last Login
+                最後登入
               </label>
               <p className="text-sm text-slate-900">
                 {formatLastLogin(user.lastLoginAt)}
@@ -233,7 +227,7 @@ export function UserDetail({
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Account Created
+                帳戶建立時間
               </label>
               <p className="text-sm text-slate-900">
                 {formatDate(user.createdAt)}
@@ -241,7 +235,7 @@ export function UserDetail({
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">
-                Last Updated
+                最後更新時間
               </label>
               <p className="text-sm text-slate-900">
                 {formatDate(user.updatedAt)}

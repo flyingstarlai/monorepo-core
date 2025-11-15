@@ -59,7 +59,7 @@ function UserEdit() {
           className="flex items-center space-x-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          <span>Back to User</span>
+          <span>返回用戶</span>
         </Button>
       </Link>
 
@@ -69,8 +69,8 @@ function UserEdit() {
         onSubmit={handleSubmit}
         isLoading={updateUserMutation.isPending}
         currentUserRole={currentUser?.role}
-        title="Edit User"
-        description="Update user information and permissions."
+        title="編輯用戶"
+        description="更新用戶資訊和權限。"
       />
     </div>
   );

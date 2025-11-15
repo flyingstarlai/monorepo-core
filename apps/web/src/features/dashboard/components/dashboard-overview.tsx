@@ -24,11 +24,11 @@ const formatRelativeTime = (timestamp: string): string => {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffMins < 60) {
-    return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    return `${diffMins} 分鐘前`;
   } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    return `${diffHours} 小時前`;
   } else {
-    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    return `${diffDays} 天前`;
   }
 };
 
@@ -93,40 +93,40 @@ export function DashboardOverview() {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-red-500">Failed to load dashboard data</p>
+          <p className="text-red-500">載入儀表板資料失敗</p>
         </CardContent>
       </Card>
     );
   }
   const statCards = [
     {
-      title: 'Total Users',
+      title: '用戶總數',
       value: stats.totalUsers.toLocaleString(),
-      change: `+${stats.newUsersThisMonth} this month`,
+      change: `+${stats.newUsersThisMonth} 本月新增`,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
-      title: 'Active Users',
+      title: '活躍用戶',
       value: stats.activeUsers.toLocaleString(),
-      change: `${Math.round((stats.activeUsers / stats.totalUsers) * 100)}% of total`,
+      change: `佔總數 ${Math.round((stats.activeUsers / stats.totalUsers) * 100)}%`,
       icon: UserCheck,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
     },
     {
-      title: 'Departments',
+      title: '部門',
       value: stats.totalDepartments.toLocaleString(),
-      change: 'Total departments',
+      change: '部門總數',
       icon: Building,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
     {
-      title: 'Growth Rate',
+      title: '增長率',
       value: `${stats.growthRate}%`,
-      change: 'Monthly growth',
+      change: '每月增長',
       icon: Activity,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
@@ -167,10 +167,10 @@ export function DashboardOverview() {
       <Card className="">
         <CardHeader>
           <CardTitle className="text-lg font-medium text-slate-900">
-            Recent Activity
+            最近活動
           </CardTitle>
           <CardDescription className="text-slate-600">
-            Latest user registrations and profile updates
+            最新用戶註冊和個人資料更新
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -192,8 +192,8 @@ export function DashboardOverview() {
                       </p>
                       <p className="text-sm text-slate-600">
                         {activity.action === 'created'
-                          ? 'Created account'
-                          : 'Updated profile'}{' '}
+                          ? '建立帳戶'
+                          : '更新個人資料'}{' '}
                         • {activity.deptName}
                       </p>
                       <p className="text-xs text-slate-500">

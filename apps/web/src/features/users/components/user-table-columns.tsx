@@ -55,7 +55,7 @@ export function createUserTableColumns({
   return [
     {
       accessorKey: 'username',
-      header: 'User',
+      header: '用戶',
       cell: ({ row }) => {
         const user = row.original;
         const displayName = getUserDisplayName(user);
@@ -76,7 +76,7 @@ export function createUserTableColumns({
     },
     {
       accessorKey: 'deptName',
-      header: 'Department',
+      header: '部門',
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -89,7 +89,7 @@ export function createUserTableColumns({
     },
     {
       accessorKey: 'role',
-      header: 'Role',
+      header: '角色',
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -108,7 +108,7 @@ export function createUserTableColumns({
     },
     {
       accessorKey: 'isActive',
-      header: 'Status',
+      header: '狀態',
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -119,7 +119,7 @@ export function createUserTableColumns({
               disabled={!onToggleStatus}
             />
             <Badge variant={getStatusVariant(user.isActive)}>
-              {user.isActive ? 'Active' : 'Inactive'}
+              {user.isActive ? '啟用' : '停用'}
             </Badge>
           </div>
         );
@@ -127,7 +127,7 @@ export function createUserTableColumns({
     },
     {
       accessorKey: 'lastLoginAt',
-      header: 'Last Login',
+      header: '最後登入',
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -139,7 +139,7 @@ export function createUserTableColumns({
     },
     {
       accessorKey: 'createdAt',
-      header: 'Created',
+      header: '建立時間',
       cell: ({ row }) => {
         const user = row.original;
         return (
@@ -151,7 +151,7 @@ export function createUserTableColumns({
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: '操作',
       cell: ({ row }) => {
         const user = row.original;
 
@@ -159,7 +159,7 @@ export function createUserTableColumns({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">開啟選單</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -167,13 +167,13 @@ export function createUserTableColumns({
               {onView && (
                 <DropdownMenuItem onClick={() => onView(user)}>
                   <Eye className="mr-2 h-4 w-4" />
-                  View Details
+                  查看詳情
                 </DropdownMenuItem>
               )}
               {onEdit && (
                 <DropdownMenuItem onClick={() => onEdit(user)}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Edit User
+                  編輯用戶
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
@@ -183,7 +183,7 @@ export function createUserTableColumns({
                   className="text-red-600 focus:text-red-600"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete User
+                  刪除用戶
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>

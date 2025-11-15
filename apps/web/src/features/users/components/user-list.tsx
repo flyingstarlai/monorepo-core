@@ -43,7 +43,7 @@ export function UserList() {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-destructive">Failed to load users data</p>
+          <p className="text-destructive">載入用戶資料失敗</p>
         </CardContent>
       </Card>
     );

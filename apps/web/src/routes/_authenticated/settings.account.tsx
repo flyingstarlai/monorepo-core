@@ -23,16 +23,12 @@ function RouteComponent() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-slate-900">
-          Account Settings
-        </h2>
-        <p className="text-slate-600 mt-2">
-          Manage your account security and details.
-        </p>
+        <h2 className="text-2xl font-semibold text-slate-900">帳戶設定</h2>
+        <p className="text-slate-600 mt-2">管理您的帳戶安全和詳細資訊。</p>
       </div>
 
       <div className="bg-white rounded-lg p-6 shadow-sm">
-        <h3 className="text-lg font-medium text-slate-900 mb-6">Security</h3>
+        <h3 className="text-lg font-medium text-slate-900 mb-6">安全性</h3>
         {showChangePassword ? (
           <ChangePasswordForm
             onSuccess={handleChangePasswordSuccess}
@@ -42,16 +38,16 @@ function RouteComponent() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-slate-900">Password</p>
+                <p className="font-medium text-slate-900">密碼</p>
                 <p className="text-sm text-slate-600 mt-1">
-                  Change your password to keep your account secure
+                  更改您的密碼以保護帳戶安全
                 </p>
               </div>
               <Button
                 onClick={() => setShowChangePassword(true)}
                 variant="default"
               >
-                Change Password
+                更改密碼
               </Button>
             </div>
           </div>
@@ -60,13 +56,11 @@ function RouteComponent() {
 
       {user && (
         <div className="bg-white rounded-lg p-6 shadow-sm">
-          <h3 className="text-lg font-medium text-slate-900 mb-6">
-            Account Details
-          </h3>
+          <h3 className="text-lg font-medium text-slate-900 mb-6">帳戶詳情</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
-                User ID
+                用戶ID
               </label>
               <p className="text-sm font-mono text-slate-600 bg-slate-50 p-3 rounded">
                 {user.id}
@@ -74,17 +68,17 @@ function RouteComponent() {
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
-                Last Login
+                最後登入
               </label>
               <p className="text-sm text-slate-600">
                 {user.lastLoginAt
                   ? new Date(user.lastLoginAt).toLocaleString()
-                  : 'Never'}
+                  : '從未'}
               </p>
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
-                Account Created
+                帳戶建立時間
               </label>
               <p className="text-sm text-slate-600">
                 {new Date(user.createdAt).toLocaleString()}
@@ -92,7 +86,7 @@ function RouteComponent() {
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
-                Last Updated
+                最後更新時間
               </label>
               <p className="text-sm text-slate-600">
                 {new Date(user.updatedAt).toLocaleString()}

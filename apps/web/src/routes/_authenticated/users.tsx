@@ -46,15 +46,15 @@ function UsersLayout() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">User Management</h1>
+          <h1 className="text-3xl font-bold text-slate-900">用戶管理</h1>
           <p className="text-slate-600 mt-2">
-            Manage user accounts, roles, and permissions in system.
+            管理系統中的用戶帳戶、角色和權限。
           </p>
         </div>
         {isUsersIndex && getCreateUserLink() && (
           <Link to={getCreateUserLink()}>
             <Button className="flex items-center space-x-2">
-              <span>Create User</span>
+              <span>建立用戶</span>
             </Button>
           </Link>
         )}

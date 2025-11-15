@@ -19,11 +19,11 @@ function UserDetailRoute() {
   const { data: user, isLoading, error } = useUser(id);
 
   if (isLoading) {
-    return <div>Loading user details...</div>;
+    return <div>載入用戶詳情中...</div>;
   }
 
   if (error || !user) {
-    return <div>User not found</div>;
+    return <div>找不到用戶</div>;
   }
 
   return <UserDetail user={user} isLoading={isLoading} />;

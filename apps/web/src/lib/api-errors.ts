@@ -81,18 +81,18 @@ export class ApiError extends Error {
    */
   getUserMessage(): string {
     if (this.isAuthError) {
-      return 'Your session has expired. Please log in again.';
+      return '您的會話已過期。請重新登入。';
     }
     if (this.isNetworkError) {
-      return 'Network connection error. Please check your internet connection.';
+      return '網路連線錯誤。請檢查您的網路連線。';
     }
     if (this.isServerError) {
-      return 'Server error occurred. Please try again later.';
+      return '伺服器錯誤發生。請稍後再試。';
     }
     if (this.isClientError) {
       return this.message;
     }
-    return 'An unexpected error occurred. Please try again.';
+    return '發生意外錯誤。請重試。';
   }
 
   /**
@@ -146,7 +146,7 @@ export class AuthError extends ApiError {
       return new AuthError(error);
     }
 
-    return new AuthError('Authentication failed');
+    return new AuthError('身份驗證失敗');
   }
 
   /**

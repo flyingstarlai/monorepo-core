@@ -28,7 +28,7 @@ export function DashboardHeader() {
 
     // Home breadcrumb
     breadcrumbs.push({
-      label: 'Dashboard',
+      label: '儀表板',
       href: '/dashboard',
       isCurrentPage:
         filteredSegments.length === 1 && filteredSegments[0] === 'dashboard',
@@ -41,13 +41,13 @@ export function DashboardHeader() {
         filteredSegments[1] === 'profile'
       ) {
         breadcrumbs.push({
-          label: 'Profile',
+          label: '個人資料',
           href: '/dashboard/profile',
           isCurrentPage: true,
         });
       } else if (filteredSegments[0] === 'users') {
         breadcrumbs.push({
-          label: 'User Management',
+          label: '用戶管理',
           href: '/users',
           isCurrentPage: filteredSegments.length === 1,
         });
@@ -55,13 +55,13 @@ export function DashboardHeader() {
         if (filteredSegments.length > 1) {
           if (filteredSegments[1] === 'create') {
             breadcrumbs.push({
-              label: 'Create User',
+              label: '建立用戶',
               href: '/users/create',
               isCurrentPage: true,
             });
           } else if (filteredSegments[1] === '$id') {
             breadcrumbs.push({
-              label: 'User Details',
+              label: '用戶詳情',
               href: location.pathname,
               isCurrentPage: true,
             });
@@ -70,7 +70,7 @@ export function DashboardHeader() {
             filteredSegments[2] === 'edit'
           ) {
             breadcrumbs.push({
-              label: 'Edit User',
+              label: '編輯用戶',
               href: location.pathname,
               isCurrentPage: true,
             });

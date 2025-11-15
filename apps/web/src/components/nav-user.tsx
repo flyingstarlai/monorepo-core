@@ -39,8 +39,8 @@ export function NavUser({
   };
 
   // Add safety checks for user data
-  const displayName = user?.fullName || user?.username || 'User';
-  const displaySubtitle = user?.username || 'Unknown';
+  const displayName = user?.fullName || user?.username || '用戶';
+  const displaySubtitle = user?.username || '未知';
   const initials = displayName?.charAt(0)?.toUpperCase() || 'U';
 
   return (
@@ -88,14 +88,14 @@ export function NavUser({
               <DropdownMenuItem asChild>
                 <Link to="/settings/profile">
                   <User />
-                  Profile
+                  個人資料
                 </Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
                 <Link to="/settings/account">
                   <BadgeCheck />
-                  Change Password
+                  更改密碼
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -105,7 +105,7 @@ export function NavUser({
               disabled={logoutMutation.isPending}
             >
               <LogOut />
-              {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
+              {logoutMutation.isPending ? '登出中...' : '登出'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

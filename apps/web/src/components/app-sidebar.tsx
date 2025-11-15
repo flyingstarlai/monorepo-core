@@ -27,7 +27,7 @@ export function AppSidebar() {
 
   const navigation = [
     {
-      title: 'Dashboard',
+      title: '儀表板',
       url: '/dashboard',
       icon: LayoutDashboard,
       isActive: location.pathname === '/dashboard',
@@ -35,7 +35,7 @@ export function AppSidebar() {
     ...(user?.role && ['admin', 'manager'].includes(user.role)
       ? [
           {
-            title: 'User Management',
+            title: '用戶管理',
             url: '/users',
             icon: Users,
             isActive: location.pathname.startsWith('/users'),
@@ -43,7 +43,7 @@ export function AppSidebar() {
         ]
       : []),
     {
-      title: 'Settings',
+      title: '設定',
       url: '/settings/profile',
       icon: Settings,
       isActive: location.pathname.startsWith('/settings'),
@@ -61,7 +61,7 @@ export function AppSidebar() {
                   <LayoutDashboard className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">App Starter</span>
+                  <span className="truncate font-semibold">帳戶管理器</span>
                   <span className="truncate text-xs">Comp Inc</span>
                 </div>
               </Link>
@@ -72,7 +72,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupLabel>平台</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => (
@@ -101,7 +101,7 @@ export function AppSidebar() {
                 disabled={logoutMutation.isPending}
               >
                 <LogOut />
-                {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
+                {logoutMutation.isPending ? '登出中...' : '登出'}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

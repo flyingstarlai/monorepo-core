@@ -43,12 +43,12 @@ import { RoleService } from '@/lib/role.service';
 
 // Zod schema for validation
 const userFormSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
+  username: z.string().min(3, '用戶名長度至少需要3個字元'),
   // Optional here; we enforce required on create via UI
   password: z.string().optional(),
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  deptNo: z.string().min(1, 'Department code is required'),
-  deptName: z.string().min(2, 'Department name must be at least 2 characters'),
+  fullName: z.string().min(2, '全名長度至少需要2個字元'),
+  deptNo: z.string().min(1, '部門代碼為必填項目'),
+  deptName: z.string().min(2, '部門名稱長度至少需要2個字元'),
   role: z.enum(['admin', 'manager', 'user']),
   isActive: z.boolean(),
 });
@@ -130,18 +130,18 @@ export function UserForm({
   return (
     <LoadingOverlay
       isLoading={isLoading}
-      message={isEdit ? 'Updating user...' : 'Creating user...'}
+      message={isEdit ? '更新用戶中...' : '建立用戶中...'}
     >
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium text-slate-900">
-            {title || (isEdit ? 'Edit User' : 'Create New User')}
+            {title || (isEdit ? '編輯用戶' : '建立新用戶')}
           </CardTitle>
           <CardDescription className="text-slate-600">
             {description ||
               (isEdit
-                ? 'Update user information and permissions'
-                : 'Add a new user to system with appropriate permissions')}
+                ? '更新用戶資訊和權限'
+                : '新增一個新用戶到系統並設定適當權限')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-6">
@@ -163,7 +163,7 @@ export function UserForm({
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>Username</FieldLabel>
+                        <FieldLabel htmlFor={field.name}>用戶名</FieldLabel>
                         <div className="relative">
                           <Input
                             id="username-field"
@@ -177,7 +177,7 @@ export function UserForm({
                             }}
                             disabled={isEdit}
                             aria-invalid={isInvalid}
-                            placeholder="Enter username"
+                            placeholder="請輸入用戶名"
                             className={!isEdit ? 'pr-12' : undefined}
                           />
                           {!isEdit && (
@@ -191,7 +191,7 @@ export function UserForm({
                         )}
                         {!isEdit && (
                           <FieldDescription>
-                            Press <Kbd>F2</Kbd> to lookup factory users
+                            按 <Kbd>F2</Kbd> 查詢工廠用戶
                           </FieldDescription>
                         )}
                       </Field>
@@ -208,7 +208,7 @@ export function UserForm({
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>
-                          Password {isEdit && '(leave blank to keep current)'}
+                          密碼 {isEdit && '(留空以保持目前密碼)'}
                         </FieldLabel>
                         <Input
                           id={field.name}
@@ -216,7 +216,7 @@ export function UserForm({
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
-                          placeholder="Enter password"
+                          placeholder="請輸入密碼"
                           required={!isEdit}
                         />
                         {isInvalid && (
@@ -235,13 +235,13 @@ export function UserForm({
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>Full Name</FieldLabel>
+                        <FieldLabel htmlFor={field.name}>全名</FieldLabel>
                         <Input
                           id={field.name}
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
-                          placeholder="Enter full name"
+                          placeholder="請輸入全名"
                           required
                         />
                         {isInvalid && (
@@ -262,9 +262,7 @@ export function UserForm({
 
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          Department Code
-                        </FieldLabel>
+                        <FieldLabel htmlFor={field.name}>部門代碼</FieldLabel>
 
                         <div className="relative">
                           <Input
@@ -278,7 +276,7 @@ export function UserForm({
                               }
                             }}
                             aria-invalid={isInvalid}
-                            placeholder="e.g., 21110"
+                            placeholder="例如：21110"
                             required
                             className="pr-12"
                           />
@@ -293,7 +291,7 @@ export function UserForm({
                           <FieldError errors={field.state.meta.errors} />
                         )}
                         <FieldDescription>
-                          Press <Kbd>F2</Kbd> to lookup department
+                          按 <Kbd>F2</Kbd> 查詢部門
                         </FieldDescription>
                       </Field>
                     );
@@ -308,15 +306,13 @@ export function UserForm({
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          Department Name
-                        </FieldLabel>
+                        <FieldLabel htmlFor={field.name}>部門名稱</FieldLabel>
                         <Input
                           id={field.name}
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
-                          placeholder="e.g., 技術傳承委員會"
+                          placeholder="例如：技術傳承委員會"
                           required
                         />
                         {isInvalid && (
@@ -336,7 +332,7 @@ export function UserForm({
                         field.state.meta.isTouched && !field.state.meta.isValid;
                       return (
                         <Field data-invalid={isInvalid}>
-                          <FieldLabel htmlFor={field.name}>Role</FieldLabel>
+                          <FieldLabel htmlFor={field.name}>角色</FieldLabel>
                           <Select
                             value={field.state.value}
                             onValueChange={(value) =>
@@ -347,17 +343,17 @@ export function UserForm({
                             disabled={isEdit && !canEditRole}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Select role" />
+                              <SelectValue placeholder="選擇角色" />
                             </SelectTrigger>
                             <SelectContent>
                               {availableRoles.includes('user') && (
-                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="user">用戶</SelectItem>
                               )}
                               {availableRoles.includes('manager') && (
-                                <SelectItem value="manager">Manager</SelectItem>
+                                <SelectItem value="manager">管理員</SelectItem>
                               )}
                               {availableRoles.includes('admin') && (
-                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="admin">管理員</SelectItem>
                               )}
                             </SelectContent>
                           </Select>
@@ -366,7 +362,7 @@ export function UserForm({
                           )}
                           {!canEditRole && isEdit && (
                             <FieldDescription>
-                              Only administrators can change user roles
+                              只有管理員可以更改用戶角色
                             </FieldDescription>
                           )}
                         </Field>
@@ -376,8 +372,7 @@ export function UserForm({
                 ) : (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 md:col-span-2">
                     <p className="text-sm text-yellow-800">
-                      Your role doesn&apos;t have permission to create users
-                      with specific roles.
+                      您的角色沒有權限建立具有特定角色的用戶。
                     </p>
                   </div>
                 )}
@@ -395,9 +390,9 @@ export function UserForm({
                         className="md:col-span-2"
                       >
                         <FieldContent>
-                          <FieldLabel htmlFor={field.name}>Status</FieldLabel>
+                          <FieldLabel htmlFor={field.name}>狀態</FieldLabel>
                           <FieldDescription>
-                            Enable or disable user account
+                            啟用或停用用戶帳戶
                           </FieldDescription>
                           {isInvalid && (
                             <FieldError errors={field.state.meta.errors} />
@@ -422,10 +417,10 @@ export function UserForm({
                 variant="outline"
                 onClick={() => form.reset()}
               >
-                Reset
+                重設
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isEdit ? 'Update User' : 'Create User'}
+                {isEdit ? '更新用戶' : '建立用戶'}
               </Button>
             </div>
           </form>

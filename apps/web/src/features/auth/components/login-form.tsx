@@ -22,16 +22,13 @@ import { useLogin } from '../hooks/use-auth';
 const loginFormSchema = z.object({
   username: z
     .string()
-    .min(1, 'Username is required')
-    .max(50, 'Username must be less than 50 characters')
-    .regex(
-      /^[a-zA-Z0-9_@.-]+$/,
-      'Username can only contain letters, numbers, and @._-',
-    ),
+    .min(1, '用戶名為必填項目')
+    .max(50, '用戶名長度不能超過50個字元')
+    .regex(/^[a-zA-Z0-9_@.-]+$/, '用戶名只能包含字母、數字和@._-'),
   password: z
     .string()
-    .min(3, 'Password must be at least 3 characters')
-    .max(100, 'Password must be less than 100 characters'),
+    .min(3, '密碼長度至少需要3個字元')
+    .max(100, '密碼長度不能超過100個字元'),
 });
 
 export function LoginForm() {
@@ -57,14 +54,14 @@ export function LoginForm() {
   });
 
   return (
-    <LoadingOverlay isLoading={loginMutation.isPending} message="Signing in...">
+    <LoadingOverlay isLoading={loginMutation.isPending} message="登入中...">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Welcome Back
+            歡迎回來
           </CardTitle>
           <CardDescription className="text-center">
-            Sign in to your account to continue
+            登入您的帳戶以繼續
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -82,12 +79,12 @@ export function LoginForm() {
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor="username">Username</FieldLabel>
+                    <FieldLabel htmlFor="username">用戶名</FieldLabel>
                     <FieldContent>
                       <Input
                         id="username"
                         type="text"
-                        placeholder="Enter your username"
+                        placeholder="請輸入您的用戶名"
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
@@ -105,7 +102,7 @@ export function LoginForm() {
                           message:
                             typeof error === 'string'
                               ? error
-                              : error?.message || 'Invalid username',
+                              : error?.message || '無效的用戶名',
                         }))}
                       />
                     )}
@@ -120,12 +117,12 @@ export function LoginForm() {
                   field.state.meta.isTouched && !field.state.meta.isValid;
                 return (
                   <Field data-invalid={isInvalid}>
-                    <FieldLabel htmlFor="password">Password</FieldLabel>
+                    <FieldLabel htmlFor="password">密碼</FieldLabel>
                     <FieldContent>
                       <Input
                         id="password"
                         type="password"
-                        placeholder="Enter your password"
+                        placeholder="請輸入您的密碼"
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                         onBlur={field.handleBlur}
@@ -143,7 +140,7 @@ export function LoginForm() {
                           message:
                             typeof error === 'string'
                               ? error
-                              : error?.message || 'Invalid password',
+                              : error?.message || '無效的密碼',
                         }))}
                       />
                     )}
@@ -171,7 +168,7 @@ export function LoginForm() {
                   </div>
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-red-800">
-                      Authentication failed
+                      身份驗證失敗
                     </h3>
                     <div className="mt-2 text-sm text-red-700">
                       {(() => {
@@ -181,10 +178,10 @@ export function LoginForm() {
                         if (error?.message) {
                           const message = error.message;
                           if (message.includes('disabled')) {
-                            return 'Your account has been disabled. Please contact support.';
+                            return '您的帳戶已被停用。請聯繫支援團隊。';
                           }
                           if (message.includes('expired')) {
-                            return 'Your session has expired. Please log in again.';
+                            return '您的會話已過期。請重新登入。';
                           }
                           return message;
                         }
@@ -204,7 +201,7 @@ export function LoginForm() {
                           }
                         }
 
-                        return 'Invalid username or password. Please try again.';
+                        return '無效的用戶名或密碼。請重試。';
                       })()}
                     </div>
                   </div>
@@ -217,7 +214,7 @@ export function LoginForm() {
               className="w-full"
               disabled={loginMutation.isPending}
             >
-              {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
+              {loginMutation.isPending ? '登入中...' : '登入'}
             </Button>
           </form>
         </CardContent>

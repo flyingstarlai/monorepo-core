@@ -81,7 +81,7 @@ export function UserSearchDrawer({
       <div className="relative ml-auto h-full w-full max-w-2xl bg-white shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Factory User Lookup</h2>
+          <h2 className="text-lg font-semibold">工廠用戶查詢</h2>
           <Button
             variant="ghost"
             size="sm"
@@ -97,15 +97,14 @@ export function UserSearchDrawer({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search factory users..."
+              placeholder="搜尋工廠用戶..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
               autoFocus
             />
-          </div>
           <p className="text-sm text-gray-500 mt-2">
-            Press <Kbd>Enter</Kbd> to select a user, <Kbd>Escape</Kbd> to close
+            按 <Kbd>Enter</Kbd> 選擇用戶，<Kbd>Escape</Kbd> 關閉
           </p>
         </div>
 
@@ -114,7 +113,7 @@ export function UserSearchDrawer({
           {isLoading && (
             <div className="flex items-center justify-center h-full">
               <div className="text-sm text-gray-500">
-                Loading factory users...
+                載入工廠用戶中...
               </div>
             </div>
           )}
@@ -122,10 +121,10 @@ export function UserSearchDrawer({
           {error && (
             <div className="flex flex-col items-center justify-center h-full p-4">
               <div className="text-sm text-red-600 mb-4">
-                Failed to load factory users
+                載入工廠用戶失敗
               </div>
               <Button variant="outline" size="sm" onClick={() => refetch()}>
-                Try Again
+                重試
               </Button>
             </div>
           )}
@@ -136,8 +135,8 @@ export function UserSearchDrawer({
                 <div className="flex items-center justify-center h-full">
                   <div className="text-sm text-gray-500">
                     {searchTerm
-                      ? 'No factory users found matching your search'
-                      : 'No factory users available'}
+                      ? '找不到符合您搜尋的工廠用戶'
+                      : '沒有可用的工廠用戶'}
                   </div>
                 </div>
               ) : (
@@ -145,10 +144,10 @@ export function UserSearchDrawer({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Username</TableHead>
-                        <TableHead>Full Name</TableHead>
-                        <TableHead>Department Code</TableHead>
-                        <TableHead>Department Name</TableHead>
+                        <TableHead>用戶名</TableHead>
+                        <TableHead>全名</TableHead>
+                        <TableHead>部門代碼</TableHead>
+                        <TableHead>部門名稱</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

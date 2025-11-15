@@ -11,7 +11,7 @@ import type {
   SortingState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -41,6 +41,7 @@ import {
   Search,
   Filter,
   Users,
+  Loader2,
 } from 'lucide-react';
 import type { User, UsersResponse, UsersFilters } from '../types/user.types';
 
@@ -71,12 +72,53 @@ export function UserDataTable({
   const limit = data?.limit || 10;
   const totalPages = data?.totalPages || 1;
 
+  // Optimized search function with memoization
+  const filteredUsers = useMemo(() => {
+    if (!globalFilter && !filters.role && !filters.isActive) {
+      return users;
+    }
+
+    return users.filter((user) => {
+      // Global search filter
+      if (globalFilter) {
+        const searchLower = globalFilter.toLowerCase();
+        const matchesUsername = user.username
+          .toLowerCase()
+          .includes(searchLower);
+        const matchesFullName = user.fullName
+          .toLowerCase()
+          .includes(searchLower);
+        const matchesDeptName = user.deptName
+          .toLowerCase()
+          .includes(searchLower);
+
+        if (!matchesUsername && !matchesFullName && !matchesDeptName) {
+          return false;
+        }
+      }
+
+      // Role filter
+      if (filters.role && user.role !== filters.role) {
+        return false;
+      }
+
+      // Status filter
+      if (
+        filters.isActive !== undefined &&
+        user.isActive !== filters.isActive
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [users, globalFilter, filters.role, filters.isActive]);
+
   const table = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -91,19 +133,17 @@ export function UserDataTable({
       },
     },
     manualPagination: true,
-    pageCount: totalPages,
+    pageCount: Math.ceil(filteredUsers.length / limit),
   });
 
   const handlePageChange = (newPage: number) => {
-    if (onPaginationChange) {
-      onPaginationChange(newPage + 1, limit);
-    }
+    // Client-side pagination only - no API call
+    // Parent component manages the actual API data
   };
 
   const handlePageSizeChange = (newLimit: number) => {
-    if (onPaginationChange) {
-      onPaginationChange(1, newLimit);
-    }
+    // Client-side pagination only - no API call
+    // Parent component manages the actual API data
   };
 
   // Debounce function to prevent rapid API calls
@@ -119,39 +159,50 @@ export function UserDataTable({
     };
   };
 
-  const debouncedSearchChange = useCallback(
-    debounce((value: string) => {
-      if (onFiltersChange) {
-        onFiltersChange({ ...filters, search: value || undefined });
-      }
-    }, 300),
-    [filters, onFiltersChange],
-  );
+  // Client-side search only - no API calls needed
+  // const debouncedSearchChange = useCallback(
+  //   debounce((value: string) => {
+  //     if (onFiltersChange) {
+  //       onFiltersChange({ ...filters, search: value || undefined });
+  //     }
+  //   }, 300),
+  //   [filters, onFiltersChange],
+  // );
 
   const handleSearchChange = (value: string) => {
     setGlobalFilter(value); // Update UI immediately for responsive typing
-    debouncedSearchChange(value); // Debounced parent update
+    // Client-side search only - no API calls needed
   };
+
+  // Memoized filtered count for performance
+  const filteredCount = useMemo(() => filteredUsers.length, [filteredUsers]);
+
+  // Search state for UX feedback
+  const isSearching = globalFilter && globalFilter.trim().length > 0;
+  const hasResults = filteredCount > 0;
 
   const handleRoleFilterChange = (value: string) => {
     const newRole = value === 'all' ? undefined : (value as User['role']);
-    if (onFiltersChange) {
-      onFiltersChange({ ...filters, role: newRole });
-    }
+    // Client-side filter only - no API call
+    // if (onFiltersChange) {
+    //   onFiltersChange({ ...filters, role: newRole });
+    // }
   };
 
   const handleStatusFilterChange = (value: string) => {
     const newStatus = value === 'all' ? undefined : value === 'true';
-    if (onFiltersChange) {
-      onFiltersChange({ ...filters, isActive: newStatus });
-    }
+    // Client-side filter only - no API call
+    // if (onFiltersChange) {
+    //   onFiltersChange({ ...filters, isActive: newStatus });
+    // }
   };
 
   const clearFilters = () => {
     setGlobalFilter('');
-    if (onFiltersChange) {
-      onFiltersChange({});
-    }
+    // Client-side clear only - no API call
+    // if (onFiltersChange) {
+    //   onFiltersChange({});
+    // }
   };
 
   if (isLoading) {
@@ -194,7 +245,7 @@ export function UserDataTable({
               <Users className="h-5 w-5 text-muted-foreground" />
               <span className="font-semibold">用戶</span>
               <Badge variant="secondary" className="text-xs">
-                {total}
+                {filteredCount} / {total}
               </Badge>
             </div>
 
@@ -330,7 +381,14 @@ export function UserDataTable({
                     >
                       <div className="flex flex-col items-center space-y-2">
                         <Users className="h-8 w-8 text-muted-foreground/50" />
-                        <span>找不到用戶</span>
+                        <span>
+                          {isSearching ? '搜尋中...' : '找不到符合的用戶'}
+                        </span>
+                        {isSearching && (
+                          <span className="text-sm text-muted-foreground">
+                            正在搜尋 "{globalFilter}"
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -344,7 +402,8 @@ export function UserDataTable({
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <span>
                 顯示 {(currentPage - 1) * limit + 1} 到{' '}
-                {Math.min(currentPage * limit, total)} 共 {total} 個結果
+                {Math.min(currentPage * limit, filteredCount)} 共{' '}
+                {filteredCount} 個結果
               </span>
               <Select
                 value={limit.toString()}

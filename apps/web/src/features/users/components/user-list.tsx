@@ -59,6 +59,7 @@ export function UserList() {
         filters={filters}
         onFiltersChange={(newFilters) => {
           setFilters(newFilters);
+          // Client-side filters only - reset pagination without API call
           setPagination((prev) => ({ ...prev, page: 1 }));
         }}
         onPaginationChange={handlePaginationChange}

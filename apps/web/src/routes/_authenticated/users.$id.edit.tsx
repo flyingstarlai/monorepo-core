@@ -18,7 +18,7 @@ function UserEdit() {
   const navigate = useNavigate();
   const { id } = Route.useParams();
   const updateUserMutation = useUpdateUser({
-    onSuccess: (updatedUser, variables) => {
+    onSuccess: (_updatedUser, variables) => {
       // Navigate after successful update and query invalidation
       navigate({ to: '/users/$id', params: { id: variables.id } });
     },

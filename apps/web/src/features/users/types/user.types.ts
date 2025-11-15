@@ -51,3 +51,8 @@ export interface FactoryUser {
   deptNo: string;
   deptName: string;
 }
+
+export interface FactoryDepartment {
+  deptNo: string;
+  deptName: string;
+}

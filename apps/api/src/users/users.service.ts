@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
+import { FactoryDepartmentDto } from './dto/factory-department.dto';
 
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
@@ -441,6 +442,41 @@ export class UsersService {
       );
       throw new BadRequestException(
         'Failed to retrieve factory users. Please try again later.',
+      );
+    }
+  }
+
+  async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
+    try {
+      console.log('Executing LS_FACTORY_DEPT stored procedure');
+      const result = await this.usersRepository.query('EXEC LS_FACTORY_DEPT');
+
+      console.log('Procedure result:', result);
+
+      // Map procedure results to FactoryDepartmentDto format
+      console.log('Raw procedure result items:', result);
+      const factoryDepartments = result.map((item: any, index: number) => {
+        console.log(`Mapping department item ${index}:`, item);
+        const mapped = {
+          dept_no: item.dept_no || '',
+          dept_name: item.dept_name || '',
+        };
+        console.log(`Mapped department item ${index}:`, mapped);
+        return mapped;
+      });
+
+      // Transform to camelCase for frontend
+      const camelCaseFactoryDepartments = factoryDepartments.map((item) => ({
+        deptNo: item.dept_no,
+        deptName: item.dept_name,
+      }));
+
+      console.log('Mapped factory departments:', camelCaseFactoryDepartments);
+      return camelCaseFactoryDepartments;
+    } catch (error) {
+      console.error('Error executing LS_FACTORY_DEPT procedure:', error);
+      throw new BadRequestException(
+        'Failed to retrieve factory departments. Please try again later.',
       );
     }
   }

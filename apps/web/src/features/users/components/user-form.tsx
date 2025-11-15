@@ -30,9 +30,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingOverlay } from '@/components/ui/loading';
 import { Kbd } from '@/components/ui/kbd';
 import { UserSearchDrawer } from './user-search-drawer';
+import { DepartmentSearchDrawer } from './department-search-drawer';
 
 import type {
   FactoryUser,
+  FactoryDepartment,
   User,
   CreateUserData,
   UpdateUserData,
@@ -61,15 +63,16 @@ export interface UserFormProps {
 }
 
 export function UserForm({
-                           user,
-                           onSubmit,
-                           isLoading = false,
-                           title,
-                           description,
-                           currentUserRole,
-                         }: UserFormProps) {
+  user,
+  onSubmit,
+  isLoading = false,
+  title,
+  description,
+  currentUserRole,
+}: UserFormProps) {
   const isEdit = !!user;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDeptDrawerOpen, setIsDeptDrawerOpen] = useState(false);
 
   // Get available role options based on current user's role
   const availableRoles =
@@ -84,7 +87,8 @@ export function UserForm({
       fullName: user?.fullName || '',
       deptNo: user?.deptNo || '',
       deptName: user?.deptName || '',
-      role: (user?.role as User['role']) ||
+      role:
+        (user?.role as User['role']) ||
         (availableRoles[0] as User['role']) ||
         'user',
       isActive: user?.isActive ?? true,
@@ -114,6 +118,13 @@ export function UserForm({
     form.setFieldValue('deptNo', selectedUser.deptNo);
     form.setFieldValue('deptName', selectedUser.deptName);
     setIsDrawerOpen(false);
+  };
+
+  // Handle department selection from drawer
+  const handleDepartmentSelect = (selectedDepartment: FactoryDepartment) => {
+    form.setFieldValue('deptNo', selectedDepartment.deptNo);
+    form.setFieldValue('deptName', selectedDepartment.deptName);
+    setIsDeptDrawerOpen(false);
   };
 
   return (
@@ -251,7 +262,9 @@ export function UserForm({
 
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>Department Code</FieldLabel>
+                        <FieldLabel htmlFor={field.name}>
+                          Department Code
+                        </FieldLabel>
 
                         <div className="relative">
                           <Input
@@ -261,7 +274,7 @@ export function UserForm({
                             onKeyDown={(e) => {
                               if (e.key === 'F2') {
                                 e.preventDefault();
-                                setIsDrawerOpen(true);
+                                setIsDeptDrawerOpen(true);
                               }
                             }}
                             aria-invalid={isInvalid}
@@ -276,7 +289,9 @@ export function UserForm({
                           </div>
                         </div>
 
-                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                        {isInvalid && (
+                          <FieldError errors={field.state.meta.errors} />
+                        )}
                         <FieldDescription>
                           Press <Kbd>F2</Kbd> to lookup department
                         </FieldDescription>
@@ -318,8 +333,7 @@ export function UserForm({
                     name="role"
                     children={(field) => {
                       const isInvalid =
-                        field.state.meta.isTouched &&
-                        !field.state.meta.isValid;
+                        field.state.meta.isTouched && !field.state.meta.isValid;
                       return (
                         <Field data-invalid={isInvalid}>
                           <FieldLabel htmlFor={field.name}>Role</FieldLabel>
@@ -340,9 +354,7 @@ export function UserForm({
                                 <SelectItem value="user">User</SelectItem>
                               )}
                               {availableRoles.includes('manager') && (
-                                <SelectItem value="manager">
-                                  Manager
-                                </SelectItem>
+                                <SelectItem value="manager">Manager</SelectItem>
                               )}
                               {availableRoles.includes('admin') && (
                                 <SelectItem value="admin">Admin</SelectItem>
@@ -425,6 +437,13 @@ export function UserForm({
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         onUserSelect={handleUserSelect}
+      />
+
+      {/* Department Search Drawer */}
+      <DepartmentSearchDrawer
+        isOpen={isDeptDrawerOpen}
+        onClose={() => setIsDeptDrawerOpen(false)}
+        onDepartmentSelect={handleDepartmentSelect}
       />
     </LoadingOverlay>
   );

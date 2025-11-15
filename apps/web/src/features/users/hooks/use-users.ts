@@ -7,6 +7,7 @@ import type {
   UsersFilters,
   UsersResponse,
   FactoryUser,
+  FactoryDepartment,
 } from '../types/user.types';
 
 export const useUsers = (filters?: UsersFilters) => {
@@ -117,6 +118,19 @@ export const useFactoryUsers = () => {
     queryFn: async (): Promise<FactoryUser[]> => {
       const response = await api.get('/users/factory');
       return response.data as FactoryUser[];
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+export const useFactoryDepartments = () => {
+  return useQuery({
+    queryKey: ['factory-departments'],
+    queryFn: async (): Promise<FactoryDepartment[]> => {
+      const response = await api.get('/users/factory-departments');
+      return response.data as FactoryDepartment[];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,

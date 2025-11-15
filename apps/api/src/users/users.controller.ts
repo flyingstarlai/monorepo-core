@@ -17,6 +17,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
+import { FactoryDepartmentDto } from './dto/factory-department.dto';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { User } from './entities/user.entity';
@@ -62,6 +63,16 @@ export class UsersController {
       return await this.usersService.getFactoryUsers();
     } catch (error) {
       console.error('Factory users endpoint error:', error);
+      throw error;
+    }
+  }
+
+  @Get('factory-departments')
+  async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
+    try {
+      return await this.usersService.getFactoryDepartments();
+    } catch (error) {
+      console.error('Factory departments endpoint error:', error);
       throw error;
     }
   }

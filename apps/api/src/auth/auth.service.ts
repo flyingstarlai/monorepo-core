@@ -40,7 +40,7 @@ export class AuthService {
       user: {
         id: user.id,
         username: user.username,
-        name: user.fullName,
+        fullName: user.fullName,
         role: user.role,
         avatar: null,
         isActive: user.isActive,

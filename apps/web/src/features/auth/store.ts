@@ -65,8 +65,18 @@ export const useAuthStore = create<AuthStore>()(
             refreshToken: refresh_token || null,
           });
 
-          // Return success for navigation handling
-          return { success: true, user };
+          // Immediately fetch full profile to ensure up-to-date fields (e.g. fullName)
+          try {
+            const profileRes = await api.get('/auth/profile');
+            const freshUser = profileRes.data as User;
+            set({ user: freshUser });
+
+            // Return success with latest user
+            return { success: true, user: freshUser };
+          } catch {
+            // If profile fetch fails, fall back to login payload user
+            return { success: true, user };
+          }
         } catch (error) {
           set({ isLoading: false, isAuthenticating: false });
 
@@ -84,27 +94,14 @@ export const useAuthStore = create<AuthStore>()(
 
       // Enhanced logout with cleanup
       logout: async () => {
-        set({ isLoading: true });
-
-        try {
-          // Call logout endpoint if available
-          try {
-            await api.post('/auth/logout', {});
-          } catch (error) {
-            // Continue with logout even if API call fails
-            console.warn('Logout API call failed:', error);
-          }
-        } finally {
-          // Atomic state update - tokens are cleared via Zustand persist
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            isAuthenticating: false,
-            token: null,
-            refreshToken: null,
-          });
-        }
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          isAuthenticating: false,
+          token: null,
+          refreshToken: null,
+        });
       },
 
       // Enhanced profile update

@@ -84,7 +84,6 @@ export function UserForm({
     validators: {
       onSubmit: userFormSchema as any,
       onChange: userFormSchema as any,
-      onBlur: userFormSchema as any,
     },
     onSubmit: async ({ value }) => {
       const submitData = { ...value };
@@ -166,7 +165,6 @@ export function UserForm({
                           id="username-field"
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
                           disabled={isEdit}
                           aria-invalid={isInvalid}
                           placeholder="Enter username"

@@ -141,36 +141,38 @@ export function UserSearchDrawer({
                   </div>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Username</TableHead>
-                      <TableHead>Full Name</TableHead>
-                      <TableHead>Department Code</TableHead>
-                      <TableHead>Department Name</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow
-                        key={user.username}
-                        className="cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleUserSelect(user)}
-                        onKeyDown={(e) => handleRowKeyDown(e, user)}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Select ${user.fullName} (${user.username})`}
-                      >
-                        <TableCell className="font-medium">
-                          {user.username}
-                        </TableCell>
-                        <TableCell>{user.fullName}</TableCell>
-                        <TableCell>{user.deptNo}</TableCell>
-                        <TableCell>{user.deptName}</TableCell>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Username</TableHead>
+                        <TableHead>Full Name</TableHead>
+                        <TableHead>Department Code</TableHead>
+                        <TableHead>Department Name</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow
+                          key={user.username}
+                          className="cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleUserSelect(user)}
+                          onKeyDown={(e) => handleRowKeyDown(e, user)}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Select ${user.fullName} (${user.username})`}
+                        >
+                          <TableCell className="font-medium">
+                            {user.username}
+                          </TableCell>
+                          <TableCell>{user.fullName}</TableCell>
+                          <TableCell>{user.deptNo}</TableCell>
+                          <TableCell>{user.deptName}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </div>
           )}

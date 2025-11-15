@@ -411,15 +411,29 @@ export class UsersService {
       console.log('Procedure result:', result);
 
       // Map procedure results to FactoryUserDto format
-      const factoryUsers = result.map((item: any) => ({
-        username: item.username || '',
-        full_name: item.full_name || item.fullName || '',
-        dept_no: item.dept_no || item.deptNo || '',
-        dept_name: item.dept_name || item.deptName || '',
+      console.log('Raw procedure result items:', result);
+      const factoryUsers = result.map((item: any, index: number) => {
+        console.log(`Mapping item ${index}:`, item);
+        const mapped = {
+          username: item.username || '',
+          full_name: item.full_name || '',
+          dept_no: item.dept_no || '',
+          dept_name: item.dept_name || '',
+        };
+        console.log(`Mapped item ${index}:`, mapped);
+        return mapped;
+      });
+
+      // Transform to camelCase for frontend
+      const camelCaseFactoryUsers = factoryUsers.map((item) => ({
+        username: item.username,
+        fullName: item.full_name,
+        deptNo: item.dept_no,
+        deptName: item.dept_name,
       }));
 
-      console.log('Mapped factory users:', factoryUsers);
-      return factoryUsers;
+      console.log('Mapped factory users:', camelCaseFactoryUsers);
+      return camelCaseFactoryUsers;
     } catch (error) {
       console.error(
         'Error executing LS_FACTORY_USER_ACCOUNT procedure:',

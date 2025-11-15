@@ -93,11 +93,11 @@
 
 ### 12. Backend Testing
 
-- [ ] Write unit tests for `getFactoryUsers()` method
-- [ ] Test controller endpoint with authentication
-- [ ] Test error handling scenarios
-- [ ] Verify DTO validation works correctly
-- [ ] Add integration tests for complete flow
+- [x] Write unit tests for `getFactoryUsers()` method
+- [x] Test controller endpoint with authentication
+- [x] Test error handling scenarios
+- [x] Verify DTO validation works correctly
+- [x] Add integration tests for complete flow
 
 ### 13. Frontend Testing
 

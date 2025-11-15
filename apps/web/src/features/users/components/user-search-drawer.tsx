@@ -78,7 +78,7 @@ export function UserSearchDrawer({
       />
 
       {/* Drawer */}
-      <div className="relative ml-auto h-full w-full max-w-md bg-white shadow-xl flex flex-col">
+      <div className="relative ml-auto h-full w-full max-w-2xl bg-white shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Factory User Lookup</h2>

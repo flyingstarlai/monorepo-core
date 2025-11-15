@@ -1,5 +1,7 @@
 import { useForm } from '@tanstack/react-form';
 import * as z from 'zod';
+import { useState } from 'react';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -28,15 +30,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { LoadingOverlay } from '@/components/ui/loading';
 import { Kbd } from '@/components/ui/kbd';
 import { UserSearchDrawer } from './user-search-drawer';
-import type { FactoryUser } from '../types/user.types';
 
-import type { User, CreateUserData, UpdateUserData } from '../types/user.types';
-import { useState, useEffect } from 'react';
+import type {
+  FactoryUser,
+  User,
+  CreateUserData,
+  UpdateUserData,
+} from '../types/user.types';
 import { RoleService } from '@/lib/role.service';
 
 // Zod schema for validation
 const userFormSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
+  // Optional here; we enforce required on create via UI
   password: z.string().optional(),
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   deptNo: z.string().min(1, 'Department code is required'),
@@ -47,7 +53,7 @@ const userFormSchema = z.object({
 
 export interface UserFormProps {
   user?: User; // For edit mode
-  onSubmit: (data: CreateUserData | UpdateUserData) => void;
+  onSubmit: (data: CreateUserData | UpdateUserData) => void | Promise<void>;
   isLoading?: boolean;
   title?: string;
   description?: string;
@@ -55,13 +61,13 @@ export interface UserFormProps {
 }
 
 export function UserForm({
-  user,
-  onSubmit,
-  isLoading = false,
-  title,
-  description,
-  currentUserRole,
-}: UserFormProps) {
+                           user,
+                           onSubmit,
+                           isLoading = false,
+                           title,
+                           description,
+                           currentUserRole,
+                         }: UserFormProps) {
   const isEdit = !!user;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -74,11 +80,13 @@ export function UserForm({
   const form = useForm({
     defaultValues: {
       username: user?.username || '',
-      password: user ? '' : '', // Empty password for both new and edit
+      password: '',
       fullName: user?.fullName || '',
       deptNo: user?.deptNo || '',
       deptName: user?.deptName || '',
-      role: user?.role || (availableRoles[0] as User['role']) || 'user',
+      role: (user?.role as User['role']) ||
+        (availableRoles[0] as User['role']) ||
+        'user',
       isActive: user?.isActive ?? true,
     },
     validators: {
@@ -88,34 +96,16 @@ export function UserForm({
     onSubmit: async ({ value }) => {
       const submitData = { ...value };
 
-      // Don't send password if it's empty in edit mode
+      // In edit mode, if password is empty, don't send it
       if (isEdit && !submitData.password) {
         const { password, ...dataWithoutPassword } = submitData;
-        await onSubmit(dataWithoutPassword);
+        await onSubmit(dataWithoutPassword as UpdateUserData);
         return;
       }
 
-      await onSubmit(submitData);
+      await onSubmit(submitData as CreateUserData | UpdateUserData);
     },
   });
-
-  // Handle F2 key press in username field
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F2') {
-        e.preventDefault();
-        setIsDrawerOpen(true);
-      }
-    };
-
-    const usernameField = document.getElementById('username-field');
-    if (usernameField) {
-      usernameField.addEventListener('keydown', handleKeyDown);
-      return () => {
-        usernameField.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, []);
 
   // Handle user selection from drawer
   const handleUserSelect = (selectedUser: FactoryUser) => {
@@ -152,7 +142,9 @@ export function UserForm({
             className="space-y-6"
           >
             <FieldGroup>
+              {/* Single grid for all fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Username */}
                 <form.Field
                   name="username"
                   children={(field) => {
@@ -161,14 +153,28 @@ export function UserForm({
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>Username</FieldLabel>
-                        <Input
-                          id="username-field"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          disabled={isEdit}
-                          aria-invalid={isInvalid}
-                          placeholder="Enter username"
-                        />
+                        <div className="relative">
+                          <Input
+                            id="username-field"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'F2') {
+                                e.preventDefault();
+                                setIsDrawerOpen(true);
+                              }
+                            }}
+                            disabled={isEdit}
+                            aria-invalid={isInvalid}
+                            placeholder="Enter username"
+                            className={!isEdit ? 'pr-12' : undefined}
+                          />
+                          {!isEdit && (
+                            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
+                              <Kbd>F2</Kbd>
+                            </div>
+                          )}
+                        </div>
                         {isInvalid && (
                           <FieldError errors={field.state.meta.errors} />
                         )}
@@ -177,14 +183,12 @@ export function UserForm({
                             Press <Kbd>F2</Kbd> to lookup factory users
                           </FieldDescription>
                         )}
-                        {isInvalid && (
-                          <FieldError errors={field.state.meta.errors} />
-                        )}
                       </Field>
                     );
                   }}
                 />
 
+                {/* Password */}
                 <form.Field
                   name="password"
                   children={(field) => {
@@ -200,13 +204,8 @@ export function UserForm({
                           type="password"
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
                           aria-invalid={isInvalid}
-                          placeholder={
-                            isEdit
-                              ? 'Leave blank to keep current password'
-                              : 'Enter password'
-                          }
+                          placeholder="Enter password"
                           required={!isEdit}
                         />
                         {isInvalid && (
@@ -216,51 +215,22 @@ export function UserForm({
                     );
                   }}
                 />
-              </div>
 
-              <form.Field
-                name="fullName"
-                children={(field) => {
-                  const isInvalid =
-                    field.state.meta.isTouched && !field.state.meta.isValid;
-                  return (
-                    <Field data-invalid={isInvalid}>
-                      <FieldLabel htmlFor={field.name}>Full Name</FieldLabel>
-                      <Input
-                        id={field.name}
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        onBlur={field.handleBlur}
-                        aria-invalid={isInvalid}
-                        placeholder="Enter full name"
-                        required
-                      />
-                      {isInvalid && (
-                        <FieldError errors={field.state.meta.errors} />
-                      )}
-                    </Field>
-                  );
-                }}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Full Name */}
                 <form.Field
-                  name="deptNo"
+                  name="fullName"
                   children={(field) => {
                     const isInvalid =
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>
-                          Department Code
-                        </FieldLabel>
+                        <FieldLabel htmlFor={field.name}>Full Name</FieldLabel>
                         <Input
                           id={field.name}
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
                           aria-invalid={isInvalid}
-                          placeholder="e.g., IT001"
+                          placeholder="Enter full name"
                           required
                         />
                         {isInvalid && (
@@ -271,6 +241,51 @@ export function UserForm({
                   }}
                 />
 
+                {/* Dept Code */}
+                {/* Dept Code */}
+                <form.Field
+                  name="deptNo"
+                  children={(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>Department Code</FieldLabel>
+
+                        <div className="relative">
+                          <Input
+                            id="deptno-field"
+                            value={field.state.value}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'F2') {
+                                e.preventDefault();
+                                setIsDrawerOpen(true);
+                              }
+                            }}
+                            aria-invalid={isInvalid}
+                            placeholder="e.g., 21110"
+                            required
+                            className="pr-12"
+                          />
+
+                          {/* F2 suffix */}
+                          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
+                            <Kbd>F2</Kbd>
+                          </div>
+                        </div>
+
+                        {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                        <FieldDescription>
+                          Press <Kbd>F2</Kbd> to lookup department
+                        </FieldDescription>
+                      </Field>
+                    );
+                  }}
+                />
+
+                {/* Dept Name */}
                 <form.Field
                   name="deptName"
                   children={(field) => {
@@ -285,9 +300,8 @@ export function UserForm({
                           id={field.name}
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
                           aria-invalid={isInvalid}
-                          placeholder="e.g., Information Technology"
+                          placeholder="e.g., 技術傳承委員會"
                           required
                         />
                         {isInvalid && (
@@ -297,15 +311,15 @@ export function UserForm({
                     );
                   }}
                 />
-              </div>
 
-              {canSelectRole && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Role / Role Warning */}
+                {canSelectRole ? (
                   <form.Field
                     name="role"
                     children={(field) => {
                       const isInvalid =
-                        field.state.meta.isTouched && !field.state.meta.isValid;
+                        field.state.meta.isTouched &&
+                        !field.state.meta.isValid;
                       return (
                         <Field data-invalid={isInvalid}>
                           <FieldLabel htmlFor={field.name}>Role</FieldLabel>
@@ -316,7 +330,7 @@ export function UserForm({
                                 value as 'admin' | 'manager' | 'user',
                               )
                             }
-                            disabled={isEdit && !canEditRole} // Only admins can change roles
+                            disabled={isEdit && !canEditRole}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select role" />
@@ -326,7 +340,9 @@ export function UserForm({
                                 <SelectItem value="user">User</SelectItem>
                               )}
                               {availableRoles.includes('manager') && (
-                                <SelectItem value="manager">Manager</SelectItem>
+                                <SelectItem value="manager">
+                                  Manager
+                                </SelectItem>
                               )}
                               {availableRoles.includes('admin') && (
                                 <SelectItem value="admin">Admin</SelectItem>
@@ -345,26 +361,27 @@ export function UserForm({
                       );
                     }}
                   />
-                </div>
-              )}
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 md:col-span-2">
+                    <p className="text-sm text-yellow-800">
+                      Your role doesn&apos;t have permission to create users
+                      with specific roles.
+                    </p>
+                  </div>
+                )}
 
-              {!canSelectRole && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                  <p className="text-sm text-yellow-800">
-                    Your role doesn't have permission to create users with
-                    specific roles.
-                  </p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Status */}
                 <form.Field
                   name="isActive"
                   children={(field) => {
                     const isInvalid =
                       field.state.meta.isTouched && !field.state.meta.isValid;
                     return (
-                      <Field orientation="horizontal" data-invalid={isInvalid}>
+                      <Field
+                        orientation="horizontal"
+                        data-invalid={isInvalid}
+                        className="md:col-span-2"
+                      >
                         <FieldContent>
                           <FieldLabel htmlFor={field.name}>Status</FieldLabel>
                           <FieldDescription>

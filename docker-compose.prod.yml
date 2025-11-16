@@ -1,6 +1,6 @@
 services:
   api:
-    image: twsbpmac/starter-api:latest
+    image: twsbpmac/acm-api:latest
     container_name: account-manager-api-prod
     ports:
       - '3000:3000'
@@ -44,7 +44,7 @@ services:
         max-file: '3'
 
   web:
-    image: twsbpmac/starter-web:latest
+    image: twsbpnac/acm:latest
     container_name: account-manager-web-prod
     ports:
       - '80:80'

@@ -1,0 +1,65 @@
+# Ultra-optimized multi-stage build for NestJS API
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install pnpm globally
+RUN npm install -g pnpm@8.15.5 && npm cache clean --force
+
+# Copy only essential package files first for better layer caching
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/api/package.json ./packages/api/
+
+# Install only production dependencies for builder
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy source code
+COPY apps/api ./apps/api
+COPY packages/api ./packages/api
+COPY turbo.json ./
+
+# Build the application
+RUN pnpm run build --filter=app-starter-api
+
+# Production stage - minimal runtime
+FROM node:20-alpine AS production
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nestjs -u 1001 -G nodejs
+
+# Set working directory
+WORKDIR /app
+
+# Copy only essential files
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/apps/api/package.json ./apps/api/
+COPY --from=builder /app/packages/api ./packages/api
+COPY --from=builder /app/node_modules ./node_modules
+
+# Create necessary directories and set permissions
+RUN mkdir -p /app/apps/api/dist && \
+    chown -R nestjs:nodejs /app
+
+# Switch to non-root user
+USER nestjs
+
+# Expose port
+EXPOSE 3000
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Start the application with dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "apps/api/dist/main.js"]

@@ -1,13 +1,15 @@
 #!/bin/bash
 
 # Build and push API Docker image to Docker Hub
+# Target: twsbpmac/acm-api
+# Target size: 500-600MB
 # Usage: ./scripts/build-api.sh [version]
 
 set -e
 
 # Configuration
-IMAGE_NAME="twsbpmac/starter-api"
-DOCKERFILE="apps/api/Dockerfile"
+IMAGE_NAME="twsbpmac/acm-api"
+DOCKERFILE="apps/api/Dockerfile.optimized"
 BUILD_CONTEXT="."
 
 # Get version from argument or package.json
@@ -36,6 +38,7 @@ fi
 
 # Build the image
 echo "📦 Building Docker image..."
+echo "Target size: 500-600MB"
 docker build \
     -f "${DOCKERFILE}" \
     -t "${IMAGE_LATEST}" \
@@ -45,15 +48,38 @@ docker build \
 echo "✅ Build completed successfully!"
 echo ""
 
-# Show image information
+# Show image information and size
 echo "📋 Image information:"
+IMAGE_SIZE=$(docker images "${IMAGE_NAME}:${VERSION}" --format "table {{.Size}}" | tail -n 1)
+echo "Size: ${IMAGE_SIZE}"
 docker images | grep "${IMAGE_NAME}" || echo "No images found"
 echo ""
 
-# Ask for confirmation before pushing
-read -p "📤 Push images to Docker Hub? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+# Check if size is within target range
+if [[ $IMAGE_SIZE == *"GB"* ]]; then
+    echo "⚠️  Warning: Image size is over 1GB"
+elif [[ $IMAGE_SIZE == *"MB"* ]]; then
+    SIZE_MB=$(echo "$IMAGE_SIZE" | sed 's/MB//g' | awk '{print $1}')
+    if [ "$SIZE_MB" -gt 600 ]; then
+        echo "⚠️  Warning: Image size exceeds 600MB target"
+    elif [ "$SIZE_MB" -lt 500 ]; then
+        echo "✅ Great: Image size is within target range (500-600MB)"
+    else
+        echo "✅ Good: Image size is close to target range"
+    fi
+fi
+echo ""
+
+# Check for auto-push flag
+if [ "$2" = "--auto-push" ]; then
+    AUTO_PUSH=true
+else
+    AUTO_PUSH=false
+fi
+
+# Push images
+if [ "$AUTO_PUSH" = true ]; then
+    echo "📤 Auto-pushing images to Docker Hub..."
     echo "🚀 Pushing ${IMAGE_LATEST}..."
     docker push "${IMAGE_LATEST}"
     
@@ -61,12 +87,25 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     docker push "${IMAGE_VERSIONED}"
     
     echo "✅ Images pushed successfully!"
-    echo ""
-    echo "🔗 Available images:"
-    echo "  - ${IMAGE_LATEST}"
-    echo "  - ${IMAGE_VERSIONED}"
 else
-    echo "❌ Push cancelled. Images built locally only."
+    # Ask for confirmation before pushing
+    read -p "📤 Push images to Docker Hub? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "🚀 Pushing ${IMAGE_LATEST}..."
+        docker push "${IMAGE_LATEST}"
+        
+        echo "🚀 Pushing ${IMAGE_VERSIONED}..."
+        docker push "${IMAGE_VERSIONED}"
+        
+        echo "✅ Images pushed successfully!"
+        echo ""
+        echo "🔗 Available images:"
+        echo "  - ${IMAGE_LATEST}"
+        echo "  - ${IMAGE_VERSIONED}"
+    else
+        echo "❌ Push cancelled. Images built locally only."
+    fi
 fi
 
 echo ""

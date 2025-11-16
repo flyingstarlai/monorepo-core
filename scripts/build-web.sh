@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Build and push Web Docker image to Docker Hub
+# Target: twsbpnac/acm
 # Usage: ./scripts/build-web.sh [version]
 
 set -e
 
 # Configuration
-IMAGE_NAME="twsbpmac/starter-web"
-DOCKERFILE="apps/web/Dockerfile"
+IMAGE_NAME="twsbpnac/acm"
+DOCKERFILE="apps/web/Dockerfile.optimized"
 BUILD_CONTEXT="."
 
 # Get version from argument or package.json
@@ -53,15 +54,23 @@ docker build \
 echo "✅ Build completed successfully!"
 echo ""
 
-# Show image information
+# Show image information and size
 echo "📋 Image information:"
+IMAGE_SIZE=$(docker images "${IMAGE_NAME}:${VERSION}" --format "table {{.Size}}" | tail -n 1)
+echo "Size: ${IMAGE_SIZE}"
 docker images | grep "${IMAGE_NAME}" || echo "No images found"
 echo ""
 
-# Ask for confirmation before pushing
-read -p "📤 Push images to Docker Hub? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+# Check for auto-push flag
+if [ "$2" = "--auto-push" ]; then
+    AUTO_PUSH=true
+else
+    AUTO_PUSH=false
+fi
+
+# Push images
+if [ "$AUTO_PUSH" = true ]; then
+    echo "📤 Auto-pushing images to Docker Hub..."
     echo "🚀 Pushing ${IMAGE_LATEST}..."
     docker push "${IMAGE_LATEST}"
     
@@ -69,12 +78,25 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     docker push "${IMAGE_VERSIONED}"
     
     echo "✅ Images pushed successfully!"
-    echo ""
-    echo "🔗 Available images:"
-    echo "  - ${IMAGE_LATEST}"
-    echo "  - ${IMAGE_VERSIONED}"
 else
-    echo "❌ Push cancelled. Images built locally only."
+    # Ask for confirmation before pushing
+    read -p "📤 Push images to Docker Hub? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "🚀 Pushing ${IMAGE_LATEST}..."
+        docker push "${IMAGE_LATEST}"
+        
+        echo "🚀 Pushing ${IMAGE_VERSIONED}..."
+        docker push "${IMAGE_VERSIONED}"
+        
+        echo "✅ Images pushed successfully!"
+        echo ""
+        echo "🔗 Available images:"
+        echo "  - ${IMAGE_LATEST}"
+        echo "  - ${IMAGE_VERSIONED}"
+    else
+        echo "❌ Push cancelled. Images built locally only."
+    fi
 fi
 
 echo ""

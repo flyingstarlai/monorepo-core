@@ -2,7 +2,6 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table';
@@ -11,7 +10,7 @@ import type {
   SortingState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -41,7 +40,6 @@ import {
   Search,
   Filter,
   Users,
-  Loader2,
 } from 'lucide-react';
 import type { User, UsersResponse, UsersFilters } from '../types/user.types';
 
@@ -59,8 +57,6 @@ export function UserDataTable({
   isLoading,
   columns,
   filters = {},
-  onFiltersChange,
-  onPaginationChange,
 }: UserDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -136,27 +132,14 @@ export function UserDataTable({
     pageCount: Math.ceil(filteredUsers.length / limit),
   });
 
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = () => {
     // Client-side pagination only - no API call
     // Parent component manages the actual API data
   };
 
-  const handlePageSizeChange = (newLimit: number) => {
+  const handlePageSizeChange = () => {
     // Client-side pagination only - no API call
     // Parent component manages the actual API data
-  };
-
-  // Debounce function to prevent rapid API calls
-  const debounce = (func: Function, wait: number) => {
-    let timeout: NodeJS.Timeout;
-    return function executedFunction(...args: any[]) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
   };
 
   // Client-side search only - no API calls needed
@@ -179,21 +162,18 @@ export function UserDataTable({
 
   // Search state for UX feedback
   const isSearching = globalFilter && globalFilter.trim().length > 0;
-  const hasResults = filteredCount > 0;
 
-  const handleRoleFilterChange = (value: string) => {
-    const newRole = value === 'all' ? undefined : (value as User['role']);
+  const handleRoleFilterChange = () => {
     // Client-side filter only - no API call
     // if (onFiltersChange) {
-    //   onFiltersChange({ ...filters, role: newRole });
+    //   onFiltersChange({ ...filters, role: value === 'all' ? undefined : (value as User['role']) });
     // }
   };
 
-  const handleStatusFilterChange = (value: string) => {
-    const newStatus = value === 'all' ? undefined : value === 'true';
+  const handleStatusFilterChange = () => {
     // Client-side filter only - no API call
     // if (onFiltersChange) {
-    //   onFiltersChange({ ...filters, isActive: newStatus });
+    //   onFiltersChange({ ...filters, isActive: value === 'all' ? undefined : value === 'true' });
     // }
   };
 
@@ -265,7 +245,7 @@ export function UserDataTable({
               {/* Role Filter */}
               <Select
                 value={filters.role || 'all'}
-                onValueChange={handleRoleFilterChange}
+                onValueChange={() => handleRoleFilterChange()}
               >
                 <SelectTrigger className="w-32 h-9 text-sm">
                   <SelectValue placeholder="角色" />
@@ -285,7 +265,7 @@ export function UserDataTable({
                     ? 'all'
                     : filters.isActive.toString()
                 }
-                onValueChange={handleStatusFilterChange}
+                onValueChange={() => handleStatusFilterChange()}
               >
                 <SelectTrigger className="w-32 h-9 text-sm">
                   <SelectValue placeholder="狀態" />
@@ -407,7 +387,7 @@ export function UserDataTable({
               </span>
               <Select
                 value={limit.toString()}
-                onValueChange={(value) => handlePageSizeChange(Number(value))}
+                onValueChange={() => handlePageSizeChange()}
               >
                 <SelectTrigger className="w-16 h-8 text-xs">
                   <SelectValue />
@@ -430,7 +410,7 @@ export function UserDataTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(0)}
+                onClick={() => handlePageChange()}
                 disabled={!table.getCanPreviousPage()}
                 className="h-8 px-3 text-xs"
               >
@@ -456,7 +436,7 @@ export function UserDataTable({
                       key={pageNum}
                       variant={currentPage === pageNum ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => handlePageChange(pageNum - 1)}
+                      onClick={() => handlePageChange()}
                       className="w-8 h-8 p-0 text-xs"
                     >
                       {pageNum}
@@ -468,7 +448,7 @@ export function UserDataTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange(currentPage)}
+                onClick={() => handlePageChange()}
                 disabled={!table.getCanNextPage()}
                 className="h-8 px-3 text-xs"
               >

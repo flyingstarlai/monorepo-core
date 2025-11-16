@@ -26,8 +26,22 @@ export const useLogin = () => {
       // Navigate to intended destination after login
       const intended =
         localStorage.getItem('intended_destination') || '/dashboard';
+
+      // Validate navigation target
+      const safeDestination =
+        typeof intended === 'string' && intended.startsWith('/')
+          ? intended
+          : '/dashboard';
+
+      console.log(
+        'Login: Navigating to:',
+        safeDestination,
+        '(original:',
+        intended,
+        ')',
+      );
       localStorage.removeItem('intended_destination');
-      router.navigate({ to: intended });
+      router.navigate({ to: safeDestination });
     },
     onError: (error) => {
       // Log error for debugging

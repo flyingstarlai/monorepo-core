@@ -3,6 +3,7 @@ import { UserForm } from '@/features/users/components/user-form';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useUpdateUser, useUser } from '@/features/users/hooks/use-users';
 import { useNavigate } from '@tanstack/react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
@@ -16,11 +17,18 @@ export const Route = createFileRoute('/_authenticated/users/$id/edit')({
 function UserEdit() {
   const { user: currentUser } = useAuthContext();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { id } = Route.useParams();
   const updateUserMutation = useUpdateUser({
-    onSuccess: (_updatedUser, variables) => {
+    onSuccess: async (_updatedUser, { id: userId }) => {
+      // Prefetch detail data before navigation to ensure fresh content
+      await queryClient.prefetchQuery({ queryKey: ['user', userId] });
       // Navigate after successful update and query invalidation
-      navigate({ to: '/users/$id', params: { id: variables.id } });
+      navigate({
+        to: '/users/$id/view',
+        params: { id: userId },
+        replace: true,
+      });
     },
   });
 
@@ -57,7 +65,7 @@ function UserEdit() {
   return (
     <div className="max-w-2xl space-y-4">
       {/* Back Button */}
-      <Link to="/users/$id" params={{ id }} replace>
+      <Link to="/users/$id/view" params={{ id }} replace preload="intent">
         <Button
           variant="outline"
           size="sm"

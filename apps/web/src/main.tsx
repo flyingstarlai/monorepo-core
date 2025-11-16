@@ -30,11 +30,11 @@ const authInit = useAuthStore.getState().initializeAuth();
 // Role helper functions
 const createAuthHelpers = (user: typeof initialAuth.user) => ({
   hasRole: (role: 'admin' | 'manager' | 'user') =>
-    RoleService.hasRole(user?.role, role),
+    user?.role ? RoleService.hasRole(user.role, role) : false,
   hasAnyRole: (roles: ('admin' | 'manager' | 'user')[]) =>
-    RoleService.hasAnyRole(user?.role, roles),
+    user?.role ? RoleService.hasAnyRole(user.role, roles) : false,
   hasMinimumRole: (minimumRole: 'admin' | 'manager' | 'user') =>
-    RoleService.hasMinimumRole(user?.role, minimumRole),
+    user?.role ? RoleService.hasMinimumRole(user.role, minimumRole) : false,
   getPermissions: () => RoleService.getPermissions(user?.role),
 });
 

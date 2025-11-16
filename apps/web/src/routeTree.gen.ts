@@ -21,6 +21,7 @@ import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenti
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
+import { Route as AuthenticatedUsersIdViewRouteImport } from './routes/_authenticated/users.$id.view'
 import { Route as AuthenticatedUsersIdEditRouteImport } from './routes/_authenticated/users.$id.edit'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
@@ -85,6 +86,12 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedUsersIdViewRoute =
+  AuthenticatedUsersIdViewRouteImport.update({
+    id: '/view',
+    path: '/view',
+    getParentRoute: () => AuthenticatedUsersIdRoute,
+  } as any)
 const AuthenticatedUsersIdEditRoute =
   AuthenticatedUsersIdEditRouteImport.update({
     id: '/edit',
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
+  '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
+  '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +143,7 @@ export interface FileRoutesById {
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
+  '/_authenticated/users/$id/view': typeof AuthenticatedUsersIdViewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/users/create'
     | '/users/'
     | '/users/$id/edit'
+    | '/users/$id/view'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/users/create'
     | '/users'
     | '/users/$id/edit'
+    | '/users/$id/view'
   id:
     | '__root__'
     | '/'
@@ -178,6 +190,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users/create'
     | '/_authenticated/users/'
     | '/_authenticated/users/$id/edit'
+    | '/_authenticated/users/$id/view'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -273,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/users/$id/view': {
+      id: '/_authenticated/users/$id/view'
+      path: '/view'
+      fullPath: '/users/$id/view'
+      preLoaderRoute: typeof AuthenticatedUsersIdViewRouteImport
+      parentRoute: typeof AuthenticatedUsersIdRoute
+    }
     '/_authenticated/users/$id/edit': {
       id: '/_authenticated/users/$id/edit'
       path: '/edit'
@@ -300,10 +320,12 @@ const AuthenticatedSettingsRouteWithChildren =
 
 interface AuthenticatedUsersIdRouteChildren {
   AuthenticatedUsersIdEditRoute: typeof AuthenticatedUsersIdEditRoute
+  AuthenticatedUsersIdViewRoute: typeof AuthenticatedUsersIdViewRoute
 }
 
 const AuthenticatedUsersIdRouteChildren: AuthenticatedUsersIdRouteChildren = {
   AuthenticatedUsersIdEditRoute: AuthenticatedUsersIdEditRoute,
+  AuthenticatedUsersIdViewRoute: AuthenticatedUsersIdViewRoute,
 }
 
 const AuthenticatedUsersIdRouteWithChildren =

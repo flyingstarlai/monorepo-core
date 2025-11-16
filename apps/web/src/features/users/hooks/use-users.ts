@@ -28,6 +28,8 @@ export const useUser = (id: string) => {
       const response = await api.get(`/users/${id}`);
       return response.data as User;
     },
+    // Force a refetch when detail page mounts after redirect
+    refetchOnMount: 'always',
     staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!id,
   });
@@ -66,10 +68,18 @@ export const useUpdateUser = (options?: {
       const response = await api.put(`/users/${id}`, data);
       return response.data as User;
     },
-    onSuccess: (updatedUser, variables) => {
-      // Update cache directly with fresh data
-      queryClient.setQueryData(['user', variables.id], updatedUser);
-      queryClient.invalidateQueries({ queryKey: ['users'] }); // Only invalidate list
+    onSuccess: async (updatedUser, variables) => {
+      // If API ever returns empty body, force a refetch; otherwise seed cache for instant UI
+      if (updatedUser) {
+        queryClient.setQueryData(['user', variables.id], updatedUser);
+      }
+      // Always ensure detail page has fresh data
+      await queryClient.invalidateQueries({ queryKey: ['user', variables.id] });
+      await queryClient.refetchQueries({
+        queryKey: ['user', variables.id],
+        type: 'active',
+      });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
 
       // Call custom success callback if provided
       if (options?.onSuccess) {

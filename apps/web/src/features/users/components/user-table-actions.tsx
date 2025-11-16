@@ -22,7 +22,7 @@ export function useUserTableActions({ onRefresh }: UserTableActionsProps = {}) {
   const toggleStatusMutation = useToggleUserStatus();
 
   const handleView = (user: User) => {
-    navigate({ to: '/users/$id', params: { id: user.id } });
+    navigate({ to: '/users/$id/view', params: { id: user.id } });
   };
 
   const handleEdit = (user: User) => {

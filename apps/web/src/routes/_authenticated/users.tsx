@@ -5,7 +5,7 @@ import {
   Link,
 } from '@tanstack/react-router';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
-import { useLocation } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 
 export const Route = createFileRoute('/_authenticated/users')({
@@ -25,17 +25,15 @@ export const Route = createFileRoute('/_authenticated/users')({
 
 function UsersLayout() {
   const { user } = useAuthContext();
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const router = useRouter();
 
-  // Check if we're on the main users list page
-  const isUsersIndex = currentPath === '/users' || currentPath === '/users/';
+  // Check if we're on main users list page using regex to detect user action routes
+  const userActionRoutes = /^\/users\/(create|\d+\/view(\/edit)?)$/;
+  const isUsersIndex = !userActionRoutes.test(router.state.location.pathname);
 
   // Determine create user link based on role
   const getCreateUserLink = () => {
-    if (user?.role === 'admin') {
-      return '/users/create';
-    } else if (user?.role === 'manager') {
+    if (user?.role === 'admin' || user?.role === 'manager') {
       return '/users/create';
     }
     return undefined;

@@ -19,11 +19,16 @@ export const Route = createFileRoute('/login')({
 });
 
 function Login() {
-  const search = useSearch({ from: '/login' });
+  const search = useSearch({ from: '/login' }) as { redirect?: string };
 
   useEffect(() => {
     // Check for redirect parameter using TanStack Router search params
-    if (search.redirect && search.redirect !== '/login') {
+    if (
+      search.redirect &&
+      typeof search.redirect === 'string' &&
+      search.redirect !== '/login'
+    ) {
+      console.log('Login: Storing intended destination:', search.redirect);
       localStorage.setItem('intended_destination', search.redirect);
     }
   }, [search.redirect]);

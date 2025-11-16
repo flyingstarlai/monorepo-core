@@ -34,9 +34,8 @@ RUN apk add --no-cache curl && \
     rm -rf /var/cache/apk/* && \
     rm -rf /tmp/*
 
-# Create non-root user
-RUN addgroup -g 1001 -S nginx && \
-    adduser -S webuser -u 1001 -G nginx
+# Create non-root user (nginx group already exists)
+RUN adduser -S webuser -u 1001 -G nginx
 
 # Copy optimized nginx configuration
 COPY apps/web/nginx.conf /etc/nginx/nginx.conf

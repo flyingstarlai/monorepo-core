@@ -11,13 +11,17 @@ RUN npm install -g pnpm@8.15.5 && npm cache clean --force
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/api/package.json ./packages/api/
+COPY packages/eslint-config/package.json ./packages/eslint-config/
+COPY packages/typescript-config/package.json ./packages/typescript-config/
 
-# Install only production dependencies for builder
-RUN pnpm install --frozen-lockfile --prod
+# Install all dependencies for building (including turbo)
+RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY apps/api ./apps/api
 COPY packages/api ./packages/api
+COPY packages/eslint-config ./packages/eslint-config
+COPY packages/typescript-config ./packages/typescript-config
 COPY turbo.json ./
 
 # Build the application
@@ -26,8 +30,10 @@ RUN pnpm run build --filter=app-starter-api
 # Production stage - minimal runtime
 FROM node:20-alpine AS production
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Install dumb-init for proper signal handling and clean up
+RUN apk add --no-cache dumb-init && \
+    apk del --purge && \
+    rm -rf /var/cache/apk/*
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -36,15 +42,14 @@ RUN addgroup -g 1001 -S nodejs && \
 # Set working directory
 WORKDIR /app
 
-# Copy only essential files
+# Copy built application and production node_modules
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/packages/api ./packages/api
 COPY --from=builder /app/node_modules ./node_modules
 
-# Create necessary directories and set permissions
-RUN mkdir -p /app/apps/api/dist && \
-    chown -R nestjs:nodejs /app
+# Set permissions
+RUN chown -R nestjs:nodejs /app
 
 # Switch to non-root user
 USER nestjs

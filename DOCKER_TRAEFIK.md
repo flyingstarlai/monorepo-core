@@ -26,7 +26,7 @@ This Docker Compose configuration includes ACM services with Traefik reverse pro
 
 2. **Environment Variables**: Copy and configure the environment file:
    ```bash
-   cp .env.traefik.example .env.traefik
+   cp .env .env.traefik
    ```
 
 ## Deployment

@@ -87,7 +87,7 @@
 ./scripts/build-web.sh
 
 # Build Both
-./scripts/build-all-docker.sh
+./scripts/build-all.sh
 
 # Deploy with Docker Compose
 docker-compose -f docker-compose.prod.yml up -d

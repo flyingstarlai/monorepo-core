@@ -37,10 +37,10 @@ This guide covers building and deploying the Account Manager application using D
 
 ```bash
 # Build both images with version from package.json
-./scripts/build-all-docker.sh
+./scripts/build-all.sh
 
 # Build both images with specific version
-./scripts/build-all-docker.sh v1.0.0
+./scripts/build-all.sh v1.0.0
 ```
 
 ## Dockerfiles

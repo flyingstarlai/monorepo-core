@@ -3,7 +3,7 @@
 # Build and Push All Docker Images
 # API: twsbpmac/acm-api (target: 500-600MB)
 # Web: twsbpnac/acm
-# Usage: ./scripts/build-all-docker.sh [version]
+# Usage: ./scripts/build-all.sh [version]
 
 set -e
 

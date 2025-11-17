@@ -27,7 +27,7 @@ COPY packages/ui ./packages/ui
 COPY turbo.json ./
 
 # Build the application
-RUN pnpm run build --filter=app-starter-web
+RUN pnpm run build --filter=acm-web
 
 # Production stage with Nginx
 FROM nginx:alpine AS production

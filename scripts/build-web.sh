@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Build and push Web Docker image to Docker Hub
-# Target: twsbpnac/acm
+# Target: twsbpmac/acm
 # Usage: ./scripts/build-web.sh [version]
 
 set -e
 
 # Configuration
-IMAGE_NAME="twsbpnac/acm"
+IMAGE_NAME="twsbpmac/acm"
 DOCKERFILE="apps/web/Dockerfile.optimized"
 BUILD_CONTEXT="."
 

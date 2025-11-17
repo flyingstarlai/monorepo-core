@@ -2,7 +2,7 @@
 
 # Build and Push All Docker Images
 # API: twsbpmac/acm-api (target: 500-600MB)
-# Web: twsbpnac/acm
+# Web: twsbpmac/acm
 # Usage: ./scripts/build-all.sh [version]
 
 set -e
@@ -29,7 +29,7 @@ echo ""
 
 # Build Web image
 echo "📦 Building Web Image..."
-echo "Target: twsbpnac/acm"
+echo "Target: twsbpmac/acm"
 ./scripts/build-web.sh "$VERSION" --auto-push
 
 echo ""
@@ -37,8 +37,8 @@ echo "🎉 All images built and pushed successfully!"
 echo ""
 echo "📋 Summary:"
 echo "  API: twsbpmac/acm-api:$VERSION"
-echo "  Web: twsbpnac/acm:$VERSION"
+echo "  Web: twsbpmac/acm:$VERSION"
 echo ""
 echo "🚀 To run both services:"
 echo "  API: docker run -d -p 3000:3000 --name acm-api twsbpmac/acm-api:$VERSION"
-echo "  Web: docker run -d -p 80:80 --name acm-web twsbpnac/acm:$VERSION"
+echo "  Web: docker run -d -p 80:80 --name acm-web twsbpmac/acm:$VERSION"

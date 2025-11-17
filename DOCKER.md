@@ -7,7 +7,7 @@ This guide covers building and deploying the Account Manager application using D
 ## Images
 
 - **API**: `twsbpmac/acm-api` (target size: 500-600MB)
-- **Web**: `twsbpnac/acm`
+- **Web**: `twsbpmac/acm`
 
 ## Build Scripts
 

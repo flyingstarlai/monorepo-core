@@ -1,8 +1,8 @@
 {
-  "name": "app-starter",
+  "name": "acm",
   "version": "0.0.0",
   "private": true,
-  "description": "App Starter - A modern web application starter template",
+  "description": "ACM - Account Manager Application",
   "author": "",
   "license": "UNLICENSED",
   "scripts": {

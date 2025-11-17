@@ -27,7 +27,7 @@ COPY packages/typescript-config ./packages/typescript-config
 COPY turbo.json ./
 
 # Build the application
-RUN pnpm run build --filter=app-starter-api
+RUN pnpm run build --filter=acm-api
 
 # Production stage
 FROM node:20-alpine AS production

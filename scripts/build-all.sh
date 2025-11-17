@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# Build and push all Docker images to Docker Hub
-# Usage: ./scripts/build-all.sh [version]
+# Build and Push All Docker Images
+# API: twsbpmac/acm-api (target: 500-600MB)
+# Web: twsbpnac/acm
+# Usage: ./scripts/build-all-docker.sh [version]
 
 set -e
-
-# Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Get version from argument or package.json
 if [ -n "$1" ]; then
@@ -16,52 +14,31 @@ else
     VERSION=$(node -p "require('./package.json').version")
 fi
 
-echo "🚀 Building all Docker images..."
+echo "🚀 Building All Docker Images for Account Manager"
 echo "Version: ${VERSION}"
-echo "Project Root: ${PROJECT_ROOT}"
 echo ""
-
-# Change to project root directory
-cd "$PROJECT_ROOT"
-
-# Function to build and push image
-build_image() {
-    local script_name="$1"
-    local image_name="$2"
-    
-    echo "📦 Building ${image_name}..."
-    
-    if [ ! -f "$script_name" ]; then
-        echo "❌ Error: Script $script_name not found!"
-        exit 1
-    fi
-    
-    # Execute build script with version argument and auto-confirm push
-    echo "y" | "$script_name" "$VERSION"
-    
-    if [ $? -eq 0 ]; then
-        echo "✅ ${image_name} built and pushed successfully!"
-    else
-        echo "❌ Failed to build ${image_name}!"
-        exit 1
-    fi
-    
-    echo ""
-}
 
 # Build API image
-build_image "${SCRIPT_DIR}/build-api.sh" "API"
+echo "📦 Building API Image..."
+echo "Target: twsbpmac/acm-api (500-600MB)"
+./scripts/build-api.sh "$VERSION" --auto-push
+
+echo ""
+echo "----------------------------------------"
+echo ""
 
 # Build Web image
-build_image "${SCRIPT_DIR}/build-web.sh" "Web"
+echo "📦 Building Web Image..."
+echo "Target: twsbpnac/acm"
+./scripts/build-web.sh "$VERSION" --auto-push
 
+echo ""
 echo "🎉 All images built and pushed successfully!"
 echo ""
-echo "🔗 Available images:"
-echo "  - twsbpmac/starter-api:latest"
-echo "  - twsbpmac/starter-api:${VERSION}"
-echo "  - twsbpmac/starter-web:latest"
-echo "  - twsbpmac/starter-web:${VERSION}"
+echo "📋 Summary:"
+echo "  API: twsbpmac/acm-api:$VERSION"
+echo "  Web: twsbpnac/acm:$VERSION"
 echo ""
-echo "🚀 You can now deploy using:"
-echo "  docker-compose -f docker-compose.prod.yml up -d"
+echo "🚀 To run both services:"
+echo "  API: docker run -d -p 3000:3000 --name acm-api twsbpmac/acm-api:$VERSION"
+echo "  Web: docker run -d -p 80:80 --name acm-web twsbpnac/acm:$VERSION"

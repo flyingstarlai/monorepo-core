@@ -33,13 +33,6 @@ export const useLogin = () => {
           ? intended
           : '/dashboard';
 
-      console.log(
-        'Login: Navigating to:',
-        safeDestination,
-        '(original:',
-        intended,
-        ')',
-      );
       localStorage.removeItem('intended_destination');
       router.navigate({ to: safeDestination });
     },

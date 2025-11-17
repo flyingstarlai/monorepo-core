@@ -43,7 +43,6 @@ export class UsersService {
       // Validate role creation permissions
       this.validateRoleCreation(role, creatorRole);
 
-      console.log('Creating user with data:', {
         username,
         fullName,
         deptNo,
@@ -59,15 +58,10 @@ export class UsersService {
         : password;
 
       if (shouldHashPassword) {
-        console.log('Generated hash:', finalPassword);
-        console.log(
           'Hash test - immediate compare:',
           bcrypt.compareSync(password, finalPassword),
         );
-        console.log('Hash type:', typeof finalPassword);
-        console.log('Hash length:', finalPassword.length);
       } else {
-        console.log('Using plain text password');
       }
 
       const user = this.usersRepository.create({
@@ -81,18 +75,12 @@ export class UsersService {
         isActive,
       });
 
-      console.log('User entity created:', user);
       const result = await this.usersRepository.save(user);
-      console.log('User saved successfully:', result);
-      console.log('Password in saved result:', result.password);
-      console.log('Password type in result:', typeof result.password);
 
       // Immediately retrieve to check if hash is corrupted
       const retrieved = await this.usersRepository.findOne({
         where: { username },
       });
-      console.log('Immediately retrieved user password:', retrieved?.password);
-      console.log(
         'Retrieved matches saved:',
         result.password === retrieved?.password,
       );
@@ -256,7 +244,6 @@ export class UsersService {
     username: string,
     password: string,
   ): Promise<User | null> {
-    console.log('Validating credentials in users service:', {
       username,
       passwordLength: password.length,
     });
@@ -265,12 +252,9 @@ export class UsersService {
     });
 
     if (!user) {
-      console.log('User not found');
       return null;
     }
 
-    console.log('Found user, comparing password');
-    console.log('Stored hash:', user.password);
 
     // Check if password should be compared as hash or plain text
     const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
@@ -279,11 +263,9 @@ export class UsersService {
     if (shouldHashPassword) {
       // Compare with hashed password
       isValidPassword = await bcrypt.compare(password, user.password);
-      console.log('Comparing with bcrypt:', { isValidPassword });
     } else {
       // Compare with plain text password
       isValidPassword = password === user.password;
-      console.log('Comparing plain text:', { isValidPassword });
     }
 
     if (isValidPassword) {
@@ -404,24 +386,19 @@ export class UsersService {
 
   async getFactoryUsers(): Promise<FactoryUserDto[]> {
     try {
-      console.log('Executing ACM_FACTORY_USER_ACCOUNT stored procedure');
       const result = await this.usersRepository.query(
         'EXEC ACM_FACTORY_USER_ACCOUNT',
       );
 
-      console.log('Procedure result:', result);
 
       // Map procedure results to FactoryUserDto format
-      console.log('Raw procedure result items:', result);
       const factoryUsers = result.map((item: any, index: number) => {
-        console.log(`Mapping item ${index}:`, item);
         const mapped = {
           username: item.username || '',
           full_name: item.full_name || '',
           dept_no: item.dept_no || '',
           dept_name: item.dept_name || '',
         };
-        console.log(`Mapped item ${index}:`, mapped);
         return mapped;
       });
 
@@ -433,7 +410,6 @@ export class UsersService {
         deptName: item.dept_name,
       }));
 
-      console.log('Mapped factory users:', camelCaseFactoryUsers);
       return camelCaseFactoryUsers;
     } catch (error) {
       console.error(
@@ -448,20 +424,15 @@ export class UsersService {
 
   async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
     try {
-      console.log('Executing ACM_FACTORY_DEPT stored procedure');
       const result = await this.usersRepository.query('EXEC ACM_FACTORY_DEPT');
 
-      console.log('Procedure result:', result);
 
       // Map procedure results to FactoryDepartmentDto format
-      console.log('Raw procedure result items:', result);
       const factoryDepartments = result.map((item: any, index: number) => {
-        console.log(`Mapping department item ${index}:`, item);
         const mapped = {
           dept_no: item.dept_no || '',
           dept_name: item.dept_name || '',
         };
-        console.log(`Mapped department item ${index}:`, mapped);
         return mapped;
       });
 
@@ -471,7 +442,6 @@ export class UsersService {
         deptName: item.dept_name,
       }));
 
-      console.log('Mapped factory departments:', camelCaseFactoryDepartments);
       return camelCaseFactoryDepartments;
     } catch (error) {
       console.error('Error executing ACM_FACTORY_DEPT procedure:', error);

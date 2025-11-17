@@ -3,12 +3,10 @@ import { User } from '../users/entities/user.entity';
 
 async function clearUsers() {
   try {
-    console.log('🗑️  Clearing existing users...');
 
     // Initialize database connection
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
-      console.log('✅ Database connection established');
     }
 
     const userRepository = AppDataSource.getRepository(User);
@@ -19,11 +17,9 @@ async function clearUsers() {
       .delete()
       .from(User)
       .execute();
-    console.log(`✅ Deleted ${result.affected} users from database`);
 
     // Close connection
     await AppDataSource.destroy();
-    console.log('🎉 User clearing completed successfully');
   } catch (error) {
     console.error('❌ Error during user clearing:', error);
     process.exit(1);

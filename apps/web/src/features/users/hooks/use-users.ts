@@ -100,7 +100,6 @@ export const useDeleteUser = () => {
       // Remove deleted user from cache immediately for better UX
       queryClient.invalidateQueries({ queryKey: ['users'] });
       // Also show success message
-      console.log('User deleted successfully');
     },
     onError: (error: any) => {
       console.error('Delete user error:', error);

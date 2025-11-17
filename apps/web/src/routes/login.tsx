@@ -28,7 +28,6 @@ function Login() {
       typeof search.redirect === 'string' &&
       search.redirect !== '/login'
     ) {
-      console.log('Login: Storing intended destination:', search.redirect);
       localStorage.setItem('intended_destination', search.redirect);
     }
   }, [search.redirect]);

@@ -37,13 +37,11 @@ const users = [
 
 export const seedUsers = async (dataSource: DataSource) => {
   try {
-    console.log('Seeding users...');
 
     const userRepository = dataSource.getRepository(User);
 
     // Conditionally hash passwords based on FEATURE_HASHED setting
     const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-    console.log(
       `FEATURE_HASHED setting: ${shouldHashPassword ? 'true (using hashed passwords)' : 'false (using plain text passwords)'}`,
     );
 
@@ -70,7 +68,6 @@ export const seedUsers = async (dataSource: DataSource) => {
     if (!existingAdmin) {
       const adminUser = userRepository.create(processedUsers[0] as any);
       await userRepository.save(adminUser);
-      console.log(
         `✅ Admin user created: admin/nimda (${shouldHashPassword ? 'hashed' : 'plain text'})`,
       );
     }
@@ -78,7 +75,6 @@ export const seedUsers = async (dataSource: DataSource) => {
     if (!existingManager) {
       const managerUser = userRepository.create(processedUsers[1] as any);
       await userRepository.save(managerUser);
-      console.log(
         `✅ Manager user created: manager/manager (${shouldHashPassword ? 'hashed' : 'plain text'})`,
       );
     } else {
@@ -87,14 +83,12 @@ export const seedUsers = async (dataSource: DataSource) => {
         await userRepository.update(existingManager.id, {
           password: processedUsers[1].password,
         });
-        console.log('🔄 Manager password updated to hashed');
       }
     }
 
     if (!existingUser) {
       const regularUser = userRepository.create(processedUsers[2] as any);
       await userRepository.save(regularUser);
-      console.log(
         `✅ Regular user created: user/user (${shouldHashPassword ? 'hashed' : 'plain text'})`,
       );
     } else {
@@ -103,39 +97,9 @@ export const seedUsers = async (dataSource: DataSource) => {
         await userRepository.update(existingUser.id, {
           password: processedUsers[2].password,
         });
-        console.log('🔄 Regular user password updated to hashed');
       }
     }
 
-    if (!existingUser) {
-      const regularUser = userRepository.create(processedUsers[2] as any);
-      await userRepository.save(regularUser);
-      console.log(
-        `✅ Regular user created: user/resu (${shouldHashPassword ? 'hashed' : 'plain text'})`,
-      );
-    }
-
-    if (!existingManager) {
-      const managerUser = userRepository.create(processedUsers[1] as any);
-      await userRepository.save(managerUser);
-      console.log(
-        `✅ Manager user created: manager/manager (${shouldHashPassword ? 'hashed' : 'plain text'})`,
-      );
-    } else {
-      console.log('ℹ️ Manager user already exists');
-    }
-
-    if (!existingUser) {
-      const regularUser = userRepository.create(processedUsers[2] as any);
-      await userRepository.save(regularUser);
-      console.log(
-        `✅ User created: user/user (${shouldHashPassword ? 'hashed' : 'plain text'})`,
-      );
-    } else {
-      console.log('ℹ️ User already exists');
-    }
-
-    console.log('🎉 User seeding completed successfully');
   } catch (error) {
     console.error('❌ Error seeding users:', error);
     throw error;

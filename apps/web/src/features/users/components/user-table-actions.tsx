@@ -47,9 +47,8 @@ export function useUserTableActions({ onRefresh }: UserTableActionsProps = {}) {
 
   const confirmDelete = async (user: User) => {
     try {
-      console.log('Attempting to delete user:', user.id);
       await deleteUserMutation.mutateAsync(user.id);
-      console.log('Delete successful, closing dialog');
+
       setDeleteDialog({ user: null, isOpen: false });
       // No need to call onRefresh since useDeleteUser already invalidates queries
     } catch (error) {

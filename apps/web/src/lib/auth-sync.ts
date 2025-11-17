@@ -349,26 +349,13 @@ export const debugCrossTabEvents = (enabled: boolean = false): void => {
   if (!enabled) return;
 
   listenToAuthEvents((event, data) => {
-    console.log(`[Cross-Tab] Auth event received:`, {
       event,
       data,
       timestamp: Date.now(),
     });
   });
 
-  monitorTokenChanges((token) => {
-    console.log(`[Cross-Tab] Token changed:`, {
-      hasToken: !!token,
-      tokenLength: token?.length || 0,
-      timestamp: Date.now(),
-    });
-  });
+  monitorTokenChanges((token) => {});
 
-  monitorRefreshTokenChanges((refreshToken) => {
-    console.log(`[Cross-Tab] Refresh token changed`, {
-      hasRefreshToken: !!refreshToken,
-      refreshTokenLength: refreshToken?.length || 0,
-      timestamp: Date.now(),
-    });
-  });
+  monitorRefreshTokenChanges((refreshToken) => {});
 };

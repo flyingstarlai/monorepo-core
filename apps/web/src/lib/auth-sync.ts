@@ -349,13 +349,14 @@ export const debugCrossTabEvents = (enabled: boolean = false): void => {
   if (!enabled) return;
 
   listenToAuthEvents((event, data) => {
+    console.log({
       event,
       data,
       timestamp: Date.now(),
     });
   });
 
-  monitorTokenChanges((token) => {});
+  monitorTokenChanges((_token) => {});
 
-  monitorRefreshTokenChanges((refreshToken) => {});
+  monitorRefreshTokenChanges((_refreshToken) => {});
 };

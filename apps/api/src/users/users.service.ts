@@ -43,14 +43,6 @@ export class UsersService {
       // Validate role creation permissions
       this.validateRoleCreation(role, creatorRole);
 
-        username,
-        fullName,
-        deptNo,
-        deptName,
-        role,
-        isActive,
-      });
-
       // Check if password should be hashed based on FEATURE_HASHED setting
       const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
       const finalPassword = shouldHashPassword
@@ -58,10 +50,10 @@ export class UsersService {
         : password;
 
       if (shouldHashPassword) {
+        console.log(
           'Hash test - immediate compare:',
           bcrypt.compareSync(password, finalPassword),
         );
-      } else {
       }
 
       const user = this.usersRepository.create({
@@ -81,6 +73,7 @@ export class UsersService {
       const retrieved = await this.usersRepository.findOne({
         where: { username },
       });
+      console.log(
         'Retrieved matches saved:',
         result.password === retrieved?.password,
       );
@@ -244,6 +237,7 @@ export class UsersService {
     username: string,
     password: string,
   ): Promise<User | null> {
+    console.log({
       username,
       passwordLength: password.length,
     });
@@ -254,7 +248,6 @@ export class UsersService {
     if (!user) {
       return null;
     }
-
 
     // Check if password should be compared as hash or plain text
     const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
@@ -390,7 +383,6 @@ export class UsersService {
         'EXEC ACM_FACTORY_USER_ACCOUNT',
       );
 
-
       // Map procedure results to FactoryUserDto format
       const factoryUsers = result.map((item: any, index: number) => {
         const mapped = {
@@ -425,7 +417,6 @@ export class UsersService {
   async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
     try {
       const result = await this.usersRepository.query('EXEC ACM_FACTORY_DEPT');
-
 
       // Map procedure results to FactoryDepartmentDto format
       const factoryDepartments = result.map((item: any, index: number) => {

@@ -31,6 +31,7 @@ import { LoadingOverlay } from '@/components/ui/loading';
 import { Kbd } from '@/components/ui/kbd';
 import { UserSearchDrawer } from './user-search-drawer';
 import { DepartmentSearchDrawer } from './department-search-drawer';
+import { Search } from 'lucide-react';
 
 import type {
   FactoryUser,
@@ -178,12 +179,23 @@ export function UserForm({
                             disabled={isEdit}
                             aria-invalid={isInvalid}
                             placeholder="請輸入用戶名"
-                            className={!isEdit ? 'pr-12' : undefined}
+                            className={
+                              !isEdit
+                                ? 'pr-[3.5rem] border-r-0 focus:border-blue-500'
+                                : undefined
+                            }
                           />
                           {!isEdit && (
-                            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
-                              <Kbd>F2</Kbd>
-                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full z-10 bg-blue-500 border-input text-white hover:bg-blue-500/90 rounded-l-none border-l transition-all duration-200 shadow-sm"
+                              onClick={() => setIsDrawerOpen(true)}
+                              aria-label="搜尋工廠用戶"
+                            >
+                              <Search className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
                         {isInvalid && (
@@ -191,7 +203,7 @@ export function UserForm({
                         )}
                         {!isEdit && (
                           <FieldDescription>
-                            按 <Kbd>F2</Kbd> 查詢工廠用戶
+                            按 <Kbd>F2</Kbd> 或點擊搜尋圖示查詢工廠用戶
                           </FieldDescription>
                         )}
                       </Field>
@@ -278,20 +290,27 @@ export function UserForm({
                             aria-invalid={isInvalid}
                             placeholder="例如：21110"
                             required
-                            className="pr-12"
+                            className="pr-[3.5rem] border-r-0 focus:border-green-500"
                           />
 
-                          {/* F2 suffix */}
-                          <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-muted-foreground">
-                            <Kbd>F2</Kbd>
-                          </div>
+                          {/* Search button */}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="absolute right-0 top-0 h-full z-10 px-3 bg-green-500 border-input text-white hover:bg-green-500/90 rounded-l-none border-l transition-all duration-200 shadow-sm"
+                            onClick={() => setIsDeptDrawerOpen(true)}
+                            aria-label="搜尋工廠部門"
+                          >
+                            <Search className="h-4 w-4" />
+                          </Button>
                         </div>
 
                         {isInvalid && (
                           <FieldError errors={field.state.meta.errors} />
                         )}
                         <FieldDescription>
-                          按 <Kbd>F2</Kbd> 查詢部門
+                          按 <Kbd>F2</Kbd> 或點擊搜尋圖示查詢部門
                         </FieldDescription>
                       </Field>
                     );

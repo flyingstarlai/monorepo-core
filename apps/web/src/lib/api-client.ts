@@ -19,7 +19,7 @@ function getBaseUrl(): string {
   if (isLocalAccess()) {
     return import.meta.env.VITE_BASE_LOCAL ?? 'http://localhost:3000';
   }
-  return import.meta.env.VITE_BASE_PUBLIC ?? 'https://ls-acm-api.twsbp.net';
+  return import.meta.env.VITE_BASE_PUBLIC ?? 'http://ls-acm-api.twsbp.com';
 }
 
 export const api = axios.create({

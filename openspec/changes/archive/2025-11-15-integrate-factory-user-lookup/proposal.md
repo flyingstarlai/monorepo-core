@@ -2,7 +2,7 @@
 
 ## Summary
 
-Add factory user lookup functionality that allows users to search and select factory users via F2 key in username field, populating form fields with selected user data from LS_FACTORY_USER_ACCOUNT stored procedure.
+Add factory user lookup functionality that allows users to search and select factory users via F2 key in username field, populating form fields with selected user data from ACM_FACTORY_USER_ACCOUNT stored procedure.
 
 ## Status
 

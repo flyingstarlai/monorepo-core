@@ -404,9 +404,9 @@ export class UsersService {
 
   async getFactoryUsers(): Promise<FactoryUserDto[]> {
     try {
-      console.log('Executing LS_FACTORY_USER_ACCOUNT stored procedure');
+      console.log('Executing ACM_FACTORY_USER_ACCOUNT stored procedure');
       const result = await this.usersRepository.query(
-        'EXEC LS_FACTORY_USER_ACCOUNT',
+        'EXEC ACM_FACTORY_USER_ACCOUNT',
       );
 
       console.log('Procedure result:', result);
@@ -437,7 +437,7 @@ export class UsersService {
       return camelCaseFactoryUsers;
     } catch (error) {
       console.error(
-        'Error executing LS_FACTORY_USER_ACCOUNT procedure:',
+        'Error executing ACM_FACTORY_USER_ACCOUNT procedure:',
         error,
       );
       throw new BadRequestException(
@@ -448,8 +448,8 @@ export class UsersService {
 
   async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
     try {
-      console.log('Executing LS_FACTORY_DEPT stored procedure');
-      const result = await this.usersRepository.query('EXEC LS_FACTORY_DEPT');
+      console.log('Executing ACM_FACTORY_DEPT stored procedure');
+      const result = await this.usersRepository.query('EXEC ACM_FACTORY_DEPT');
 
       console.log('Procedure result:', result);
 
@@ -474,7 +474,7 @@ export class UsersService {
       console.log('Mapped factory departments:', camelCaseFactoryDepartments);
       return camelCaseFactoryDepartments;
     } catch (error) {
-      console.error('Error executing LS_FACTORY_DEPT procedure:', error);
+      console.error('Error executing ACM_FACTORY_DEPT procedure:', error);
       throw new BadRequestException(
         'Failed to retrieve factory departments. Please try again later.',
       );

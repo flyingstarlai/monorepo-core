@@ -23,6 +23,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { User } from './entities/user.entity';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
+import { UserResponseDto } from './dto/user-response.dto';
+import { formatDateUTC8 } from '../utils/date-formatter';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -122,8 +124,13 @@ export class UsersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id') id: string): Promise<UserResponseDto> {
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return user;
   }
 
   @Put(':id')

@@ -9,8 +9,10 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserResponseDto } from './dto/user-response.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
 import { FactoryDepartmentDto } from './dto/factory-department.dto';
+import { formatDateUTC8 } from '../utils/date-formatter';
 
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
@@ -114,12 +116,23 @@ export class UsersService {
     return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.usersRepository.find();
+  async findAll(): Promise<UserResponseDto[]> {
+    const users = await this.usersRepository.find();
+    return users.map(
+      (user) =>
+        ({
+          ...user,
+          lastLoginAt: user.lastLoginAt
+            ? formatDateUTC8(user.lastLoginAt)
+            : null,
+          createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+          updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+        }) as UserResponseDto,
+    );
   }
 
   async findWithFilters(filters: UsersFilterDto): Promise<{
-    users: User[];
+    users: UserResponseDto[];
     total: number;
     page: number;
     limit: number;
@@ -174,9 +187,20 @@ export class UsersService {
     queryBuilder.skip(offset).take(limit);
 
     const users = await queryBuilder.getMany();
+    const formattedUsers = users.map(
+      (user) =>
+        ({
+          ...user,
+          lastLoginAt: user.lastLoginAt
+            ? formatDateUTC8(user.lastLoginAt)
+            : null,
+          createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+          updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+        }) as UserResponseDto,
+    );
 
     return {
-      users,
+      users: formattedUsers,
       total,
       page,
       limit,
@@ -184,19 +208,24 @@ export class UsersService {
     };
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<UserResponseDto> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return user;
+    return {
+      ...user,
+      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
+      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+    } as UserResponseDto;
   }
 
   async update(
     id: string,
     updateUserDto: UpdateUserDto,
     creatorRole?: string,
-  ): Promise<User> {
+  ): Promise<UserResponseDto> {
     const existingUser = await this.findOne(id);
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -217,7 +246,23 @@ export class UsersService {
     }
 
     await this.usersRepository.update(id, updateUserDto);
-    return this.findOne(id);
+    const updatedUser = await this.usersRepository.findOne({ where: { id } });
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return {
+      ...updatedUser,
+      lastLoginAt: updatedUser.lastLoginAt
+        ? formatDateUTC8(updatedUser.lastLoginAt)
+        : null,
+      createdAt: updatedUser.createdAt
+        ? formatDateUTC8(updatedUser.createdAt)
+        : null,
+      updatedAt: updatedUser.updatedAt
+        ? formatDateUTC8(updatedUser.updatedAt)
+        : null,
+    } as UserResponseDto;
   }
 
   async remove(id: string): Promise<void> {
@@ -229,14 +274,24 @@ export class UsersService {
     await this.usersRepository.delete(id);
   }
 
-  async findByUsername(username: string): Promise<User> {
-    return this.usersRepository.findOne({ where: { username } });
+  async findByUsername(username: string): Promise<UserResponseDto> {
+    const user = await this.usersRepository.findOne({ where: { username } });
+    if (!user) {
+      return null;
+    }
+
+    return {
+      ...user,
+      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
+      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+    } as UserResponseDto;
   }
 
   async validateUserCredentials(
     username: string,
     password: string,
-  ): Promise<User | null> {
+  ): Promise<Omit<User, 'password'> | null> {
     console.log({
       username,
       passwordLength: password.length,
@@ -265,13 +320,27 @@ export class UsersService {
       // Exclude password from returned user object
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
-      return result as User;
+      return result as Omit<User, 'password'>;
     }
 
     return null;
   }
 
-  async findById(id: string): Promise<User> {
+  async findById(id: string): Promise<UserResponseDto> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      return null;
+    }
+
+    return {
+      ...user,
+      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
+      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+    } as UserResponseDto;
+  }
+
+  async findRawById(id: string): Promise<User> {
     return this.usersRepository.findOne({ where: { id } });
   }
 
@@ -284,15 +353,31 @@ export class UsersService {
     await this.usersRepository.update(id, { password: finalPassword });
   }
 
-  async toggleUserStatus(id: string): Promise<User> {
-    const user = await this.findOne(id);
+  async toggleUserStatus(id: string): Promise<UserResponseDto> {
+    const user = await this.findRawById(id);
     const newStatus = !user.isActive;
     await this.usersRepository.update(id, { isActive: newStatus });
-    return this.findOne(id);
+    const updatedUser = await this.usersRepository.findOne({ where: { id } });
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return {
+      ...updatedUser,
+      lastLoginAt: updatedUser.lastLoginAt
+        ? formatDateUTC8(updatedUser.lastLoginAt)
+        : null,
+      createdAt: updatedUser.createdAt
+        ? formatDateUTC8(updatedUser.createdAt)
+        : null,
+      updatedAt: updatedUser.updatedAt
+        ? formatDateUTC8(updatedUser.updatedAt)
+        : null,
+    } as UserResponseDto;
   }
 
-  async searchUsers(query: string): Promise<User[]> {
-    return this.usersRepository
+  async searchUsers(query: string): Promise<UserResponseDto[]> {
+    const users = await this.usersRepository
       .createQueryBuilder('user')
       .where('user.username LIKE :query', { query: `%${query}%` })
       .orWhere('user.fullName LIKE :query', { query: `%${query}%` })
@@ -300,11 +385,23 @@ export class UsersService {
       .orderBy('user.fullName', 'ASC')
       .limit(20)
       .getMany();
+
+    return users.map(
+      (user) =>
+        ({
+          ...user,
+          lastLoginAt: user.lastLoginAt
+            ? formatDateUTC8(user.lastLoginAt)
+            : null,
+          createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+          updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+        }) as UserResponseDto,
+    );
   }
 
   async login(
     user: User,
-  ): Promise<{ access_token: string; user: Omit<User, 'password'> }> {
+  ): Promise<{ access_token: string; user: UserResponseDto }> {
     // Update lastLoginAt
     await this.usersRepository.update(user.id, { lastLoginAt: new Date() });
 
@@ -319,31 +416,47 @@ export class UsersService {
         deptName: user.deptName,
         role: user.role,
         isActive: user.isActive,
-        lastLoginAt: user.lastLoginAt,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
+        lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
+        createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+        updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+      } as UserResponseDto,
     };
   }
 
   async updateProfile(
     id: string,
     updateProfileDto: { fullName: string },
-  ): Promise<User> {
+  ): Promise<UserResponseDto> {
     const existingUser = await this.findOne(id);
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
     await this.usersRepository.update(id, updateProfileDto);
-    return this.findOne(id);
+    const updatedUser = await this.usersRepository.findOne({ where: { id } });
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return {
+      ...updatedUser,
+      lastLoginAt: updatedUser.lastLoginAt
+        ? formatDateUTC8(updatedUser.lastLoginAt)
+        : null,
+      createdAt: updatedUser.createdAt
+        ? formatDateUTC8(updatedUser.createdAt)
+        : null,
+      updatedAt: updatedUser.updatedAt
+        ? formatDateUTC8(updatedUser.updatedAt)
+        : null,
+    } as UserResponseDto;
   }
 
   async changePassword(
     id: string,
     changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
-    const user = await this.findOne(id);
+    const user = await this.findRawById(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

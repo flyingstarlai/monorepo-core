@@ -8,6 +8,8 @@ import * as bcrypt from 'bcrypt';
 import type { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { UserResponseDto } from '../users/dto/user-response.dto';
+import { formatDateUTC8 } from '../utils/date-formatter';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +18,10 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<User | null> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<Omit<User, 'password'> | null> {
     // Delegate validation to users service to ensure consistency
     return await this.usersService.validateUserCredentials(username, password);
   }
@@ -42,11 +47,13 @@ export class AuthService {
         username: user.username,
         fullName: user.fullName,
         role: user.role,
+        deptNo: user.deptNo,
+        deptName: user.deptName,
         avatar: null,
         isActive: user.isActive,
-        createdAt: user.createdAt,
-        lastLoginAt: loginResult.user.lastLoginAt,
-      },
+        createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+        lastLoginAt: loginResult.user?.lastLoginAt || null,
+      } as UserResponseDto,
     };
   }
 
@@ -70,6 +77,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    // User is already formatted from usersService.create()
     return { message: 'User created successfully', user };
   }
 
@@ -78,7 +86,7 @@ export class AuthService {
     currentPassword: string,
     newPassword: string,
   ): Promise<void> {
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.findRawById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

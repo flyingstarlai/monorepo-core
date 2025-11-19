@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { ActivityDto } from './dto/activity.dto';
+import { formatDateUTC8, parseUTC8Date } from '../utils/date-formatter';
 
 @Injectable()
 export class DashboardService {
@@ -92,7 +93,7 @@ export class DashboardService {
         fullName: user.fullName,
         deptName: user.deptName || 'Unknown',
         action: 'created',
-        timestamp: user.createdAt.toISOString(),
+        timestamp: formatDateUTC8(user.createdAt),
       });
 
       // Add update activity if updatedAt exists and is different from createdAt
@@ -106,7 +107,7 @@ export class DashboardService {
           fullName: user.fullName,
           deptName: user.deptName || 'Unknown',
           action: 'updated',
-          timestamp: user.updatedAt.toISOString(),
+          timestamp: formatDateUTC8(user.updatedAt),
         });
       }
     });
@@ -115,7 +116,8 @@ export class DashboardService {
     return activities
       .sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+          parseUTC8Date(b.timestamp).getTime() -
+          parseUTC8Date(a.timestamp).getTime(),
       )
       .slice(0, 10);
   }

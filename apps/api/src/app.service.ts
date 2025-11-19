@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { formatCurrentTimeUTC8 } from './utils/date-formatter';
 
 @Injectable()
 export class AppService {
@@ -26,7 +27,7 @@ export class AppService {
   getHealth() {
     return {
       status: 'ok',
-      timestamp: new Date().toISOString(),
+      timestamp: formatCurrentTimeUTC8(),
       uptime: process.uptime(),
       version: this.version,
       service: 'acm-api',

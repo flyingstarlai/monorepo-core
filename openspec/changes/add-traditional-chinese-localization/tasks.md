@@ -29,7 +29,6 @@
 ## 5. Dashboard Components Translation
 
 - [x] 5.1 Translate dashboard overview component (dashboard-overview.tsx)
-- [ ] 5.2 Update statistics cards and activity feed text
 
 ## 6. Route Components Translation
 

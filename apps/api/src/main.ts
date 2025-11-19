@@ -1,21 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 import { AppModule } from './app.module';
+import { corsConfig } from './config/cors.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://acm.twsbp.com',
-      'https://acm.twsbp.com',
-      'http://acm-api.twsbp.com',
-      'https://acm-api.twsbp.com',
-    ],
-    credentials: true,
-  });
+  const configService = app.get(ConfigService);
+
+  app.enableCors(corsConfig(configService));
   app.useGlobalPipes(new ValidationPipe());
   await app.listen(3000);
 }

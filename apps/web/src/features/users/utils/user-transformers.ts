@@ -25,9 +25,21 @@ export const getStatusVariant = (isActive: boolean) => {
 
 export const formatLastLogin = (lastLoginAt?: Date): string => {
   if (!lastLoginAt) return 'Never';
-  return new Date(lastLoginAt).toLocaleString();
+  return formatDateTime(lastLoginAt);
+};
+
+const formatDateTime = (date: Date | string): string => {
+  const d = date instanceof Date ? date : new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
 export const formatDate = (date: Date): string => {
-  return new Date(date).toLocaleString();
+  return formatDateTime(date);
 };

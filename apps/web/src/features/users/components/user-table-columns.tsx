@@ -18,6 +18,7 @@ import {
   getRoleColor,
   getStatusVariant,
   formatLastLogin,
+  formatDate,
 } from '../utils/user-transformers';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
@@ -144,7 +145,7 @@ export function createUserTableColumns({
         const user = row.original;
         return (
           <div className="text-sm text-slate-600">
-            {new Date(user.createdAt).toLocaleDateString()}
+            {formatDate(user.createdAt)}
           </div>
         );
       },

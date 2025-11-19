@@ -4,18 +4,18 @@ import type {
   User,
   CreateUserData,
   UpdateUserData,
-  UsersFilters,
-  UsersResponse,
   FactoryUser,
   FactoryDepartment,
 } from '../types/user.types';
 
-export const useUsers = (filters?: UsersFilters) => {
+export const useUsers = () => {
   return useQuery({
-    queryKey: ['users', filters],
-    queryFn: async (): Promise<UsersResponse> => {
-      const response = await api.get('/users');
-      return response.data as UsersResponse;
+    queryKey: ['users'],
+    queryFn: async (): Promise<User[]> => {
+      // Request all users with increased limit for client-side pagination
+      const response = await api.get('/users?limit=300');
+      // Handle both response formats - direct array or wrapped in users property
+      return response.data.users || response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

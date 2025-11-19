@@ -1,24 +1,11 @@
-import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserDataTable } from './user-data-table';
 import { createUserTableColumns } from './user-table-columns';
 import { useUserTableActions } from './user-table-actions';
 import { useUsers } from '../hooks/use-users';
-import type { UsersFilters } from '../types/user.types';
 
 export function UserList() {
-  const [filters, setFilters] = useState<UsersFilters>({});
-  const [pagination, setPagination] = useState({ page: 1, limit: 10 });
-
-  const {
-    data: usersData,
-    isLoading,
-    error,
-    refetch,
-  } = useUsers({
-    ...filters,
-    ...pagination,
-  });
+  const { data: usersData, isLoading, error, refetch } = useUsers();
 
   const {
     handleView,
@@ -35,10 +22,6 @@ export function UserList() {
     onToggleStatus: handleToggleStatus,
   });
 
-  const handlePaginationChange = (page: number, limit: number) => {
-    setPagination({ page, limit });
-  };
-
   if (error) {
     return (
       <Card>
@@ -52,18 +35,7 @@ export function UserList() {
   return (
     <div className="space-y-6">
       {/* Users Data Table with Integrated Filters */}
-      <UserDataTable
-        data={usersData}
-        isLoading={isLoading}
-        columns={columns}
-        filters={filters}
-        onFiltersChange={(newFilters) => {
-          setFilters(newFilters);
-          // Client-side filters only - reset pagination without API call
-          setPagination((prev) => ({ ...prev, page: 1 }));
-        }}
-        onPaginationChange={handlePaginationChange}
-      />
+      <UserDataTable data={usersData} isLoading={isLoading} columns={columns} />
 
       {/* Delete Confirmation Dialog */}
       <DeleteDialog />

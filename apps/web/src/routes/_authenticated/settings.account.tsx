@@ -3,6 +3,10 @@ import { useState } from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { ChangePasswordForm } from '@/features/auth/components/change-password-form';
 import { Button } from '@/components/ui/button';
+import {
+  formatLastLogin,
+  formatDate,
+} from '@/features/users/utils/user-transformers';
 
 export const Route = createFileRoute('/_authenticated/settings/account')({
   component: RouteComponent,
@@ -71,9 +75,7 @@ function RouteComponent() {
                 最後登入
               </label>
               <p className="text-sm text-slate-600">
-                {user.lastLoginAt
-                  ? new Date(user.lastLoginAt).toLocaleString()
-                  : '從未'}
+                {formatLastLogin(user.lastLoginAt)}
               </p>
             </div>
             <div>
@@ -81,7 +83,7 @@ function RouteComponent() {
                 帳戶建立時間
               </label>
               <p className="text-sm text-slate-600">
-                {new Date(user.createdAt).toLocaleString()}
+                {formatDate(user.createdAt)}
               </p>
             </div>
             <div>
@@ -89,7 +91,7 @@ function RouteComponent() {
                 最後更新時間
               </label>
               <p className="text-sm text-slate-600">
-                {new Date(user.updatedAt).toLocaleString()}
+                {formatDate(user.updatedAt)}
               </p>
             </div>
           </div>

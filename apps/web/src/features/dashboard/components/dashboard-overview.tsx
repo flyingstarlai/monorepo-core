@@ -14,22 +14,16 @@ import {
 } from '../hooks/use-dashboard-data';
 import { TrendingUp, Users, UserCheck, Building, Activity } from 'lucide-react';
 
-// Helper function to format relative time
-const formatRelativeTime = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+const formatDateTime = (date: Date | string): string => {
+  const d = date instanceof Date ? date : new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
 
-  if (diffMins < 60) {
-    return `${diffMins} 分鐘前`;
-  } else if (diffHours < 24) {
-    return `${diffHours} 小時前`;
-  } else {
-    return `${diffDays} 天前`;
-  }
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
 export function DashboardOverview() {
@@ -201,7 +195,7 @@ export function DashboardOverview() {
                       </p>
                     </div>
                     <Badge variant="secondary" className="text-xs">
-                      {formatRelativeTime(activity.timestamp)}
+                      {formatDateTime(activity.timestamp)}
                     </Badge>
                   </div>
                   {index < activities.length - 1 && (

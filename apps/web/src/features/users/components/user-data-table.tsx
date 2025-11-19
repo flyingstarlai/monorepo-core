@@ -41,36 +41,35 @@ import {
   Filter,
   Users,
 } from 'lucide-react';
-import type { User, UsersResponse, UsersFilters } from '../types/user.types';
+import type { User } from '../types/user.types';
 
 interface UserDataTableProps {
-  data?: UsersResponse;
+  data?: User[];
   isLoading?: boolean;
   columns: ColumnDef<User>[];
-  filters?: UsersFilters;
-  onFiltersChange?: (filters: UsersFilters) => void;
-  onPaginationChange?: (page: number, limit: number) => void;
 }
 
 export function UserDataTable({
   data,
   isLoading,
   columns,
-  filters = {},
 }: UserDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState(filters.search || '');
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paginationState, setPaginationState] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
-  const users = data?.users || [];
-  const total = data?.total || 0;
-  const currentPage = data?.page || 1;
-  const limit = data?.limit || 10;
-  const totalPages = data?.totalPages || 1;
+  const users = data || [];
+  const total = users.length;
 
   // Optimized search function with memoization
   const filteredUsers = useMemo(() => {
-    if (!globalFilter && !filters.role && !filters.isActive) {
+    if (!globalFilter && roleFilter === 'all' && statusFilter === 'all') {
       return users;
     }
 
@@ -94,21 +93,21 @@ export function UserDataTable({
       }
 
       // Role filter
-      if (filters.role && user.role !== filters.role) {
+      if (roleFilter !== 'all' && user.role !== roleFilter) {
         return false;
       }
 
       // Status filter
       if (
-        filters.isActive !== undefined &&
-        user.isActive !== filters.isActive
+        statusFilter !== 'all' &&
+        user.isActive !== (statusFilter === 'true')
       ) {
         return false;
       }
 
       return true;
     });
-  }, [users, globalFilter, filters.role, filters.isActive]);
+  }, [users, globalFilter, roleFilter, statusFilter]);
 
   const table = useReactTable({
     data: filteredUsers,
@@ -119,27 +118,25 @@ export function UserDataTable({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPaginationState,
     state: {
       sorting,
       columnFilters,
       globalFilter,
-      pagination: {
-        pageIndex: currentPage - 1,
-        pageSize: limit,
-      },
+      pagination: paginationState,
     },
-    manualPagination: true,
-    pageCount: Math.ceil(filteredUsers.length / limit),
   });
 
-  const handlePageChange = () => {
-    // Client-side pagination only - no API call
-    // Parent component manages the actual API data
+  const handlePageChange = (newPageIndex: number) => {
+    setPaginationState((prev) => ({ ...prev, pageIndex: newPageIndex }));
   };
 
-  const handlePageSizeChange = () => {
-    // Client-side pagination only - no API call
-    // Parent component manages the actual API data
+  const handlePageSizeChange = (newPageSize: string) => {
+    setPaginationState((prev) => ({
+      ...prev,
+      pageSize: parseInt(newPageSize),
+      pageIndex: 0, // Reset to first page when changing page size
+    }));
   };
 
   // Client-side search only - no API calls needed
@@ -163,26 +160,26 @@ export function UserDataTable({
   // Search state for UX feedback
   const isSearching = globalFilter && globalFilter.trim().length > 0;
 
-  const handleRoleFilterChange = () => {
-    // Client-side filter only - no API call
-    // if (onFiltersChange) {
-    //   onFiltersChange({ ...filters, role: value === 'all' ? undefined : (value as User['role']) });
-    // }
+  // Pagination calculations
+  const currentPage = paginationState.pageIndex + 1;
+  const pageSize = paginationState.pageSize;
+  const totalPages = Math.ceil(filteredCount / pageSize);
+
+  const handleRoleFilterChange = (value: string) => {
+    setRoleFilter(value);
+    setPaginationState((prev) => ({ ...prev, pageIndex: 0 })); // Reset to first page
   };
 
-  const handleStatusFilterChange = () => {
-    // Client-side filter only - no API call
-    // if (onFiltersChange) {
-    //   onFiltersChange({ ...filters, isActive: value === 'all' ? undefined : value === 'true' });
-    // }
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setPaginationState((prev) => ({ ...prev, pageIndex: 0 })); // Reset to first page
   };
 
   const clearFilters = () => {
     setGlobalFilter('');
-    // Client-side clear only - no API call
-    // if (onFiltersChange) {
-    //   onFiltersChange({});
-    // }
+    setRoleFilter('all');
+    setStatusFilter('all');
+    setPaginationState((prev) => ({ ...prev, pageIndex: 0 })); // Reset to first page
   };
 
   if (isLoading) {
@@ -243,10 +240,7 @@ export function UserDataTable({
               </div>
 
               {/* Role Filter */}
-              <Select
-                value={filters.role || 'all'}
-                onValueChange={() => handleRoleFilterChange()}
-              >
+              <Select value={roleFilter} onValueChange={handleRoleFilterChange}>
                 <SelectTrigger className="w-32 h-9 text-sm">
                   <SelectValue placeholder="角色" />
                 </SelectTrigger>
@@ -260,12 +254,8 @@ export function UserDataTable({
 
               {/* Status Filter */}
               <Select
-                value={
-                  filters.isActive === undefined
-                    ? 'all'
-                    : filters.isActive.toString()
-                }
-                onValueChange={() => handleStatusFilterChange()}
+                value={statusFilter}
+                onValueChange={handleStatusFilterChange}
               >
                 <SelectTrigger className="w-32 h-9 text-sm">
                   <SelectValue placeholder="狀態" />
@@ -381,13 +371,15 @@ export function UserDataTable({
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <span>
-                顯示 {(currentPage - 1) * limit + 1} 到{' '}
-                {Math.min(currentPage * limit, filteredCount)} 共{' '}
-                {filteredCount} 個結果
+                {table.getPaginationRowModel().rows.length} / {filteredCount}{' '}
+                項目
+              </span>
+              <span className="text-xs">
+                (第 {paginationState.pageIndex + 1} 頁，每頁 {pageSize} 項)
               </span>
               <Select
-                value={limit.toString()}
-                onValueChange={() => handlePageSizeChange()}
+                value={pageSize.toString()}
+                onValueChange={handlePageSizeChange}
               >
                 <SelectTrigger className="w-16 h-8 text-xs">
                   <SelectValue />
@@ -410,7 +402,9 @@ export function UserDataTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange()}
+                onClick={() =>
+                  handlePageChange(table.getState().pagination.pageIndex - 1)
+                }
                 disabled={!table.getCanPreviousPage()}
                 className="h-8 px-3 text-xs"
               >
@@ -436,7 +430,7 @@ export function UserDataTable({
                       key={pageNum}
                       variant={currentPage === pageNum ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => handlePageChange()}
+                      onClick={() => handlePageChange(pageNum - 1)}
                       className="w-8 h-8 p-0 text-xs"
                     >
                       {pageNum}
@@ -448,7 +442,9 @@ export function UserDataTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handlePageChange()}
+                onClick={() =>
+                  handlePageChange(table.getState().pagination.pageIndex + 1)
+                }
                 disabled={!table.getCanNextPage()}
                 className="h-8 px-3 text-xs"
               >

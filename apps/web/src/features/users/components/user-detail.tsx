@@ -17,7 +17,6 @@ import {
   getRoleColor,
   getStatusVariant,
   formatLastLogin,
-  formatDate,
 } from '../utils/user-transformers';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { UserLoginHistory } from './user-login-history';
@@ -176,7 +175,6 @@ export function UserDetail({
           </CardContent>
         </Card>
       </div>
-
 
       {/* Tabs */}
       <Tabs defaultValue="account-info" className="w-full">

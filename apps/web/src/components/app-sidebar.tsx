@@ -14,7 +14,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Users, Settings, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
+  LogOut,
+  Smartphone,
+} from 'lucide-react';
 
 export function AppSidebar() {
   const { user } = useAuthContext();
@@ -39,6 +45,12 @@ export function AppSidebar() {
             url: '/users',
             icon: Users,
             isActive: location.pathname.startsWith('/users'),
+          },
+          {
+            title: '應用程式',
+            url: '/apps',
+            icon: Smartphone,
+            isActive: location.pathname.startsWith('/apps'),
           },
         ]
       : []),

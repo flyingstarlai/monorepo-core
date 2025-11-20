@@ -5,6 +5,7 @@ import { DatabaseModule } from './database/database.config';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { MobileAppsModule } from './mobile-apps/mobile-apps.module';
 
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
@@ -19,6 +20,7 @@ import { AppController } from './app.controller';
     AuthModule,
     UsersModule,
     DashboardModule,
+    MobileAppsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

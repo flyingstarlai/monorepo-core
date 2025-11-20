@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { formatDate } from '../utils/user-transformers';
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -242,7 +243,7 @@ export function UserLoginHistory({ userId }: UserLoginHistoryProps) {
               paginatedData.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell className="text-sm font-medium text-slate-900">
-                    {row.loginAt || '—'}
+                    {row.loginAt ? formatDate(new Date(row.loginAt)) : '—'}
                   </TableCell>
                   <TableCell>
                     <span

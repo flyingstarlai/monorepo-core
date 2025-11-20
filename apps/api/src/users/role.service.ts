@@ -109,10 +109,7 @@ export class RoleService {
   /**
    * Check if a user can edit another user's role
    */
-  static canEditUserRole(
-    editorRole: UserRole | undefined,
-    _targetRole: UserRole,
-  ): boolean {
+  static canEditUserRole(editorRole: UserRole | undefined): boolean {
     if (!editorRole) return false;
 
     // Only admins can edit roles

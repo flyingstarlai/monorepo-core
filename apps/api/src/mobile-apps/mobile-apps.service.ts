@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MobileApp } from './entities/tc-app-user.entity';
+import { MobileApp } from './entities/mobile-app.entity';
 import { MobileAppOverviewDto } from './dto/mobile-app-overview.dto';
 
 @Injectable()
@@ -20,7 +20,8 @@ export class MobileAppsService {
     const grouped = new Map<string, MobileApp[]>();
 
     allApps.forEach((app) => {
-      const key = `${app.app_id}|${app.app_name}`;
+      const [appId] = app.id.split('@');
+      const key = `${appId}|${app.appName}`;
       if (!grouped.has(key)) {
         grouped.set(key, []);
       }
@@ -33,20 +34,17 @@ export class MobileAppsService {
       const [appId, appName] = key.split('|');
 
       // Get distinct versions
-      const versions = [...new Set(apps.map((app) => app.app_version))];
+      const versions = [...new Set(apps.map((app) => app.appVersion))];
 
       // Find latest version using semantic version comparison when possible
       const latestVersion = this.findLatestVersion(versions);
 
       // Count active devices
-      const activeDevices = apps.filter((app) => app.is_active).length;
+      const activeDevices = apps.filter((app) => app.isActive).length;
 
-      // Count unique users by first non-empty field
-      const uniqueUsers = new Set(
-        apps
-          .map((app) => app.useremail || app.username || app.userid)
-          .filter(Boolean),
-      ).size;
+      // Count unique users by name
+      const uniqueUsers = new Set(apps.map((app) => app.name).filter(Boolean))
+        .size;
 
       // Count distinct non-empty companies
       const companies = new Set(
@@ -59,6 +57,7 @@ export class MobileAppsService {
         appId,
         appName,
         latestVersion,
+        actualLatestVersion: null,
         versions,
         activeDevices,
         totalDevices: apps.length,
@@ -67,7 +66,12 @@ export class MobileAppsService {
       });
     }
 
-    return result;
+    // Compute global latest version across all apps (stable regardless of UI filtering)
+    const overallLatest = this.findLatestVersion(
+      result.map((r) => r.latestVersion).filter((v): v is string => v !== null),
+    );
+
+    return result.map((r) => ({ ...r, actualLatestVersion: overallLatest }));
   }
 
   private findLatestVersion(versions: string[]): string | null {

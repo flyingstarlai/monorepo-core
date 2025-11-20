@@ -298,12 +298,7 @@ export class UsersService {
 
     // Validate role change permissions if role is being updated
     if (updateUserDto.role && updateUserDto.role !== existingUser.role) {
-      if (
-        !RoleService.canEditUserRole(
-          creatorRole as UserRole,
-          updateUserDto.role as UserRole,
-        )
-      ) {
+      if (!RoleService.canEditUserRole(creatorRole as UserRole)) {
         throw new BadRequestException(
           'Only administrators can change user roles',
         );

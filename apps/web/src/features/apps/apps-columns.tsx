@@ -3,7 +3,6 @@ import { Badge } from '@/components/ui/badge';
 import type { MobileAppOverviewDto } from '@/lib/mobile-apps.service';
 import {
   getVersionStatus,
-  getLatestVersion,
   compareVersions,
   type VersionStatus,
 } from '@/lib/version-comparison.utils';
@@ -21,11 +20,7 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
     header: '應用程式 ID',
     cell: ({ row }) => {
       const appId = row.getValue('appId') as string;
-      const displayId = appId.includes('@')
-        ? appId.split('@')[0] // Get first part before @
-        : appId;
-
-      return <div className="font-mono text-sm">{displayId}</div>;
+      return <div className="font-mono text-sm">{appId}</div>;
     },
   },
   {
@@ -38,16 +33,14 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
       // Compare A to B for descending order (newest versions first)
       return compareVersions(versionA || '0.0.0', versionB || '0.0.0');
     },
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const version = row.getValue('latestVersion') as string | null;
-
-      // Get latest version from all data
-      const allApps = table.getCoreRowModel().rows.map((r) => r.original);
-      const latestGlobalVersion = getLatestVersion(allApps);
+      const actualLatestVersion =
+        (row.original.actualLatestVersion as string | null) || '0.0.0';
 
       const versionStatus: VersionStatus = getVersionStatus(
         version,
-        latestGlobalVersion,
+        actualLatestVersion,
       );
 
       return (

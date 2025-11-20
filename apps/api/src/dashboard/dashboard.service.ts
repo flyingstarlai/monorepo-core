@@ -17,9 +17,7 @@ export class DashboardService {
   ) {}
 
   async getDashboardStats(): Promise<DashboardStatsDto> {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    // Get mobile apps data
 
     // Get mobile apps data
     const mobileApps = await this.mobileAppsService.getMobileAppsOverview();

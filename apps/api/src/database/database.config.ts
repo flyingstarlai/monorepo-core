@@ -2,7 +2,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
-import { MobileApp } from '../mobile-apps/entities/tc-app-user.entity';
+import { MobileApp } from '../mobile-apps/entities/mobile-app.entity';
 
 @Module({
   imports: [

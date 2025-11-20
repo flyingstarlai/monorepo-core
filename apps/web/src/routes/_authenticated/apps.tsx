@@ -4,8 +4,8 @@ import { Smartphone, Activity, Package } from 'lucide-react';
 import { getMobileAppsOverview } from '@/lib/mobile-apps.service';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AppsDataTable } from './apps-data-table';
-import { appsColumns } from './apps-columns';
+import { AppsDataTable } from '@/features/apps/apps-data-table';
+import { appsColumns } from '@/features/apps/apps-columns';
 
 export const Route = createFileRoute('/_authenticated/apps')({
   beforeLoad: ({ context, location }) => {

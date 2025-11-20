@@ -113,3 +113,20 @@ export function getLatestVersion(
     return compareVersions(current, latest) > 0 ? current : latest;
   });
 }
+
+/**
+ * Get the actual latest version from an array of apps (using actualLatestVersion)
+ */
+export function getActualLatestVersion(
+  apps: { actualLatestVersion: string | null }[],
+): string {
+  const versions = apps
+    .map((app) => app.actualLatestVersion)
+    .filter((version): version is string => version !== null);
+
+  if (versions.length === 0) return '0.0.0';
+
+  return versions.reduce((latest, current) => {
+    return compareVersions(current, latest) > 0 ? current : latest;
+  });
+}

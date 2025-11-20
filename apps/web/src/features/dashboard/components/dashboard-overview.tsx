@@ -12,7 +12,7 @@ import {
   useDashboardStats,
   useRecentActivity,
 } from '../hooks/use-dashboard-data';
-import { TrendingUp, Users, UserCheck, Building, Activity } from 'lucide-react';
+import { TrendingUp, Users, Smartphone, Activity, Package } from 'lucide-react';
 
 const formatDateTime = (date: Date | string): string => {
   const d = date instanceof Date ? date : new Date(date);
@@ -94,34 +94,34 @@ export function DashboardOverview() {
   }
   const statCards = [
     {
-      title: '用戶總數',
-      value: stats.totalUsers.toLocaleString(),
-      change: `+${stats.newUsersThisMonth} 本月新增`,
-      icon: Users,
+      title: '應用程式總數',
+      value: stats.totalApps.toLocaleString(),
+      change: `+${stats.newAppsThisMonth} 本月新增`,
+      icon: Smartphone,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
-      title: '活躍用戶',
-      value: stats.activeUsers.toLocaleString(),
-      change: `佔總數 ${Math.round((stats.activeUsers / stats.totalUsers) * 100)}%`,
-      icon: UserCheck,
+      title: '活躍設備',
+      value: stats.activeDevices.toLocaleString(),
+      change: '設備總數',
+      icon: Activity,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
     },
     {
-      title: '部門',
-      value: stats.totalDepartments.toLocaleString(),
-      change: '部門總數',
-      icon: Building,
+      title: '版本更新',
+      value: stats.versionUpdates.toLocaleString(),
+      change: `${stats.versionGrowthRate}% 版本增長`,
+      icon: Package,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
     },
     {
-      title: '增長率',
-      value: `${stats.growthRate}%`,
-      change: '每月增長',
-      icon: Activity,
+      title: '獨特用戶',
+      value: stats.uniqueUsers.toLocaleString(),
+      change: '應用程式用戶',
+      icon: Users,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
     },

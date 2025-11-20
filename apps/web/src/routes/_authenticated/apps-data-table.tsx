@@ -53,7 +53,12 @@ export function AppsDataTable({
   isLoading,
   columns,
 }: AppsDataTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: 'latestVersion',
+      desc: true, // Sort latest versions first (newest at top)
+    },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [appIdFilter, setAppIdFilter] = useState<string>('all');

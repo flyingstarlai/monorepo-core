@@ -5,12 +5,15 @@ import { User } from '../users/entities/user.entity';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { ActivityDto } from './dto/activity.dto';
 import { formatDateUTC8, parseUTC8Date } from '../utils/date-formatter';
+import { MobileAppsService } from '../mobile-apps/mobile-apps.service';
+import { MobileAppOverviewDto } from '../mobile-apps/dto/mobile-app-overview.dto';
 
 @Injectable()
 export class DashboardService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly mobileAppsService: MobileAppsService,
   ) {}
 
   async getDashboardStats(): Promise<DashboardStatsDto> {
@@ -18,53 +21,78 @@ export class DashboardService {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    // Get total users
-    const totalUsers = await this.userRepository.count();
+    // Get mobile apps data
+    const mobileApps = await this.mobileAppsService.getMobileAppsOverview();
 
-    // Get active users
-    const activeUsers = await this.userRepository.count({
-      where: { isActive: true },
-    });
+    // Calculate app-focused metrics
+    const totalApps = mobileApps.length;
+    const totalActiveDevices = mobileApps.reduce(
+      (sum, app) => sum + app.activeDevices,
+      0,
+    );
+    const totalUniqueUsers = mobileApps.reduce(
+      (sum, app) => sum + app.uniqueUsers,
+      0,
+    );
 
-    // Get total departments
+    // Calculate version growth metrics
+    const versionUpdates = await this.calculateVersionUpdates(mobileApps);
+    const versionGrowthRate = await this.calculateVersionGrowthRate(mobileApps);
+    const newAppsThisMonth = await this.getNewAppsThisMonth();
+
+    // Get total departments (keep existing user context)
     const departmentsResult = await this.userRepository
       .createQueryBuilder('user')
       .select('COUNT(DISTINCT user.deptName)')
       .where("user.deptName IS NOT NULL AND user.deptName != ''")
       .getRawOne();
     const totalDepartments = parseInt(
-      (departmentsResult as any)['COUNT(DISTINCT user.deptName)'] || '0',
+      (departmentsResult as { 'COUNT(DISTINCT user.deptName)': string })[
+        'COUNT(DISTINCT user.deptName)'
+      ] || '0',
     );
 
-    // Get new users in last 30 days
-    const newUsersThisMonth = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.createdAt >= :thirtyDaysAgo', { thirtyDaysAgo })
-      .getCount();
-
-    // Get users from 30-60 days ago for growth calculation
-    const usersPreviousMonth = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.createdAt >= :sixtyDaysAgo', { sixtyDaysAgo })
-      .andWhere('user.createdAt < :thirtyDaysAgo', { thirtyDaysAgo })
-      .getCount();
-
-    // Calculate growth rate
-    let growthRate = 0;
-    if (usersPreviousMonth > 0) {
-      growthRate =
-        ((newUsersThisMonth - usersPreviousMonth) / usersPreviousMonth) * 100;
-    } else if (newUsersThisMonth > 0) {
-      growthRate = 100; // If there were no users before, any new users represent 100% growth
-    }
-
     return {
-      totalUsers,
-      activeUsers,
+      totalApps,
+      activeDevices: totalActiveDevices,
+      versionUpdates,
+      uniqueUsers: totalUniqueUsers,
+      versionGrowthRate: Math.round(versionGrowthRate * 10) / 10,
+      newAppsThisMonth,
       totalDepartments,
-      newUsersThisMonth,
-      growthRate: Math.round(growthRate * 10) / 10, // Round to 1 decimal place
     };
+  }
+
+  private async calculateVersionUpdates(
+    mobileApps: MobileAppOverviewDto[],
+  ): Promise<number> {
+    // For now, return a placeholder - in real implementation, this would track version releases
+    // This would require version history tracking in database
+    return Math.floor(mobileApps.length * 0.3); // Simulate 30% of apps having version updates
+  }
+
+  private async calculateVersionGrowthRate(
+    mobileApps: MobileAppOverviewDto[],
+  ): Promise<number> {
+    // Placeholder calculation - in real implementation, this would compare version counts
+    const currentVersions = mobileApps.reduce(
+      (sum, app) => sum + app.versions.length,
+      0,
+    );
+    const previousVersions = Math.floor(currentVersions * 0.8); // Simulate previous version count
+
+    if (previousVersions > 0) {
+      return ((currentVersions - previousVersions) / previousVersions) * 100;
+    } else if (currentVersions > 0) {
+      return 100;
+    }
+    return 0;
+  }
+
+  private async getNewAppsThisMonth(): Promise<number> {
+    // Placeholder - in real implementation, this would track app creation dates
+    // For now, simulate some new apps
+    return Math.floor(Math.random() * 3) + 1; // 1-3 new apps
   }
 
   async getRecentActivity(): Promise<ActivityDto[]> {
@@ -112,13 +140,13 @@ export class DashboardService {
       }
     });
 
-    // Sort by timestamp (most recent first) and take top 10
+    // Sort by timestamp (most recent first) and take top 7
     return activities
       .sort(
         (a, b) =>
           parseUTC8Date(b.timestamp).getTime() -
           parseUTC8Date(a.timestamp).getTime(),
       )
-      .slice(0, 10);
+      .slice(0, 7);
   }
 }

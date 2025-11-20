@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { Smartphone, Users, Activity, Package } from 'lucide-react';
+import { Smartphone, Activity, Package } from 'lucide-react';
 import { getMobileAppsOverview } from '@/lib/mobile-apps.service';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -97,7 +97,6 @@ function AppsPage() {
     (sum, app) => sum + app.activeDevices,
     0,
   );
-  const totalUniqueUsers = apps.reduce((sum, app) => sum + app.uniqueUsers, 0);
 
   return (
     <div className="space-y-6">
@@ -124,15 +123,6 @@ function AppsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">設備總數</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalDevices}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">活躍設備</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -144,11 +134,22 @@ function AppsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">獨特用戶</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">版本更新</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUniqueUsers}</div>
+            <div className="text-2xl font-bold">
+              {apps.filter((app) => app.updateRequired).length}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">設備總數</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalDevices}</div>
           </CardContent>
         </Card>
       </div>

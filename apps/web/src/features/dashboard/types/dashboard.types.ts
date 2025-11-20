@@ -1,9 +1,16 @@
 export interface DashboardStats {
-  totalUsers: number;
-  activeUsers: number;
+  // App-focused metrics
+  totalApps: number;
+  activeDevices: number;
+  versionUpdates: number;
+  uniqueUsers: number;
+
+  // Growth metrics
+  versionGrowthRate: number;
+  newAppsThisMonth: number;
+
+  // Keep some user context
   totalDepartments: number;
-  newUsersThisMonth: number;
-  growthRate: number;
 }
 
 export interface RecentActivity {

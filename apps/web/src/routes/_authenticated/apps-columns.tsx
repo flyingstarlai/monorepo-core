@@ -1,6 +1,12 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import type { MobileAppOverviewDto } from '@/lib/mobile-apps.service';
+import {
+  getVersionStatus,
+  getLatestVersion,
+  compareVersions,
+  type VersionStatus,
+} from '@/lib/version-comparison.utils';
 
 export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
   {
@@ -20,12 +26,49 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
   {
     accessorKey: 'latestVersion',
     header: '最新版本',
-    cell: ({ row }) => {
+    sortingFn: (rowA, rowB) => {
+      const versionA = rowA.getValue('latestVersion') as string | null;
+      const versionB = rowB.getValue('latestVersion') as string | null;
+
+      // Compare A to B for descending order (newest versions first)
+      return compareVersions(versionA || '0.0.0', versionB || '0.0.0');
+    },
+    cell: ({ row, table }) => {
       const version = row.getValue('latestVersion') as string | null;
+
+      // Get latest version from all data
+      const allApps = table.getCoreRowModel().rows.map((r) => r.original);
+      const latestGlobalVersion = getLatestVersion(allApps);
+
+      const versionStatus: VersionStatus = getVersionStatus(
+        version,
+        latestGlobalVersion,
+      );
+
       return (
-        <Badge variant="secondary" className="text-xs">
-          {version || 'N/A'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge
+            variant={versionStatus.variant}
+            className="text-xs font-medium"
+          >
+            {version || 'N/A'}
+          </Badge>
+          {versionStatus.status === 'outdated' && (
+            <span className="text-xs text-orange-600" title="需要更新">
+              ⚠️
+            </span>
+          )}
+          {versionStatus.status === 'critical' && (
+            <span className="text-xs text-red-600" title="急需更新">
+              🚨
+            </span>
+          )}
+          {versionStatus.status === 'latest' && (
+            <span className="text-xs text-green-600" title="最新版本">
+              ✅
+            </span>
+          )}
+        </div>
       );
     },
   },
@@ -37,15 +80,5 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
         {row.getValue('activeDevices')}
       </span>
     ),
-  },
-  {
-    accessorKey: 'totalDevices',
-    header: '總設備數',
-    cell: ({ row }) => row.getValue('totalDevices'),
-  },
-  {
-    accessorKey: 'uniqueUsers',
-    header: '獨特用戶',
-    cell: ({ row }) => row.getValue('uniqueUsers'),
   },
 ];

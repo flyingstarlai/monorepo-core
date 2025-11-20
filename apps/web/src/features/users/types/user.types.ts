@@ -7,6 +7,11 @@ export interface User {
   role: 'admin' | 'manager' | 'user';
   isActive: boolean;
   lastLoginAt?: Date;
+  lastMobileLoginAt?: Date;
+  lastMobileDeviceId?: string;
+  lastMobileAppName?: string;
+  lastMobileAppVersion?: string;
+  lastMobileAppModule?: string;
   createdAt: Date;
   updatedAt: Date;
 }

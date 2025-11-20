@@ -49,3 +49,11 @@ export class User {
   })
   updatedAt: Date;
 }
+
+export type UserRole = 'admin' | 'manager' | 'user';
+
+export const UserRole = {
+  ADMIN: 'admin',
+  MANAGER: 'manager',
+  USER: 'user',
+} as const;

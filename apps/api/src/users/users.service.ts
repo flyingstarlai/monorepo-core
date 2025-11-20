@@ -128,6 +128,7 @@ export class UsersService {
         login_at,
         app_id,
         app_name,
+        app_version,
         app_module
        FROM dbo.TC_ACCOUNT_LOGIN
        WHERE account_id = @0
@@ -153,7 +154,7 @@ export class UsersService {
         : null,
       lastMobileDeviceId: row.app_id || null,
       lastMobileAppName: row.app_name || null,
-      lastMobileAppVersion: null,
+      lastMobileAppVersion: row.app_version || null,
       lastMobileAppModule: row.app_module || null,
     };
   }

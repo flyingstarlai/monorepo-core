@@ -19,9 +19,14 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
   {
     accessorKey: 'appId',
     header: '應用程式 ID',
-    cell: ({ row }) => (
-      <div className="font-mono text-sm">{row.getValue('appId')}</div>
-    ),
+    cell: ({ row }) => {
+      const appId = row.getValue('appId') as string;
+      const displayId = appId.includes('@')
+        ? appId.split('@')[0] // Get first part before @
+        : appId;
+
+      return <div className="font-mono text-sm">{displayId}</div>;
+    },
   },
   {
     accessorKey: 'latestVersion',

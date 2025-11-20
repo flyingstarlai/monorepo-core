@@ -6,17 +6,17 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
 import { FactoryDepartmentDto } from './dto/factory-department.dto';
 import { formatDateUTC8 } from '../utils/date-formatter';
-
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
+import { UserLoginLogDto } from './dto/user-login-log.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -99,12 +99,12 @@ export class UsersService {
 
     if (
       !RoleService.canCreateUserWithRole(
-        creatorRole as any,
-        roleToCreate as any,
+        creatorRole as UserRole,
+        roleToCreate as UserRole,
       )
     ) {
       const availableRoles = RoleService.getAvailableRolesForCreation(
-        creatorRole as any,
+        creatorRole as UserRole,
       );
       throw new BadRequestException(
         `Cannot create user with role "${roleToCreate}". Available roles: ${availableRoles.join(', ') || 'None'}`,
@@ -116,9 +116,61 @@ export class UsersService {
     return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
+  private async getLatestMobileLoginForUser(userId: string): Promise<{
+    lastMobileLoginAt: string | null;
+    lastMobileDeviceId: string | null;
+    lastMobileAppName: string | null;
+    lastMobileAppVersion: string | null;
+    lastMobileAppModule: string | null;
+  }> {
+    const latest = await this.usersRepository.query(
+      `SELECT TOP 1
+        login_at,
+        app_id,
+        app_name,
+        app_module
+       FROM dbo.TC_ACCOUNT_LOGIN
+       WHERE account_id = @0
+       ORDER BY login_at DESC
+       `,
+      [userId],
+    );
+
+    if (latest.length === 0) {
+      return {
+        lastMobileLoginAt: null,
+        lastMobileDeviceId: null,
+        lastMobileAppName: null,
+        lastMobileAppVersion: null,
+        lastMobileAppModule: null,
+      };
+    }
+
+    const row = latest[0];
+    return {
+      lastMobileLoginAt: row.login_at
+        ? formatDateUTC8(new Date(row.login_at as string | number | Date))
+        : null,
+      lastMobileDeviceId: row.app_id || null,
+      lastMobileAppName: row.app_name || null,
+      lastMobileAppVersion: null,
+      lastMobileAppModule: row.app_module || null,
+    };
+  }
+
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.usersRepository.find();
-    return users.map(
+    const usersWithMobile = await Promise.all(
+      users.map(async (user) => {
+        const mobile = await this.getLatestMobileLoginForUser(user.id);
+        return {
+          ...user,
+          ...mobile,
+        };
+      }),
+    );
+
+    return usersWithMobile.map(
       (user) =>
         ({
           ...user,
@@ -187,7 +239,17 @@ export class UsersService {
     queryBuilder.skip(offset).take(limit);
 
     const users = await queryBuilder.getMany();
-    const formattedUsers = users.map(
+    const usersWithMobile = await Promise.all(
+      users.map(async (user) => {
+        const mobile = await this.getLatestMobileLoginForUser(user.id);
+        return {
+          ...user,
+          ...mobile,
+        };
+      }),
+    );
+
+    const formattedUsers = usersWithMobile.map(
       (user) =>
         ({
           ...user,
@@ -213,8 +275,10 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+    const mobile = await this.getLatestMobileLoginForUser(user.id);
     return {
       ...user,
+      ...mobile,
       lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
       createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
       updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
@@ -235,8 +299,8 @@ export class UsersService {
     if (updateUserDto.role && updateUserDto.role !== existingUser.role) {
       if (
         !RoleService.canEditUserRole(
-          creatorRole as any,
-          updateUserDto.role as any,
+          creatorRole as UserRole,
+          updateUserDto.role as UserRole,
         )
       ) {
         throw new BadRequestException(
@@ -251,8 +315,10 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
+    const mobile = await this.getLatestMobileLoginForUser(updatedUser.id);
     return {
       ...updatedUser,
+      ...mobile,
       lastLoginAt: updatedUser.lastLoginAt
         ? formatDateUTC8(updatedUser.lastLoginAt)
         : null,
@@ -280,8 +346,10 @@ export class UsersService {
       return null;
     }
 
+    const mobile = await this.getLatestMobileLoginForUser(user.id);
     return {
       ...user,
+      ...mobile,
       lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
       createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
       updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
@@ -332,8 +400,10 @@ export class UsersService {
       return null;
     }
 
+    const mobile = await this.getLatestMobileLoginForUser(user.id);
     return {
       ...user,
+      ...mobile,
       lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
       createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
       updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
@@ -362,8 +432,10 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
+    const mobile = await this.getLatestMobileLoginForUser(updatedUser.id);
     return {
       ...updatedUser,
+      ...mobile,
       lastLoginAt: updatedUser.lastLoginAt
         ? formatDateUTC8(updatedUser.lastLoginAt)
         : null,
@@ -386,7 +458,17 @@ export class UsersService {
       .limit(20)
       .getMany();
 
-    return users.map(
+    const usersWithMobile = await Promise.all(
+      users.map(async (user) => {
+        const mobile = await this.getLatestMobileLoginForUser(user.id);
+        return {
+          ...user,
+          ...mobile,
+        };
+      }),
+    );
+
+    return usersWithMobile.map(
       (user) =>
         ({
           ...user,
@@ -405,6 +487,7 @@ export class UsersService {
     // Update lastLoginAt
     await this.usersRepository.update(user.id, { lastLoginAt: new Date() });
 
+    const mobile = await this.getLatestMobileLoginForUser(user.id);
     const payload = { username: user.username, sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
@@ -416,6 +499,7 @@ export class UsersService {
         deptName: user.deptName,
         role: user.role,
         isActive: user.isActive,
+        ...mobile,
         lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
         createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
         updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
@@ -438,8 +522,10 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
+    const mobile = await this.getLatestMobileLoginForUser(updatedUser.id);
     return {
       ...updatedUser,
+      ...mobile,
       lastLoginAt: updatedUser.lastLoginAt
         ? formatDateUTC8(updatedUser.lastLoginAt)
         : null,
@@ -497,7 +583,7 @@ export class UsersService {
       );
 
       // Map procedure results to FactoryUserDto format
-      const factoryUsers = result.map((item: any, index: number) => {
+      const factoryUsers = result.map((item: any) => {
         const mapped = {
           username: item.username || '',
           full_name: item.full_name || '',
@@ -532,7 +618,7 @@ export class UsersService {
       const result = await this.usersRepository.query('EXEC ACM_FACTORY_DEPT');
 
       // Map procedure results to FactoryDepartmentDto format
-      const factoryDepartments = result.map((item: any, index: number) => {
+      const factoryDepartments = result.map((item: any) => {
         const mapped = {
           dept_no: item.dept_no || '',
           dept_name: item.dept_name || '',
@@ -553,5 +639,50 @@ export class UsersService {
         'Failed to retrieve factory departments. Please try again later.',
       );
     }
+  }
+
+  async findLoginHistoryByUserId(
+    userId: string,
+    limit = 100,
+  ): Promise<{
+    items: UserLoginLogDto[];
+  }> {
+    const limitInt = Math.max(1, Math.floor(limit));
+
+    const itemsResult = await this.usersRepository.query(
+      `
+      SELECT TOP ${limitInt}
+        _key AS logId,
+        account_id AS userId,
+        login_at AS loginAt,
+        success,
+        failure_reason AS failureReason,
+        app_id AS deviceId,
+        app_name AS appName,
+        app_version AS appVersion,
+        app_module AS appModule
+       FROM dbo.TC_ACCOUNT_LOGIN
+       WHERE account_id = @0
+       ORDER BY login_at DESC
+       `,
+      [userId],
+    );
+
+    const items = itemsResult.map((row: any) => ({
+      logId: row.logId,
+      loginAt: row.loginAt
+        ? formatDateUTC8(new Date(row.loginAt as string | number | Date))
+        : null,
+      success: Boolean(row.success),
+      failureReason: row.failureReason || null,
+      deviceId: row.deviceId || null,
+      appName: row.appName || null,
+      appVersion: row.appVersion || null,
+      appModule: row.appModule || null,
+    }));
+
+    return {
+      items,
+    };
   }
 }

@@ -29,14 +29,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { UnifiedPagination } from '@/components/ui/unified-pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  ChevronLeft,
-  ChevronRight,
   Search,
   Filter,
   Users,
@@ -93,7 +92,7 @@ export function UserDataTable({
       }
 
       // Role filter
-      if (roleFilter !== 'all' && user.role !== roleFilter) {
+      if (roleFilter && roleFilter !== 'all' && user.role !== roleFilter) {
         return false;
       }
 
@@ -131,10 +130,10 @@ export function UserDataTable({
     setPaginationState((prev) => ({ ...prev, pageIndex: newPageIndex }));
   };
 
-  const handlePageSizeChange = (newPageSize: string) => {
+  const handlePageSizeChange = (newPageSize: number) => {
     setPaginationState((prev) => ({
       ...prev,
-      pageSize: parseInt(newPageSize),
+      pageSize: newPageSize,
       pageIndex: 0, // Reset to first page when changing page size
     }));
   };
@@ -368,91 +367,14 @@ export function UserDataTable({
           </div>
 
           {/* Compact Pagination */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>
-                {table.getPaginationRowModel().rows.length} / {filteredCount}{' '}
-                項目
-              </span>
-              <span className="text-xs">
-                (第 {paginationState.pageIndex + 1} 頁，每頁 {pageSize} 項)
-              </span>
-              <Select
-                value={pageSize.toString()}
-                onValueChange={handlePageSizeChange}
-              >
-                <SelectTrigger className="w-16 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem
-                      key={pageSize}
-                      value={pageSize.toString()}
-                      className="text-xs"
-                    >
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center space-x-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  handlePageChange(table.getState().pagination.pageIndex - 1)
-                }
-                disabled={!table.getCanPreviousPage()}
-                className="h-8 px-3 text-xs"
-              >
-                <ChevronLeft className="h-3 w-3 mr-1" />
-                上一頁
-              </Button>
-
-              <div className="flex items-center space-x-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handlePageChange(pageNum - 1)}
-                      className="w-8 h-8 p-0 text-xs"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  handlePageChange(table.getState().pagination.pageIndex + 1)
-                }
-                disabled={!table.getCanNextPage()}
-                className="h-8 px-3 text-xs"
-              >
-                下一頁
-                <ChevronRight className="h-3 w-3 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <UnifiedPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filteredCount}
+            onPageChange={(page) => handlePageChange(page - 1)}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </div>
       </CardContent>
     </Card>

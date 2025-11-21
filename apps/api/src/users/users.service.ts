@@ -142,7 +142,12 @@ export class UsersService implements IUsersService {
   }
 
   private generateId(): string {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    const timestamp = Date.now();
+    const randomChars = Math.random().toString(36).substring(2, 8);
+    const randomNum = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0');
+    return `user_${timestamp}_${randomChars}${randomNum}`;
   }
 
   private async getLatestMobileLoginForUser(

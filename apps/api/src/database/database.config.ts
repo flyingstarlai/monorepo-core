@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { MobileApp } from '../mobile-apps/entities/mobile-app.entity';
+import { LoginHistory } from '../mobile-apps/entities/login-history.entity';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { MobileApp } from '../mobile-apps/entities/mobile-app.entity';
         username: configService.get<string>('DB_USERNAME') || 'sa',
         password: configService.get<string>('DB_PASSWORD') || '',
         database: configService.get<string>('DB_DATABASE') || 'AccountManager',
-        entities: [User, MobileApp],
+        entities: [User, MobileApp, LoginHistory],
         synchronize: false, // Don't auto-sync since we have existing table
         logging: configService.get<string>('NODE_ENV') === 'development',
         migrations: ['dist/migrations/*.js'],

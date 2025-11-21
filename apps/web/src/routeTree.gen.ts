@@ -18,10 +18,12 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users.index'
+import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps.index'
 import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenticated/users.create'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
+import { Route as AuthenticatedAppsIdRouteImport } from './routes/_authenticated/apps.$id'
 import { Route as AuthenticatedUsersIdViewRouteImport } from './routes/_authenticated/users.$id.view'
 import { Route as AuthenticatedUsersIdEditRouteImport } from './routes/_authenticated/users.$id.edit'
 
@@ -69,6 +71,11 @@ const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedUsersRoute,
 } as any)
+const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppsRoute,
+} as any)
 const AuthenticatedUsersCreateRoute =
   AuthenticatedUsersCreateRouteImport.update({
     id: '/create',
@@ -92,6 +99,11 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedAppsIdRoute = AuthenticatedAppsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedAppsRoute,
+} as any)
 const AuthenticatedUsersIdViewRoute =
   AuthenticatedUsersIdViewRouteImport.update({
     id: '/view',
@@ -109,14 +121,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/apps': typeof AuthenticatedAppsRoute
+  '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/users': typeof AuthenticatedUsersRouteWithChildren
+  '/apps/$id': typeof AuthenticatedAppsIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/users/create': typeof AuthenticatedUsersCreateRoute
+  '/apps/': typeof AuthenticatedAppsIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
@@ -125,13 +139,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/apps': typeof AuthenticatedAppsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/apps/$id': typeof AuthenticatedAppsIdRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/users/create': typeof AuthenticatedUsersCreateRoute
+  '/apps': typeof AuthenticatedAppsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
@@ -142,14 +157,16 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/_authenticated/apps': typeof AuthenticatedAppsRoute
+  '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRouteWithChildren
+  '/_authenticated/apps/$id': typeof AuthenticatedAppsIdRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
+  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/_authenticated/users/$id/view': typeof AuthenticatedUsersIdViewRoute
@@ -164,10 +181,12 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/settings'
     | '/users'
+    | '/apps/$id'
     | '/settings/account'
     | '/settings/profile'
     | '/users/$id'
     | '/users/create'
+    | '/apps/'
     | '/users/'
     | '/users/$id/edit'
     | '/users/$id/view'
@@ -176,13 +195,14 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/unauthorized'
-    | '/apps'
     | '/dashboard'
     | '/settings'
+    | '/apps/$id'
     | '/settings/account'
     | '/settings/profile'
     | '/users/$id'
     | '/users/create'
+    | '/apps'
     | '/users'
     | '/users/$id/edit'
     | '/users/$id/view'
@@ -196,10 +216,12 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/settings'
     | '/_authenticated/users'
+    | '/_authenticated/apps/$id'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/profile'
     | '/_authenticated/users/$id'
     | '/_authenticated/users/create'
+    | '/_authenticated/apps/'
     | '/_authenticated/users/'
     | '/_authenticated/users/$id/edit'
     | '/_authenticated/users/$id/view'
@@ -277,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
       parentRoute: typeof AuthenticatedUsersRoute
     }
+    '/_authenticated/apps/': {
+      id: '/_authenticated/apps/'
+      path: '/'
+      fullPath: '/apps/'
+      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
+      parentRoute: typeof AuthenticatedAppsRoute
+    }
     '/_authenticated/users/create': {
       id: '/_authenticated/users/create'
       path: '/create'
@@ -305,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/apps/$id': {
+      id: '/_authenticated/apps/$id'
+      path: '/$id'
+      fullPath: '/apps/$id'
+      preLoaderRoute: typeof AuthenticatedAppsIdRouteImport
+      parentRoute: typeof AuthenticatedAppsRoute
+    }
     '/_authenticated/users/$id/view': {
       id: '/_authenticated/users/$id/view'
       path: '/view'
@@ -321,6 +357,19 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAppsRouteChildren {
+  AuthenticatedAppsIdRoute: typeof AuthenticatedAppsIdRoute
+  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
+}
+
+const AuthenticatedAppsRouteChildren: AuthenticatedAppsRouteChildren = {
+  AuthenticatedAppsIdRoute: AuthenticatedAppsIdRoute,
+  AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
+}
+
+const AuthenticatedAppsRouteWithChildren =
+  AuthenticatedAppsRoute._addFileChildren(AuthenticatedAppsRouteChildren)
 
 interface AuthenticatedSettingsRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -366,14 +415,14 @@ const AuthenticatedUsersRouteWithChildren =
   AuthenticatedUsersRoute._addFileChildren(AuthenticatedUsersRouteChildren)
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAppsRoute: typeof AuthenticatedAppsRoute
+  AuthenticatedAppsRoute: typeof AuthenticatedAppsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAppsRoute: AuthenticatedAppsRoute,
+  AuthenticatedAppsRoute: AuthenticatedAppsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRouteWithChildren,

@@ -1,5 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { History } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import type { MobileAppOverviewDto } from '@/lib/mobile-apps.service';
 import {
   getVersionStatus,
@@ -78,5 +81,21 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
         {row.getValue('activeDevices')}
       </span>
     ),
+  },
+  {
+    id: 'actions',
+    header: '操作',
+    cell: ({ row }) => {
+      const appId = row.getValue('appId') as string;
+
+      return (
+        <Link to="/apps/$id" params={{ id: appId }}>
+          <Button variant="outline" size="sm">
+            <History className="h-4 w-4 mr-2" />
+            查看登入歷史
+          </Button>
+        </Link>
+      );
+    },
   },
 ];

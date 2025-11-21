@@ -265,12 +265,15 @@ export function AppLoginHistory({ appId }: AppLoginHistoryProps) {
                         {record.username}
                       </TableCell>
                       <TableCell className="py-3 px-4">
-                        <Badge
-                          variant={record.success ? 'default' : 'destructive'}
-                          className="text-xs"
-                        >
-                          {record.success ? '成功' : '失敗'}
-                        </Badge>
+                       <span
+                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                           record.success
+                             ? 'bg-green-100 text-green-800'
+                             : 'bg-red-100 text-red-800'
+                         }`}
+                       >
+                      {record.success ? '成功' : '失敗'}
+                    </span>
                       </TableCell>
                       <TableCell
                         className={cn(

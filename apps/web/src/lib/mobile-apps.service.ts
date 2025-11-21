@@ -1,5 +1,4 @@
 import { apiClient } from './api-client';
-import { getLatestVersion, getVersionStatus } from './version-comparison.utils';
 
 export interface LoginHistoryRecord {
   key: string;
@@ -28,6 +27,7 @@ export interface LoginHistoryQueryParams {
   limit?: number;
   startDate?: string;
   endDate?: string;
+  deviceId?: string;
 }
 
 export interface PaginatedLoginHistoryResponse {
@@ -38,44 +38,49 @@ export interface PaginatedLoginHistoryResponse {
 export interface MobileAppOverviewDto {
   appId: string;
   appName: string;
-  latestVersion: string | null;
-  actualLatestVersion: string | null;
-  versions: string[];
   activeDevices: number;
   totalDevices: number;
   companies: number;
   uniqueUsers: number;
-  // Enhanced version status fields
-  versionStatus?: 'latest' | 'outdated' | 'critical' | 'unknown';
-  versionsBehind?: number;
-  updateRequired?: boolean;
+}
+
+export interface AppDeviceDto {
+  id: string;
+  appId: string;
+  appName: string;
+  appVersion: string;
+  name: string;
+  company: string;
+  isActive: boolean;
 }
 
 export async function getMobileAppsOverview(): Promise<MobileAppOverviewDto[]> {
   const response = await apiClient.get('/mobile-apps');
-  const apps = response.data as MobileAppOverviewDto[];
+  return response.data as MobileAppOverviewDto[];
+}
 
-  // Use server-provided global latest version when available to keep it stable across UI filters
-  const globalLatestVersion =
-    apps[0]?.actualLatestVersion ?? getLatestVersion(apps);
-
-  return apps.map((app) => {
-    const status = getVersionStatus(app.latestVersion, globalLatestVersion);
-    return {
-      ...app,
-      versionStatus: status.status,
-      versionsBehind: status.versionsBehind,
-      updateRequired: status.status !== 'latest' && status.status !== 'unknown',
-    };
+export async function getDevicesByAppId(
+  appId: string,
+  appName?: string,
+): Promise<AppDeviceDto[]> {
+  const response = await apiClient.get(`/mobile-apps/${appId}`, {
+    params: {
+      ...(appName && { appName }),
+    },
   });
+  return response.data as AppDeviceDto[];
 }
 
 export async function getLoginHistoryByAppId(
   appId: string,
   params?: LoginHistoryQueryParams,
+  appName?: string,
 ): Promise<PaginatedLoginHistoryResponse> {
   const response = await apiClient.get(`/mobile-apps/${appId}/login-history`, {
-    params,
+    params: {
+      ...params,
+      ...(appName && { appName }),
+    },
   });
   return response.data as PaginatedLoginHistoryResponse;
 }

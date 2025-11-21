@@ -525,16 +525,22 @@ export class UsersService implements IUsersService {
     return { items };
   }
 
-  async findLoginHistoryByAppId(
+  async findLoginHistoryByDeviceId(
     appId: string,
     query: LoginHistoryQueryDto,
   ): Promise<PaginatedLoginHistoryDto> {
-    const { page = 1, limit = 50, startDate, endDate } = query;
+    const { page = 1, limit = 50, startDate, endDate, deviceId } = query;
 
-    // Build query: match records where appId has the format `${appId}@<device>`
-    const queryBuilder = this.loginHistoryRepo
-      .createQueryBuilder('loginHistory')
-      .where('loginHistory.appId LIKE :appIdLike', { appIdLike: `${appId}@%` });
+    // Build query: when deviceId provided, match exact device id; otherwise match all devices of app
+    const queryBuilder =
+      this.loginHistoryRepo.createQueryBuilder('loginHistory');
+    if (deviceId) {
+      queryBuilder.where('loginHistory.appId = :deviceId', { deviceId });
+    } else {
+      queryBuilder.where('loginHistory.appId LIKE :appIdLike', {
+        appIdLike: `${appId}@%`,
+      });
+    }
 
     // Add date range filtering if provided
     if (startDate) {

@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryColumn } from 'typeorm';
 
 @Entity('TC_ACCOUNT_LOGIN')
 export class LoginHistory {
-  @PrimaryColumn({ type: 'uniqueidentifier', name: '_key' })
+  @PrimaryColumn({ type: 'uuid', name: '_key' })
   key: string;
 
   @Column({ name: 'username', type: 'nvarchar', length: 50 })

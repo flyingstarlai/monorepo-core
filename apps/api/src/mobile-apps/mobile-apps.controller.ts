@@ -33,6 +33,24 @@ export class MobileAppsController {
     return this.mobileAppsService.getMobileAppsOverview();
   }
 
+  @Get(':id')
+  async getDevicesByAppId(
+    @Param('id') appId: string,
+    @Req() req: { user: User },
+    @Query('appName') appName?: string,
+  ) {
+    const userRole = req.user?.role;
+
+    // Check if user has required role
+    if (!RoleService.hasAnyRole(userRole, ['admin', 'manager'])) {
+      throw new ForbiddenException(
+        'Insufficient permissions to access app devices',
+      );
+    }
+
+    return this.mobileAppsService.getDevicesByAppId(appId, appName);
+  }
+
   @Get(':id/login-history')
   async getLoginHistoryByAppId(
     @Param('id') appId: string,
@@ -48,6 +66,6 @@ export class MobileAppsController {
       );
     }
 
-    return this.mobileAppsService.getLoginHistoryByAppId(appId, query);
+    return this.mobileAppsService.getLoginHistoryByDeviceId(appId, query);
   }
 }

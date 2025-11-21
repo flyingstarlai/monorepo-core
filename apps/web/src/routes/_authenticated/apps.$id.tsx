@@ -1,5 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { AppLoginHistory } from '@/features/apps/components/app-login-history';
+import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/_authenticated/apps/$id')({
   beforeLoad: ({ context, location }) => {
@@ -13,10 +12,12 @@ export const Route = createFileRoute('/_authenticated/apps/$id')({
       });
     }
   },
-  component: AppLoginHistoryPage,
+  component: AppsIdLayout,
+  validateSearch: (search: Record<string, unknown>) => ({
+    appName: search.appName as string | undefined,
+  }),
 });
 
-function AppLoginHistoryPage() {
-  const { id } = Route.useParams();
-  return <AppLoginHistory appId={id} />;
+function AppsIdLayout() {
+  return <Outlet />;
 }

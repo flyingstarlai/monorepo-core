@@ -22,4 +22,7 @@ export class LoginHistoryQueryDto {
   @IsOptional()
   @IsDateString()
   endDate?: string;
+
+  @IsOptional()
+  deviceId?: string;
 }

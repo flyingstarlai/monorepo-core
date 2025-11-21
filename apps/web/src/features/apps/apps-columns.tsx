@@ -1,14 +1,8 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import type { MobileAppOverviewDto } from '@/lib/mobile-apps.service';
-import {
-  getVersionStatus,
-  compareVersions,
-  type VersionStatus,
-} from '@/lib/version-comparison.utils';
 
 export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
   {
@@ -27,53 +21,6 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
     },
   },
   {
-    accessorKey: 'latestVersion',
-    header: '最新版本',
-    sortingFn: (rowA, rowB) => {
-      const versionA = rowA.getValue('latestVersion') as string | null;
-      const versionB = rowB.getValue('latestVersion') as string | null;
-
-      // Compare A to B for descending order (newest versions first)
-      return compareVersions(versionA || '0.0.0', versionB || '0.0.0');
-    },
-    cell: ({ row }) => {
-      const version = row.getValue('latestVersion') as string | null;
-      const actualLatestVersion =
-        (row.original.actualLatestVersion as string | null) || '0.0.0';
-
-      const versionStatus: VersionStatus = getVersionStatus(
-        version,
-        actualLatestVersion,
-      );
-
-      return (
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={versionStatus.variant}
-            className="text-xs font-medium"
-          >
-            {version || 'N/A'}
-          </Badge>
-          {versionStatus.status === 'outdated' && (
-            <span className="text-xs text-orange-600" title="需要更新">
-              ⚠️
-            </span>
-          )}
-          {versionStatus.status === 'critical' && (
-            <span className="text-xs text-red-600" title="急需更新">
-              🚨
-            </span>
-          )}
-          {versionStatus.status === 'latest' && (
-            <span className="text-xs text-green-600" title="最新版本">
-              ✅
-            </span>
-          )}
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: 'activeDevices',
     header: '活躍設備',
     cell: ({ row }) => (
@@ -87,12 +34,13 @@ export const appsColumns: ColumnDef<MobileAppOverviewDto>[] = [
     header: '操作',
     cell: ({ row }) => {
       const appId = row.getValue('appId') as string;
+      const appName = row.original.appName;
 
       return (
-        <Link to="/apps/$id" params={{ id: appId }}>
+        <Link to="/apps/$id" params={{ id: appId }} search={{ appName }}>
           <Button variant="outline" size="sm">
-            <History className="h-4 w-4 mr-2" />
-            查看登入歷史
+            <Smartphone className="h-4 w-4 mr-2" />
+            查看設備
           </Button>
         </Link>
       );

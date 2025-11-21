@@ -5,6 +5,7 @@ import { MobileApp } from './entities/mobile-app.entity';
 import { MobileAppOverviewDto } from './dto/mobile-app-overview.dto';
 import { LoginHistoryQueryDto } from './dto/login-history-query.dto';
 import { PaginatedLoginHistoryDto } from './dto/paginated-login-history.dto';
+import { AppDeviceDto, toAppDeviceDto } from './dto/app-device.dto';
 import { IUsersService } from '../users/interfaces/users-service.interface';
 import { UsersService } from '../users/users.service';
 
@@ -26,8 +27,7 @@ export class MobileAppsService {
     const grouped = new Map<string, MobileApp[]>();
 
     allApps.forEach((app) => {
-      const [appId] = app.id.split('@');
-      const key = `${appId}|${app.appName}`;
+      const key = `${app.appId}|${app.appName}`;
       if (!grouped.has(key)) {
         grouped.set(key, []);
       }
@@ -38,12 +38,6 @@ export class MobileAppsService {
 
     for (const [key, apps] of grouped) {
       const [appId, appName] = key.split('|');
-
-      // Get distinct versions
-      const versions = [...new Set(apps.map((app) => app.appVersion))];
-
-      // Find latest version using semantic version comparison when possible
-      const latestVersion = this.findLatestVersion(versions);
 
       // Count active devices
       const activeDevices = apps.filter((app) => app.isActive).length;
@@ -62,9 +56,6 @@ export class MobileAppsService {
       result.push({
         appId,
         appName,
-        latestVersion,
-        actualLatestVersion: null,
-        versions,
         activeDevices,
         totalDevices: apps.length,
         uniqueUsers,
@@ -72,56 +63,24 @@ export class MobileAppsService {
       });
     }
 
-    // Compute global latest version across all apps (stable regardless of UI filtering)
-    const overallLatest = this.findLatestVersion(
-      result.map((r) => r.latestVersion).filter((v): v is string => v !== null),
-    );
-
-    return result.map((r) => ({ ...r, actualLatestVersion: overallLatest }));
+    return result;
   }
 
-  private findLatestVersion(versions: string[]): string | null {
-    if (versions.length === 0) return null;
-
-    // Try semantic version comparison first
-    try {
-      const semanticVersions = versions.map((v) => ({
-        original: v,
-        parts: v.split('.').map((part) => {
-          const num = parseInt(part, 10);
-          return isNaN(num) ? part : num;
-        }),
-      }));
-
-      semanticVersions.sort((a, b) => {
-        const maxLength = Math.max(a.parts.length, b.parts.length);
-        for (let i = 0; i < maxLength; i++) {
-          const aPart = a.parts[i] ?? 0;
-          const bPart = b.parts[i] ?? 0;
-
-          if (typeof aPart === 'number' && typeof bPart === 'number') {
-            if (aPart !== bPart) return bPart - aPart; // descending
-          } else {
-            // Fallback to string comparison for non-numeric parts
-            const comparison = String(bPart).localeCompare(String(aPart));
-            if (comparison !== 0) return comparison;
-          }
-        }
-        return 0;
-      });
-
-      return semanticVersions[0].original;
-    } catch {
-      // Fallback to lexicographic comparison
-      return versions.sort().reverse()[0];
-    }
+  async getDevicesByAppId(
+    appId: string,
+    appName?: string,
+  ): Promise<AppDeviceDto[]> {
+    const devices = await this.mobileAppRepository.find({
+      where: appName ? { appId, appName } : { appId },
+      order: { id: 'ASC' },
+    });
+    return devices.map(toAppDeviceDto);
   }
 
-  async getLoginHistoryByAppId(
+  async getLoginHistoryByDeviceId(
     appId: string,
     query: LoginHistoryQueryDto,
   ): Promise<PaginatedLoginHistoryDto> {
-    console.log('appId', appId);
-    return this.usersService.findLoginHistoryByAppId(appId, query);
+    return this.usersService.findLoginHistoryByDeviceId(appId, query);
   }
 }

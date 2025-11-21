@@ -32,9 +32,15 @@ import { formatDate } from '@/features/users/utils/user-transformers.ts';
 
 interface AppLoginHistoryProps {
   appId: string;
+  appName?: string;
+  deviceId?: string;
 }
 
-export function AppLoginHistory({ appId }: AppLoginHistoryProps) {
+export function AppLoginHistory({
+  appId,
+  appName,
+  deviceId,
+}: AppLoginHistoryProps) {
   const [filters, setFilters] = useState<LoginHistoryQueryParams>({
     page: 1,
     limit: 50,
@@ -45,8 +51,9 @@ export function AppLoginHistory({ appId }: AppLoginHistoryProps) {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['login-history', appId, filters],
-    queryFn: () => getLoginHistoryByAppId(appId, filters),
+    queryKey: ['login-history', appId, appName, deviceId, filters],
+    queryFn: () =>
+      getLoginHistoryByAppId(appId, { ...filters, deviceId }, appName),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
@@ -95,7 +102,11 @@ export function AppLoginHistory({ appId }: AppLoginHistoryProps) {
             </Link>
             <div>
               <h1 className="text-3xl font-bold text-slate-900">登入歷史</h1>
-              <p className="text-slate-600 mt-2">應用程式 ID: {appId}</p>
+              <p className="text-slate-600 mt-2">
+                應用程式 ID: {appId}
+                {appName && !deviceId && ` | 應用程式名稱: ${appName}`}
+                {deviceId && ` | 設備 ID: ${deviceId}`}
+              </p>
             </div>
           </div>
         </div>
@@ -142,7 +153,11 @@ export function AppLoginHistory({ appId }: AppLoginHistoryProps) {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-slate-900">登入歷史</h1>
-            <p className="text-slate-600 mt-2">應用程式 ID: {appId}</p>
+            <p className="text-slate-600 mt-2">
+              應用程式 ID: {appId}
+              {appName && !deviceId && ` | 應用程式名稱: ${appName}`}
+              {deviceId && ` | 設備 ID: ${deviceId}`}
+            </p>
           </div>
         </div>
         {pagination.total > 0 && (
@@ -265,15 +280,15 @@ export function AppLoginHistory({ appId }: AppLoginHistoryProps) {
                         {record.username}
                       </TableCell>
                       <TableCell className="py-3 px-4">
-                       <span
-                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                           record.success
-                             ? 'bg-green-100 text-green-800'
-                             : 'bg-red-100 text-red-800'
-                         }`}
-                       >
-                      {record.success ? '成功' : '失敗'}
-                    </span>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            record.success
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {record.success ? '成功' : '失敗'}
+                        </span>
                       </TableCell>
                       <TableCell
                         className={cn(

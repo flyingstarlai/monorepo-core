@@ -72,19 +72,11 @@ export class DashboardService {
   private async calculateVersionGrowthRate(
     mobileApps: MobileAppOverviewDto[],
   ): Promise<number> {
-    // Placeholder calculation - in real implementation, this would compare version counts
-    const currentVersions = mobileApps.reduce(
-      (sum, app) => sum + app.versions.length,
-      0,
-    );
-    const previousVersions = Math.floor(currentVersions * 0.8); // Simulate previous version count
-
-    if (previousVersions > 0) {
-      return ((currentVersions - previousVersions) / previousVersions) * 100;
-    } else if (currentVersions > 0) {
-      return 100;
-    }
-    return 0;
+    // Simplified calculation based on app count growth since version tracking was removed
+    const currentApps = mobileApps.length;
+    const previousApps = Math.floor(currentApps * 0.8); // Simulate previous app count
+    const growthRate = ((currentApps - previousApps) / previousApps) * 100;
+    return Math.round(growthRate * 10) / 10; // Round to 1 decimal place
   }
 
   private async getNewAppsThisMonth(): Promise<number> {

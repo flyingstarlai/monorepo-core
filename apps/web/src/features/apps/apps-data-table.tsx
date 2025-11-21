@@ -55,8 +55,8 @@ export function AppsDataTable({
 }: AppsDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
     {
-      id: 'latestVersion',
-      desc: true, // Sort latest versions first (newest at top)
+      id: 'activeDevices',
+      desc: true, // Sort by active devices first (most active at top)
     },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -83,11 +83,8 @@ export function AppsDataTable({
         const searchLower = globalFilter.toLowerCase();
         const matchesAppName = app.appName.toLowerCase().includes(searchLower);
         const matchesAppId = app.appId.toLowerCase().includes(searchLower);
-        const matchesLatestVersion = app.latestVersion
-          ?.toLowerCase()
-          .includes(searchLower);
 
-        if (!matchesAppName && !matchesAppId && !matchesLatestVersion) {
+        if (!matchesAppName && !matchesAppId) {
           return false;
         }
       }

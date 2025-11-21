@@ -81,12 +81,14 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 - **Test Data**: Seed files for consistent test database state
 - **Mock Strategy**: Mock external dependencies and database connections in tests
 
-### Current Implementation Status ✅
+### Architecture Implementation Status ✅
 
-- **Core Module**: Centralized entity registration with shared access
-- **Domain Boundaries**: Clean entity ownership by business domain
-- **Dependency Inversion**: Interface-based cross-module communication
-- **Circular Dependencies**: Resolved using forwardRef pattern
+- **Core Module**: Centralized entity registration with shared access across all domains
+- **Domain Boundaries**: Clean entity ownership by business domain (Users, Mobile Apps, Dashboard)
+- **Dependency Inversion**: Interface-based cross-module communication with proper contracts
+- **Circular Dependencies**: Resolved using forwardRef pattern for module initialization
+- **Shared Entity Access**: CoreModule provides TypeORM exports for repository injection
+- **Module Communication**: Services use well-defined interfaces rather than direct dependencies
 
 ### Git Workflow
 
@@ -110,6 +112,29 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 - **Profile Management**: Users can update their own profile information
 - **Password Management**: Change password with current password verification
 - **Architecture**: Clean domain boundaries with shared CoreModule for entity access
+
+### Mobile Apps Management Domain (IMPLEMENTED)
+
+- **Mobile Apps Overview**: Aggregated view of all connected mobile apps with device counts and user metrics
+- **App Login History**: Detailed login tracking for specific mobile apps with date filtering and pagination
+- **Device Management**: Track active vs total devices per app with version information
+- **User Analytics**: Count unique users and companies per mobile application
+- **Security Monitoring**: Login attempt tracking with success/failure status and failure reasons
+
+#### Mobile Apps Features (IMPLEMENTED)
+
+- **Overview Endpoint**: `/mobile-apps` provides aggregated app statistics
+- **Login History Endpoint**: `/mobile-apps/:id/login-history` provides detailed login tracking
+- **Role-Based Access**: Admin and manager access to mobile app data
+- **Date Filtering**: Filter login history by date range with validation
+- **Pagination**: Support for large datasets with configurable page sizes
+- **Traditional Chinese Localization**: Full UI support for Traditional Chinese language
+
+#### Frontend Routes (IMPLEMENTED)
+
+- **Mobile Apps Overview**: `/apps` - Complete mobile apps management interface
+- **App Login History**: `/apps/$id/login-history` - Detailed login history view
+- **Sidebar Navigation**: Apps menu item for admin and manager users
 
 ### Dashboard Analytics Domain (PARTIALLY IMPLEMENTED)
 
@@ -192,9 +217,12 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 - **User Management**: Full CRUD operations with role-based restrictions
 - **Profile Management**: User profile editing and password changes
 - **Dashboard Analytics**: Basic user statistics and activity tracking
-- **Database Integration**: TypeORM with SQL Server integration
-- **Frontend UI**: React components for all major features
+- **Mobile Apps Management**: Complete mobile app overview and login history tracking
+- **Advanced Architecture**: Core module with shared entity access and dependency inversion
+- **Database Integration**: TypeORM with SQL Server integration and ORM-based queries
+- **Frontend UI**: React components for all major features with pagination and filtering
 - **API Security**: Input validation, CORS, SQL injection prevention
+- **Internationalization**: Traditional Chinese localization support
 - **Docker Support**: Complete containerization for development and production
 
 ### Database Schema (IMPLEMENTED)
@@ -204,16 +232,18 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 - **Table**: `TC_ACCOUNT_LOGIN`
 - **Fields**: \_key (UUID), username, app_id, success, failure_reason, login_at, account_id, app_name, app_version, app_module
 - **Table**: `TC_APP_USER`
-- **Fields**: id, app_id, app_name, app_version, token, name, company, is_active
+- **Fields**: id, app_id, app_name, app_version, token, name, company, is_active, userid, username, useremail
 - **Role Types**: admin, manager, user (stored as nvarchar)
 - **Department Structure**: dept_no (code) and dept_name (display name)
 - **Date Format**: All dates use UTC+8 timezone format via `formatDateUTC8()` utility
+- **Entity Relationships**: LoginHistory entity maps to TC_ACCOUNT_LOGIN, MobileApp entity maps to TC_APP_USER
 
 ### API Endpoints (IMPLEMENTED)
 
 - **Authentication**: `/auth/*` - login, register, refresh, profile, change-password
 - **User Management**: `/users/*` - CRUD, search, factory data, profile management
 - **Dashboard**: `/dashboard/*` - stats, activity tracking
+- **Mobile Apps**: `/mobile-apps/*` - overview, login history with filtering and pagination
 - **Role-Based Security**: All endpoints protected with appropriate role checks
 
 ### Frontend Features (IMPLEMENTED)
@@ -221,9 +251,12 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 - **Authentication Flow**: Login/logout with token management
 - **User Management UI**: Complete interface for user operations
 - **Dashboard Interface**: Statistics and activity display
+- **Mobile Apps Management**: Complete mobile apps overview and login history interface
 - **Settings Pages**: Profile and account management
 - **Responsive Design**: Mobile-friendly interface with Tailwind CSS
 - **Theme Support**: Dark/light mode capability
+- **Internationalization**: Traditional Chinese localization support
+- **Advanced Tables**: Pagination, filtering, and sorting for large datasets
 
 ## External Dependencies
 

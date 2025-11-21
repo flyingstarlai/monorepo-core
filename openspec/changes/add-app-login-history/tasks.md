@@ -20,14 +20,7 @@
 - [x] 2.7 Web: Add breadcrumb navigation back to apps overview
 - [x] 2.8 Web: Add loading states and error handling for API calls
 
-## 3. Database & Performance Phase
-
-- [ ] 3.1 Database: Review TC_ACCOUNT_LOGIN table indexes for app_id and login_at queries
-- [ ] 3.2 Database: Create index recommendations if performance issues detected
-- [ ] 3.3 Performance: Test query performance with realistic data volumes
-- [ ] 3.4 Performance: Add response time monitoring for the new endpoint
-
-## 4. Validation & Testing Phase
+## 3. Validation & Testing Phase
 
 - [x] 4.1 openspec validate add-app-login-history --strict
 - [x] 4.2 Manual test with sample TC_ACCOUNT_LOGIN rows in dev DB

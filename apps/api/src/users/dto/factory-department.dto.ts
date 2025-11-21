@@ -3,9 +3,9 @@ import { IsString, IsNotEmpty } from 'class-validator';
 export class FactoryDepartmentDto {
   @IsString()
   @IsNotEmpty()
-  dept_no: string;
+  deptNo: string;
 
   @IsString()
   @IsNotEmpty()
-  dept_name: string;
+  deptName: string;
 }

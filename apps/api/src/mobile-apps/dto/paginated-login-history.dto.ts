@@ -1,4 +1,4 @@
-import { LoginHistory } from '../entities/login-history.entity';
+import { LoginHistory } from '../../users/entities/login-history.entity';
 
 export interface PaginationMetadata {
   page: number;

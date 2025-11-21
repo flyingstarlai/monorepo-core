@@ -1,19 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MobileApp } from './entities/mobile-app.entity';
-import { LoginHistory } from './entities/login-history.entity';
 import { MobileAppOverviewDto } from './dto/mobile-app-overview.dto';
 import { LoginHistoryQueryDto } from './dto/login-history-query.dto';
 import { PaginatedLoginHistoryDto } from './dto/paginated-login-history.dto';
+import { IUsersService } from '../users/interfaces/users-service.interface';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class MobileAppsService {
   constructor(
     @InjectRepository(MobileApp)
     private readonly mobileAppRepository: Repository<MobileApp>,
-    @InjectRepository(LoginHistory)
-    private readonly loginHistoryRepository: Repository<LoginHistory>,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: IUsersService,
   ) {}
 
   async getMobileAppsOverview(): Promise<MobileAppOverviewDto[]> {
@@ -120,50 +121,7 @@ export class MobileAppsService {
     appId: string,
     query: LoginHistoryQueryDto,
   ): Promise<PaginatedLoginHistoryDto> {
-    const { page = 1, limit = 50, startDate, endDate } = query;
-
     console.log('appId', appId);
-
-    // Build query: match records where appId has the format `${appId}@<device>`
-    const queryBuilder = this.loginHistoryRepository
-      .createQueryBuilder('loginHistory')
-      .where('loginHistory.appId LIKE :appIdLike', { appIdLike: `${appId}@%` });
-
-    // Add date range filtering if provided
-    if (startDate) {
-      queryBuilder.andWhere('loginHistory.loginAt >= :startDate', {
-        startDate,
-      });
-    }
-
-    if (endDate) {
-      queryBuilder.andWhere('loginHistory.loginAt <= :endDate', { endDate });
-    }
-
-    // Get total count
-    const total = await queryBuilder.getCount();
-
-    // Get paginated results
-    const skip = (page - 1) * limit;
-    const loginHistoryRecords = await queryBuilder
-      .orderBy('loginHistory.loginAt', 'DESC')
-      .skip(skip)
-      .take(limit)
-      .getMany();
-
-    // Calculate pagination metadata
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      data: loginHistoryRecords,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-        hasNext: page < totalPages,
-        hasPrev: page > 1,
-      },
-    };
+    return this.usersService.findLoginHistoryByAppId(appId, query);
   }
 }

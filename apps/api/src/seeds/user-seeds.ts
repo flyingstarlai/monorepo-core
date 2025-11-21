@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, DeepPartial } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -66,7 +66,9 @@ export const seedUsers = async (dataSource: DataSource) => {
     });
 
     if (!existingAdmin) {
-      const adminUser = userRepository.create(processedUsers[0] as any);
+      const adminUser = userRepository.create(
+        processedUsers[0] as DeepPartial<User>,
+      );
       await userRepository.save(adminUser);
       console.log(
         `✅ Admin user created: admin/nimda (${shouldHashPassword ? 'hashed' : 'plain text'})`,
@@ -74,7 +76,9 @@ export const seedUsers = async (dataSource: DataSource) => {
     }
 
     if (!existingManager) {
-      const managerUser = userRepository.create(processedUsers[1] as any);
+      const managerUser = userRepository.create(
+        processedUsers[1] as DeepPartial<User>,
+      );
       await userRepository.save(managerUser);
       console.log(
         `✅ Manager user created: manager/manager (${shouldHashPassword ? 'hashed' : 'plain text'})`,
@@ -89,7 +93,9 @@ export const seedUsers = async (dataSource: DataSource) => {
     }
 
     if (!existingUser) {
-      const regularUser = userRepository.create(processedUsers[2] as any);
+      const regularUser = userRepository.create(
+        processedUsers[2] as DeepPartial<User>,
+      );
       await userRepository.save(regularUser);
       console.log(
         `✅ Regular user created: user/user (${shouldHashPassword ? 'hashed' : 'plain text'})`,

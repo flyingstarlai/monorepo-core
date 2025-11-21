@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserRole } from './entities/user.entity';
+import { LoginHistory } from './entities/login-history.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
@@ -16,75 +17,103 @@ import { formatDateUTC8 } from '../utils/date-formatter';
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
-import { UserLoginLogDto } from './dto/user-login-log.dto';
+import { MobileLoginHistoryDto } from './dto/mobile-login-history.dto';
+import { IUsersService } from './interfaces/users-service.interface';
+import { LoginHistoryQueryDto } from '../mobile-apps/dto/login-history-query.dto';
+import { PaginatedLoginHistoryDto } from '../mobile-apps/dto/paginated-login-history.dto';
 import * as bcrypt from 'bcrypt';
 
+interface MobileLoginInfo {
+  lastMobileLoginAt: string | null;
+  lastMobileDeviceId: string | null;
+  lastMobileAppName: string | null;
+  lastMobileAppVersion: string | null;
+  lastMobileAppModule: string | null;
+}
+
+interface UserFactoryData {
+  username: string;
+  full_name: string;
+  dept_no: string;
+  dept_name: string;
+}
+
 @Injectable()
-export class UsersService {
+export class UsersService implements IUsersService {
+  private readonly shouldHashPassword: boolean;
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(LoginHistory)
+    private readonly loginHistoryRepo: Repository<LoginHistory>,
     private jwtService: JwtService,
-  ) {}
+  ) {
+    this.shouldHashPassword = process.env.FEATURE_HASHED === 'true';
+  }
 
   async create(
     createUserDto: CreateUserDto,
     creatorRole?: string,
   ): Promise<User> {
+    const {
+      username,
+      password,
+      fullName,
+      deptNo,
+      deptName,
+      role = 'user',
+      isActive = true,
+    } = createUserDto;
+
+    this.validateRoleCreation(role, creatorRole);
+    const finalPassword = await this.processPassword(password);
+
+    const user = this.usersRepository.create({
+      id: this.generateId(),
+      username,
+      password: finalPassword,
+      fullName,
+      deptNo,
+      deptName,
+      role,
+      isActive,
+    });
+
     try {
-      const {
-        username,
-        password,
-        fullName,
-        deptNo,
-        deptName,
-        role = 'user',
-        isActive = true,
-      } = createUserDto;
-
-      // Validate role creation permissions
-      this.validateRoleCreation(role, creatorRole);
-
-      // Check if password should be hashed based on FEATURE_HASHED setting
-      const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-      const finalPassword = shouldHashPassword
-        ? await bcrypt.hash(password, 10)
-        : password;
-
-      if (shouldHashPassword) {
-        console.log(
-          'Hash test - immediate compare:',
-          bcrypt.compareSync(password, finalPassword),
-        );
-      }
-
-      const user = this.usersRepository.create({
-        id: this.generateId(),
-        username,
-        password: finalPassword,
-        fullName,
-        deptNo,
-        deptName,
-        role,
-        isActive,
-      });
-
       const result = await this.usersRepository.save(user);
-
-      // Immediately retrieve to check if hash is corrupted
-      const retrieved = await this.usersRepository.findOne({
-        where: { username },
-      });
-      console.log(
-        'Retrieved matches saved:',
-        result.password === retrieved?.password,
-      );
-
+      this.logPasswordVerification(username, password, finalPassword);
       return result;
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
     }
+  }
+
+  private async processPassword(password: string): Promise<string> {
+    return this.shouldHashPassword ? await bcrypt.hash(password, 10) : password;
+  }
+
+  private logPasswordVerification(
+    username: string,
+    originalPassword: string,
+    hashedPassword: string,
+  ): void {
+    if (!this.shouldHashPassword) return;
+
+    console.log(
+      'Hash test - immediate compare:',
+      bcrypt.compareSync(originalPassword, hashedPassword),
+    );
+
+    void this.usersRepository
+      .findOne({ where: { username } })
+      .then((retrieved) => {
+        console.log(
+          'Retrieved matches saved:',
+          hashedPassword === retrieved?.password,
+        );
+      });
   }
 
   private validateRoleCreation(
@@ -116,72 +145,29 @@ export class UsersService {
     return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  private async getLatestMobileLoginForUser(userId: string): Promise<{
-    lastMobileLoginAt: string | null;
-    lastMobileDeviceId: string | null;
-    lastMobileAppName: string | null;
-    lastMobileAppVersion: string | null;
-    lastMobileAppModule: string | null;
-  }> {
-    const latest = await this.usersRepository.query(
-      `SELECT TOP 1
-        login_at,
-        app_id,
-        app_name,
-        app_version,
-        app_module
-       FROM dbo.TC_ACCOUNT_LOGIN
-       WHERE account_id = @0
-       ORDER BY login_at DESC
-       `,
-      [userId],
-    );
+  private async getLatestMobileLoginForUser(
+    userId: string,
+  ): Promise<MobileLoginInfo> {
+    const latest = await this.loginHistoryRepo.findOne({
+      where: { accountId: userId },
+      order: { loginAt: 'DESC' },
+      select: ['loginAt', 'appId', 'appName', 'appVersion', 'appModule'],
+    });
 
-    if (latest.length === 0) {
-      return {
-        lastMobileLoginAt: null,
-        lastMobileDeviceId: null,
-        lastMobileAppName: null,
-        lastMobileAppVersion: null,
-        lastMobileAppModule: null,
-      };
-    }
-
-    const row = latest[0];
     return {
-      lastMobileLoginAt: row.login_at
-        ? formatDateUTC8(new Date(row.login_at as string | number | Date))
+      lastMobileLoginAt: latest?.loginAt
+        ? formatDateUTC8(latest.loginAt)
         : null,
-      lastMobileDeviceId: row.app_id || null,
-      lastMobileAppName: row.app_name || null,
-      lastMobileAppVersion: row.app_version || null,
-      lastMobileAppModule: row.app_module || null,
+      lastMobileDeviceId: latest?.appId ?? null,
+      lastMobileAppName: latest?.appName ?? null,
+      lastMobileAppVersion: latest?.appVersion ?? null,
+      lastMobileAppModule: latest?.appModule ?? null,
     };
   }
 
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.usersRepository.find();
-    const usersWithMobile = await Promise.all(
-      users.map(async (user) => {
-        const mobile = await this.getLatestMobileLoginForUser(user.id);
-        return {
-          ...user,
-          ...mobile,
-        };
-      }),
-    );
-
-    return usersWithMobile.map(
-      (user) =>
-        ({
-          ...user,
-          lastLoginAt: user.lastLoginAt
-            ? formatDateUTC8(user.lastLoginAt)
-            : null,
-          createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
-          updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
-        }) as UserResponseDto,
-    );
+    return this.formatUsersWithMobileData(users);
   }
 
   async findWithFilters(filters: UsersFilterDto): Promise<{
@@ -202,64 +188,23 @@ export class UsersService {
       sortOrder = 'DESC',
     } = filters;
 
-    const queryBuilder = this.usersRepository.createQueryBuilder('user');
+    const queryBuilder = this.buildFilteredQuery({
+      search,
+      role,
+      isActive,
+      deptNo,
+      sortBy,
+      sortOrder,
+    });
 
-    // Apply search filter
-    if (search) {
-      queryBuilder.where(
-        '(user.username LIKE :search OR user.fullName LIKE :search OR user.deptName LIKE :search)',
-        { search: `%${search}%` },
-      );
-    }
-
-    // Apply role filter
-    if (role) {
-      queryBuilder.andWhere('user.role = :role', { role });
-    }
-
-    // Apply status filter
-    if (isActive !== undefined) {
-      queryBuilder.andWhere('user.isActive = :isActive', {
-        isActive: isActive === 'true',
-      });
-    }
-
-    // Apply department filter
-    if (deptNo) {
-      queryBuilder.andWhere('user.deptNo = :deptNo', { deptNo });
-    }
-
-    // Apply sorting
-    queryBuilder.orderBy(`user.${sortBy}`, sortOrder);
-
-    // Get total count
     const total = await queryBuilder.getCount();
-
-    // Apply pagination
-    const offset = (page - 1) * limit;
-    queryBuilder.skip(offset).take(limit);
-
-    const users = await queryBuilder.getMany();
-    const usersWithMobile = await Promise.all(
-      users.map(async (user) => {
-        const mobile = await this.getLatestMobileLoginForUser(user.id);
-        return {
-          ...user,
-          ...mobile,
-        };
-      }),
-    );
-
-    const formattedUsers = usersWithMobile.map(
-      (user) =>
-        ({
-          ...user,
-          lastLoginAt: user.lastLoginAt
-            ? formatDateUTC8(user.lastLoginAt)
-            : null,
-          createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
-          updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
-        }) as UserResponseDto,
+    const users = await this.applyPagination(
+      queryBuilder,
+      page,
+      limit,
+    ).getMany();
+    const formattedUsers = await this.formatUsersWithMobileData(
+      users as User[],
     );
 
     return {
@@ -271,19 +216,49 @@ export class UsersService {
     };
   }
 
-  async findOne(id: string): Promise<UserResponseDto> {
-    const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+  private buildFilteredQuery(filters: {
+    search?: string;
+    role?: string;
+    isActive?: string;
+    deptNo?: string;
+    sortBy: string;
+    sortOrder: string;
+  }) {
+    const { search, role, isActive, deptNo, sortBy, sortOrder } = filters;
+    const queryBuilder = this.usersRepository.createQueryBuilder('user');
+
+    if (search) {
+      queryBuilder.where(
+        '(user.username LIKE :search OR user.fullName LIKE :search OR user.deptName LIKE :search)',
+        { search: `%${search}%` },
+      );
     }
-    const mobile = await this.getLatestMobileLoginForUser(user.id);
-    return {
-      ...user,
-      ...mobile,
-      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
-      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
-      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
-    } as UserResponseDto;
+
+    if (role) {
+      queryBuilder.andWhere('user.role = :role', { role });
+    }
+
+    if (isActive !== undefined) {
+      queryBuilder.andWhere('user.isActive = :isActive', {
+        isActive: isActive === 'true',
+      });
+    }
+
+    if (deptNo) {
+      queryBuilder.andWhere('user.deptNo = :deptNo', { deptNo });
+    }
+
+    return queryBuilder.orderBy(`user.${sortBy}`, sortOrder as 'ASC' | 'DESC');
+  }
+
+  private applyPagination(queryBuilder: any, page: number, limit: number) {
+    const offset = (page - 1) * limit;
+    return queryBuilder.skip(offset).take(limit);
+  }
+
+  async findOne(id: string): Promise<UserResponseDto> {
+    const user = await this.findUserByIdOrThrow(id);
+    return this.formatUserWithMobileData(user);
   }
 
   async update(
@@ -291,119 +266,76 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
     creatorRole?: string,
   ): Promise<UserResponseDto> {
-    const existingUser = await this.findOne(id);
-    if (!existingUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
+    const existingUser = await this.findUserByIdOrThrow(id);
 
-    // Validate role change permissions if role is being updated
-    if (updateUserDto.role && updateUserDto.role !== existingUser.role) {
+    this.validateRoleChange(updateUserDto.role, existingUser.role, creatorRole);
+
+    await this.usersRepository.update(id, updateUserDto);
+    const updatedUser = await this.findUserByIdOrThrow(id);
+    return this.formatUserWithMobileData(updatedUser);
+  }
+
+  private validateRoleChange(
+    newRole?: string,
+    currentRole?: string,
+    creatorRole?: string,
+  ): void {
+    if (newRole && newRole !== currentRole) {
       if (!RoleService.canEditUserRole(creatorRole as UserRole)) {
         throw new BadRequestException(
           'Only administrators can change user roles',
         );
       }
     }
-
-    await this.usersRepository.update(id, updateUserDto);
-    const updatedUser = await this.usersRepository.findOne({ where: { id } });
-    if (!updatedUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    const mobile = await this.getLatestMobileLoginForUser(updatedUser.id);
-    return {
-      ...updatedUser,
-      ...mobile,
-      lastLoginAt: updatedUser.lastLoginAt
-        ? formatDateUTC8(updatedUser.lastLoginAt)
-        : null,
-      createdAt: updatedUser.createdAt
-        ? formatDateUTC8(updatedUser.createdAt)
-        : null,
-      updatedAt: updatedUser.updatedAt
-        ? formatDateUTC8(updatedUser.updatedAt)
-        : null,
-    } as UserResponseDto;
   }
 
   async remove(id: string): Promise<void> {
-    const existingUser = await this.findOne(id);
-    if (!existingUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
+    await this.findUserByIdOrThrow(id);
     await this.usersRepository.delete(id);
   }
 
-  async findByUsername(username: string): Promise<UserResponseDto> {
+  async findByUsername(username: string): Promise<UserResponseDto | null> {
     const user = await this.usersRepository.findOne({ where: { username } });
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
-    const mobile = await this.getLatestMobileLoginForUser(user.id);
-    return {
-      ...user,
-      ...mobile,
-      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
-      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
-      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
-    } as UserResponseDto;
+    return this.formatUserWithMobileData(user);
   }
 
   async validateUserCredentials(
     username: string,
     password: string,
   ): Promise<Omit<User, 'password'> | null> {
-    console.log({
-      username,
-      passwordLength: password.length,
-    });
+    console.log({ username, passwordLength: password.length });
+
     const user = await this.usersRepository.findOne({
       where: { username, isActive: true },
     });
 
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
-    // Check if password should be compared as hash or plain text
-    const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-    let isValidPassword = false;
+    const isValidPassword = await this.verifyPassword(password, user.password);
 
-    if (shouldHashPassword) {
-      // Compare with hashed password
-      isValidPassword = await bcrypt.compare(password, user.password);
-    } else {
-      // Compare with plain text password
-      isValidPassword = password === user.password;
-    }
+    if (!isValidPassword) return null;
 
-    if (isValidPassword) {
-      // Exclude password from returned user object
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password, ...result } = user;
-      return result as Omit<User, 'password'>;
-    }
-
-    return null;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...result } = user;
+    return result as Omit<User, 'password'>;
   }
 
-  async findById(id: string): Promise<UserResponseDto> {
-    const user = await this.usersRepository.findOne({ where: { id } });
-    if (!user) {
-      return null;
-    }
+  private async verifyPassword(
+    inputPassword: string,
+    storedPassword: string,
+  ): Promise<boolean> {
+    return this.shouldHashPassword
+      ? await bcrypt.compare(inputPassword, storedPassword)
+      : inputPassword === storedPassword;
+  }
 
-    const mobile = await this.getLatestMobileLoginForUser(user.id);
-    return {
-      ...user,
-      ...mobile,
-      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
-      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
-      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
-    } as UserResponseDto;
+  async findById(id: string): Promise<UserResponseDto | null> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) return null;
+
+    return this.formatUserWithMobileData(user);
   }
 
   async findRawById(id: string): Promise<User> {
@@ -411,37 +343,18 @@ export class UsersService {
   }
 
   async updatePassword(id: string, newPassword: string): Promise<void> {
-    const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-    const finalPassword = shouldHashPassword
-      ? await bcrypt.hash(newPassword, 10)
-      : newPassword;
-
+    const finalPassword = await this.processPassword(newPassword);
     await this.usersRepository.update(id, { password: finalPassword });
   }
 
   async toggleUserStatus(id: string): Promise<UserResponseDto> {
     const user = await this.findRawById(id);
     const newStatus = !user.isActive;
-    await this.usersRepository.update(id, { isActive: newStatus });
-    const updatedUser = await this.usersRepository.findOne({ where: { id } });
-    if (!updatedUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
 
-    const mobile = await this.getLatestMobileLoginForUser(updatedUser.id);
-    return {
-      ...updatedUser,
-      ...mobile,
-      lastLoginAt: updatedUser.lastLoginAt
-        ? formatDateUTC8(updatedUser.lastLoginAt)
-        : null,
-      createdAt: updatedUser.createdAt
-        ? formatDateUTC8(updatedUser.createdAt)
-        : null,
-      updatedAt: updatedUser.updatedAt
-        ? formatDateUTC8(updatedUser.updatedAt)
-        : null,
-    } as UserResponseDto;
+    await this.usersRepository.update(id, { isActive: newStatus });
+    const updatedUser = await this.findUserByIdOrThrow(id);
+
+    return this.formatUserWithMobileData(updatedUser);
   }
 
   async searchUsers(query: string): Promise<UserResponseDto[]> {
@@ -454,37 +367,18 @@ export class UsersService {
       .limit(20)
       .getMany();
 
-    const usersWithMobile = await Promise.all(
-      users.map(async (user) => {
-        const mobile = await this.getLatestMobileLoginForUser(user.id);
-        return {
-          ...user,
-          ...mobile,
-        };
-      }),
-    );
-
-    return usersWithMobile.map(
-      (user) =>
-        ({
-          ...user,
-          lastLoginAt: user.lastLoginAt
-            ? formatDateUTC8(user.lastLoginAt)
-            : null,
-          createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
-          updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
-        }) as UserResponseDto,
-    );
+    return this.formatUsersWithMobileData(users);
   }
 
   async login(
     user: User,
   ): Promise<{ access_token: string; user: UserResponseDto }> {
-    // Update lastLoginAt
     await this.usersRepository.update(user.id, { lastLoginAt: new Date() });
 
+    const updatedUser = await this.findUserByIdOrThrow(user.id);
     const mobile = await this.getLatestMobileLoginForUser(user.id);
     const payload = { username: user.username, sub: user.id };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
@@ -496,7 +390,9 @@ export class UsersService {
         role: user.role,
         isActive: user.isActive,
         ...mobile,
-        lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
+        lastLoginAt: updatedUser.lastLoginAt
+          ? formatDateUTC8(updatedUser.lastLoginAt)
+          : null,
         createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
         updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
       } as UserResponseDto,
@@ -507,31 +403,11 @@ export class UsersService {
     id: string,
     updateProfileDto: { fullName: string },
   ): Promise<UserResponseDto> {
-    const existingUser = await this.findOne(id);
-    if (!existingUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
+    await this.findUserByIdOrThrow(id);
     await this.usersRepository.update(id, updateProfileDto);
-    const updatedUser = await this.usersRepository.findOne({ where: { id } });
-    if (!updatedUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
+    const updatedUser = await this.findUserByIdOrThrow(id);
 
-    const mobile = await this.getLatestMobileLoginForUser(updatedUser.id);
-    return {
-      ...updatedUser,
-      ...mobile,
-      lastLoginAt: updatedUser.lastLoginAt
-        ? formatDateUTC8(updatedUser.lastLoginAt)
-        : null,
-      createdAt: updatedUser.createdAt
-        ? formatDateUTC8(updatedUser.createdAt)
-        : null,
-      updatedAt: updatedUser.updatedAt
-        ? formatDateUTC8(updatedUser.updatedAt)
-        : null,
-    } as UserResponseDto;
+    return this.formatUserWithMobileData(updatedUser);
   }
 
   async changePassword(
@@ -539,34 +415,19 @@ export class UsersService {
     changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
     const user = await this.findRawById(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
 
-    // Verify current password
-    const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-    let isValidCurrentPassword = false;
-
-    if (shouldHashPassword) {
-      isValidCurrentPassword = await bcrypt.compare(
-        changePasswordDto.currentPassword,
-        user.password,
-      );
-    } else {
-      isValidCurrentPassword =
-        changePasswordDto.currentPassword === user.password;
-    }
+    const isValidCurrentPassword = await this.verifyPassword(
+      changePasswordDto.currentPassword,
+      user.password,
+    );
 
     if (!isValidCurrentPassword) {
       throw new BadRequestException('Current password is incorrect');
     }
 
-    // Update password
-    const shouldHashNewPassword = process.env.FEATURE_HASHED === 'true';
-    const finalPassword = shouldHashNewPassword
-      ? await bcrypt.hash(changePasswordDto.newPassword, 10)
-      : changePasswordDto.newPassword;
-
+    const finalPassword = await this.processPassword(
+      changePasswordDto.newPassword,
+    );
     await this.usersRepository.update(id, { password: finalPassword });
 
     return { message: 'Password changed successfully' };
@@ -578,26 +439,7 @@ export class UsersService {
         'EXEC ACM_FACTORY_USER_ACCOUNT',
       );
 
-      // Map procedure results to FactoryUserDto format
-      const factoryUsers = result.map((item: any) => {
-        const mapped = {
-          username: item.username || '',
-          full_name: item.full_name || '',
-          dept_no: item.dept_no || '',
-          dept_name: item.dept_name || '',
-        };
-        return mapped;
-      });
-
-      // Transform to camelCase for frontend
-      const camelCaseFactoryUsers = factoryUsers.map((item) => ({
-        username: item.username,
-        fullName: item.full_name,
-        deptNo: item.dept_no,
-        deptName: item.dept_name,
-      }));
-
-      return camelCaseFactoryUsers;
+      return this.transformFactoryUsers(result as UserFactoryData[]);
     } catch (error) {
       console.error(
         'Error executing ACM_FACTORY_USER_ACCOUNT procedure:',
@@ -609,26 +451,19 @@ export class UsersService {
     }
   }
 
+  private transformFactoryUsers(rawData: UserFactoryData[]): FactoryUserDto[] {
+    return rawData.map((item) => ({
+      username: item.username || '',
+      fullName: item.full_name || '',
+      deptNo: item.dept_no || '',
+      deptName: item.dept_name || '',
+    }));
+  }
+
   async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
     try {
       const result = await this.usersRepository.query('EXEC ACM_FACTORY_DEPT');
-
-      // Map procedure results to FactoryDepartmentDto format
-      const factoryDepartments = result.map((item: any) => {
-        const mapped = {
-          dept_no: item.dept_no || '',
-          dept_name: item.dept_name || '',
-        };
-        return mapped;
-      });
-
-      // Transform to camelCase for frontend
-      const camelCaseFactoryDepartments = factoryDepartments.map((item) => ({
-        deptNo: item.dept_no,
-        deptName: item.dept_name,
-      }));
-
-      return camelCaseFactoryDepartments;
+      return this.transformFactoryDepartments(result as UserFactoryData[]);
     } catch (error) {
       console.error('Error executing ACM_FACTORY_DEPT procedure:', error);
       throw new BadRequestException(
@@ -637,48 +472,139 @@ export class UsersService {
     }
   }
 
+  private transformFactoryDepartments(
+    rawData: UserFactoryData[],
+  ): FactoryDepartmentDto[] {
+    return rawData.map((item) => ({
+      deptNo: item.dept_no || '',
+      deptName: item.dept_name || '',
+    }));
+  }
+
   async findLoginHistoryByUserId(
     userId: string,
     limit = 100,
   ): Promise<{
-    items: UserLoginLogDto[];
+    items: MobileLoginHistoryDto[];
   }> {
     const limitInt = Math.max(1, Math.floor(limit));
 
-    const itemsResult = await this.usersRepository.query(
-      `
-      SELECT TOP ${limitInt}
-        _key AS logId,
-        account_id AS userId,
-        login_at AS loginAt,
-        success,
-        failure_reason AS failureReason,
-        app_id AS deviceId,
-        app_name AS appName,
-        app_version AS appVersion,
-        app_module AS appModule
-       FROM dbo.TC_ACCOUNT_LOGIN
-       WHERE account_id = @0
-       ORDER BY login_at DESC
-       `,
-      [userId],
-    );
+    const rows = await this.loginHistoryRepo.find({
+      where: { accountId: userId },
+      order: { loginAt: 'DESC' },
+      take: limitInt,
+      select: [
+        'key',
+        'loginAt',
+        'success',
+        'failureReason',
+        'appId',
+        'appName',
+        'appVersion',
+        'appModule',
+      ],
+    });
 
-    const items = itemsResult.map((row: any) => ({
-      logId: row.logId,
-      loginAt: row.loginAt
-        ? formatDateUTC8(new Date(row.loginAt as string | number | Date))
-        : null,
-      success: Boolean(row.success),
-      failureReason: row.failureReason || null,
-      deviceId: row.deviceId || null,
-      appName: row.appName || null,
-      appVersion: row.appVersion || null,
-      appModule: row.appModule || null,
+    const items = rows.map((row) => ({
+      userId,
+      logId: row.key,
+      loginAt: row.loginAt ? formatDateUTC8(row.loginAt) : null,
+      success: !!row.success,
+      failureReason: row.failureReason ?? null,
+      deviceId: row.appId ?? null,
+      appName: row.appName ?? null,
+      appVersion: row.appVersion ?? null,
+      appModule: row.appModule ?? null,
     }));
 
+    return { items };
+  }
+
+  async findLoginHistoryByAppId(
+    appId: string,
+    query: LoginHistoryQueryDto,
+  ): Promise<PaginatedLoginHistoryDto> {
+    const { page = 1, limit = 50, startDate, endDate } = query;
+
+    // Build query: match records where appId has the format `${appId}@<device>`
+    const queryBuilder = this.loginHistoryRepo
+      .createQueryBuilder('loginHistory')
+      .where('loginHistory.appId LIKE :appIdLike', { appIdLike: `${appId}@%` });
+
+    // Add date range filtering if provided
+    if (startDate) {
+      queryBuilder.andWhere('loginHistory.loginAt >= :startDate', {
+        startDate: new Date(startDate),
+      });
+    }
+
+    if (endDate) {
+      queryBuilder.andWhere('loginHistory.loginAt <= :endDate', {
+        endDate: new Date(endDate),
+      });
+    }
+
+    // Get total count
+    const total = await queryBuilder.getCount();
+
+    // Get paginated results
+    const skip = (page - 1) * limit;
+    const loginHistoryRecords = await queryBuilder
+      .orderBy('loginHistory.loginAt', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getMany();
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(total / limit);
+
     return {
-      items,
+      data: loginHistoryRecords,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
+  }
+
+  // Helper methods
+  private async findUserByIdOrThrow(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
+
+  private async formatUsersWithMobileData(
+    users: User[],
+  ): Promise<UserResponseDto[]> {
+    const usersWithMobile = await Promise.all(
+      users.map(async (user) => {
+        const mobile = await this.getLatestMobileLoginForUser(user.id);
+        return { ...user, ...mobile };
+      }),
+    );
+
+    return usersWithMobile.map(this.formatUserDates) as UserResponseDto[];
+  }
+
+  private async formatUserWithMobileData(user: User): Promise<UserResponseDto> {
+    const mobile = await this.getLatestMobileLoginForUser(user.id);
+    const userWithMobile = { ...user, ...mobile };
+    return this.formatUserDates(userWithMobile) as UserResponseDto;
+  }
+
+  private formatUserDates(user: Partial<User>): Partial<UserResponseDto> {
+    return {
+      ...user,
+      lastLoginAt: user.lastLoginAt ? formatDateUTC8(user.lastLoginAt) : null,
+      createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+      updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
     };
   }
 }

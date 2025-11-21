@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { DatabaseModule } from './database/database.config';
+import { CoreModule } from './core/core.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DashboardModule } from './dashboard/dashboard.module';
@@ -17,6 +18,7 @@ import { AppController } from './app.controller';
       envFilePath: '.env',
     }),
     DatabaseModule,
+    CoreModule,
     AuthModule,
     UsersModule,
     DashboardModule,

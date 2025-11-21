@@ -7,13 +7,13 @@ export class FactoryUserDto {
 
   @IsString()
   @IsNotEmpty()
-  full_name: string;
+  fullName: string;
 
   @IsString()
   @IsNotEmpty()
-  dept_no: string;
+  deptNo: string;
 
   @IsString()
   @IsNotEmpty()
-  dept_name: string;
+  deptName: string;
 }

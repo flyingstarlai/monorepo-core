@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { CoreModule } from '../core/core.module';
+import { UsersModule } from '../users/users.module';
 import { MobileAppsController } from './mobile-apps.controller';
 import { MobileAppsService } from './mobile-apps.service';
-import { MobileApp } from './entities/mobile-app.entity';
-import { LoginHistory } from './entities/login-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MobileApp, LoginHistory])],
+  imports: [CoreModule, UsersModule],
   controllers: [MobileAppsController],
   providers: [MobileAppsService],
   exports: [MobileAppsService],

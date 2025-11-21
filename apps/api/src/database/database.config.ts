@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { MobileApp } from '../mobile-apps/entities/mobile-app.entity';
-import { LoginHistory } from '../mobile-apps/entities/login-history.entity';
+import { LoginHistory } from '../users/entities/login-history.entity';
 
 @Module({
   imports: [

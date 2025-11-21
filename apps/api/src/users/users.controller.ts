@@ -20,7 +20,7 @@ import { FactoryUserDto } from './dto/factory-user.dto';
 import { FactoryDepartmentDto } from './dto/factory-department.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
-import { UserLoginLogDto } from './dto/user-login-log.dto';
+import { MobileLoginHistoryDto } from './dto/mobile-login-history.dto';
 import { RoleService } from './role.service';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -217,7 +217,7 @@ export class UsersController {
     @Param('id') id: string,
     @Query('limit') limit?: number,
   ): Promise<{
-    items: UserLoginLogDto[];
+    items: MobileLoginHistoryDto[];
   }> {
     const user = await this.usersService.findOne(id);
     if (!user) {

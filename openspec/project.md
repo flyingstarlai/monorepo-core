@@ -65,20 +65,28 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 
 - **Monorepo Structure**: Feature-based organization with shared packages
 - **Modular Architecture**: Separate modules for auth, users, dashboard, etc.
+- **Shared Core Module**: Centralized entity registration and access
+- **Domain Boundaries**: Each entity resides in its primary business domain
 - **Dependency Injection**: NestJS DI pattern throughout backend
+- **Interface-Based Communication**: Cross-module services use dependency inversion
 - **Feature-Based Frontend**: Components organized by feature domain
-- **Shared Packages**: Common types, ESLint configs, TypeScript configs, and UI components
 - **API-First Design**: Backend API drives frontend data flow
 - **Entity-Driven Backend**: TypeORM entities define data structure
 
 ### Testing Strategy
 
 - **Backend Testing**: Jest for unit tests and e2e tests
-- **Frontend Testing**: Vitest for unit tests, Testing Library for component tests
 - **Test Organization**: Tests co-located with source files (\*.spec.ts)
 - **Coverage**: Comprehensive test coverage required for critical paths
 - **Test Data**: Seed files for consistent test database state
 - **Mock Strategy**: Mock external dependencies and database connections in tests
+
+### Current Implementation Status ✅
+
+- **Core Module**: Centralized entity registration with shared access
+- **Domain Boundaries**: Clean entity ownership by business domain
+- **Dependency Inversion**: Interface-based cross-module communication
+- **Circular Dependencies**: Resolved using forwardRef pattern
 
 ### Git Workflow
 
@@ -93,26 +101,15 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 ### User Management Domain (IMPLEMENTED)
 
 - **Users**: Core entity with ID, username, password, role, full name, department info, and status
+- **LoginHistory**: User login attempt tracking entity (moved from mobile-apps domain)
 - **Departments**: Organizational units with dept_no and dept_name fields
 - **Roles**: Three-tier permission system (admin, manager, user) with hierarchical access control
 - **Authentication**: JWT-based with access tokens and refresh token support
 - **User Status**: Active/Inactive toggle functionality with role-based permissions
-
-#### Role-Based Access Control (IMPLEMENTED)
-
-- **Admin**: Full permissions - can create/edit/delete users of any role, toggle status, edit roles
-- **Manager**: Limited permissions - can create/edit/delete regular users only, toggle user status
-- **User**: Basic permissions - can only manage own profile and password
-
-#### User Management Features (IMPLEMENTED)
-
-- **CRUD Operations**: Create, Read, Update, Delete users with role-based restrictions
-- **User Search**: Text-based search functionality across user fields
-- **User Filtering**: Filter by role, status, department, and other attributes
-- **Factory Users**: Special endpoint for factory-specific user data
-- **Factory Departments**: Department listing for factory operations
+- **User Management Features**: CRUD operations, search, filtering, factory integration
 - **Profile Management**: Users can update their own profile information
 - **Password Management**: Change password with current password verification
+- **Architecture**: Clean domain boundaries with shared CoreModule for entity access
 
 ### Dashboard Analytics Domain (PARTIALLY IMPLEMENTED)
 
@@ -204,6 +201,10 @@ ACM (Account Manager) is a comprehensive account management system designed to e
 
 - **Table**: `TC_APP_ACCOUNT`
 - **Fields**: id, username, password, role, full_name, dept_no, dept_name, is_active, last_login_at, created_at, updated_at
+- **Table**: `TC_ACCOUNT_LOGIN`
+- **Fields**: \_key (UUID), username, app_id, success, failure_reason, login_at, account_id, app_name, app_version, app_module
+- **Table**: `TC_APP_USER`
+- **Fields**: id, app_id, app_name, app_version, token, name, company, is_active
 - **Role Types**: admin, manager, user (stored as nvarchar)
 - **Department Structure**: dept_no (code) and dept_name (display name)
 - **Date Format**: All dates use UTC+8 timezone format via `formatDateUTC8()` utility

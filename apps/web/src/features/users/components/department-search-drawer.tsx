@@ -22,10 +22,10 @@ interface DepartmentSearchDrawerProps {
 }
 
 export function DepartmentSearchDrawer({
-                                         isOpen,
-                                         onClose,
-                                         onDepartmentSelect,
-                                       }: DepartmentSearchDrawerProps) {
+  isOpen,
+  onClose,
+  onDepartmentSelect,
+}: DepartmentSearchDrawerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const {
     data: factoryDepartments = [],
@@ -37,8 +37,8 @@ export function DepartmentSearchDrawer({
   // Filter departments based on search term
   const filteredDepartments = factoryDepartments.filter(
     (department) =>
-      department.deptNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      department.deptName.toLowerCase().includes(searchTerm.toLowerCase()),
+      department.deptNo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      department.deptName?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Handle keyboard events (Escape closes drawer)

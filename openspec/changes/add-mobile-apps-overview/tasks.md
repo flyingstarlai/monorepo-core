@@ -20,8 +20,3 @@
 
 - [x] 2.1 openspec validate add-mobile-apps-overview --strict
 - [x] 2.2 Manual test with sample TC_APP_USER rows in dev DB
-
-## 3. Rollout
-
-- [ ] 3.1 No migrations required; confirm read-only permissions in all environments
-- [ ] 3.2 Monitor API logs for query timing; consider index on (app_name, is_active) if slow (non-blocking)

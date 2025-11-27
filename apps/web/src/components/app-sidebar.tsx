@@ -54,7 +54,7 @@ export function AppSidebar() {
             isActive: location.pathname.startsWith('/apps'),
           },
           {
-            title: 'Mobile App Builder',
+            title: 'App Builder',
             url: '/app-builder',
             icon: Hammer,
             isActive: location.pathname.startsWith('/app-builder'),

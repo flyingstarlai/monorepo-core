@@ -20,6 +20,7 @@ import {
   Settings,
   LogOut,
   Smartphone,
+  Hammer,
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -51,6 +52,12 @@ export function AppSidebar() {
             url: '/apps',
             icon: Smartphone,
             isActive: location.pathname.startsWith('/apps'),
+          },
+          {
+            title: 'Mobile App Builder',
+            url: '/app-builder',
+            icon: Hammer,
+            isActive: location.pathname.startsWith('/app-builder'),
           },
         ]
       : []),

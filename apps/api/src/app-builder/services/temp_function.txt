@@ -1,0 +1,6 @@
+  async validateModuleExists(moduleId: string): Promise<boolean> {
+    const count = await this.dashboardModuleRepository.count({
+      where: { id: moduleId },
+    });
+    return count > 0;
+  }

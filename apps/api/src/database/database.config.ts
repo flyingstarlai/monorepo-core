@@ -4,6 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '../users/entities/user.entity';
 import { MobileApp } from '../mobile-apps/entities/mobile-app.entity';
 import { LoginHistory } from '../users/entities/login-history.entity';
+import {
+  MobileAppDefinition,
+  MobileAppBuild,
+  MobileAppIdentifier,
+} from '../app-builder/entities/index';
+import { ModuleEntity } from '../app-builder/entities/dashboard-module.entity';
 
 @Module({
   imports: [
@@ -16,7 +22,15 @@ import { LoginHistory } from '../users/entities/login-history.entity';
         username: configService.get<string>('DB_USERNAME') || 'sa',
         password: configService.get<string>('DB_PASSWORD') || '',
         database: configService.get<string>('DB_DATABASE') || 'AccountManager',
-        entities: [User, MobileApp, LoginHistory],
+        entities: [
+          User,
+          MobileApp,
+          LoginHistory,
+          MobileAppDefinition,
+          MobileAppBuild,
+          MobileAppIdentifier,
+          ModuleEntity,
+        ],
         synchronize: false, // Don't auto-sync since we have existing table
         logging: configService.get<string>('NODE_ENV') === 'development',
         migrations: ['dist/migrations/*.js'],

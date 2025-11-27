@@ -1,0 +1,264 @@
+pipeline {
+    agent {
+        docker {
+            image 'androidsdk/android-30:latest'
+            args '-v gradle-cache:/root/.gradle -v android-sdk:/root/android-sdk'
+        }
+    }
+    
+    environment {
+        APP_NAME = "${params.APP_NAME}"
+        APP_ID = "${params.APP_ID}"
+        APP_MODULE = "${params.APP_MODULE}"
+        SERVER_IP = "${params.SERVER_IP}"
+        GOOGLE_SERVICES_JSON = "${params.GOOGLE_SERVICES_JSON}"
+        BUILD_ID = "${params.BUILD_ID}"
+        MINIO_ENDPOINT = "${env.MINIO_ENDPOINT ?: 'minio:9000'}"
+        MINIO_ACCESS_KEY = "${env.MINIO_ACCESS_KEY}"
+        MINIO_SECRET_KEY = "${env.MINIO_SECRET_KEY}"
+        MINIO_BUCKET = "android-artifacts"
+    }
+    
+    parameters {
+        string(name: 'BUILD_ID', description: 'Unique build identifier')
+        string(name: 'APP_NAME', description: 'Application name')
+        string(name: 'APP_ID', description: 'Application ID')
+        string(name: 'APP_MODULE', description: 'Application module')
+        string(name: 'SERVER_IP', description: 'Server IP address')
+        text(name: 'GOOGLE_SERVICES_JSON', description: 'Google Services JSON content')
+    }
+    
+    stages {
+        stage('Setup Environment') {
+            steps {
+                script {
+                    echo "Setting up build environment for ${APP_NAME} (${APP_ID})"
+                    echo "Build ID: ${BUILD_ID}"
+                    echo "Module: ${APP_MODULE}"
+                    echo "Server IP: ${SERVER_IP}"
+                    
+                    // Create working directory
+                    sh 'mkdir -p /workspace/app'
+                    
+                    // Write google-services.json
+                    writeFile file: '/workspace/app/google-services.json', text: GOOGLE_SERVICES_JSON
+                    
+                    // Create basic Android project structure
+                    sh '''
+                        cd /workspace/app
+                        mkdir -p app/src/main/{java/com/example/app,res/{layout,values},assets}
+                        
+                        # Create basic build.gradle
+                        cat > build.gradle << 'EOF'
+                        buildscript {
+                            repositories {
+                                google()
+                                mavenCentral()
+                            }
+                            dependencies {
+                                classpath 'com.android.tools.build:gradle:7.4.2'
+                            }
+                        }
+                        
+                        allprojects {
+                            repositories {
+                                google()
+                                mavenCentral()
+                            }
+                        }
+                        
+                        task clean(type: Delete) {
+                            delete rootProject.buildDir
+                        }
+                        EOF
+                        
+                        # Create app/build.gradle
+                        cat > app/build.gradle << 'EOF'
+                        plugins {
+                            id 'com.android.application'
+                        }
+                        
+                        android {
+                            namespace 'com.example.app'
+                            compileSdk 33
+                            
+                            defaultConfig {
+                                applicationId "${APP_ID}"
+                                minSdk 21
+                                targetSdk 33
+                                versionCode 1
+                                versionName "1.0"
+                            }
+                            
+                            buildTypes {
+                                release {
+                                    minifyEnabled false
+                                    proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+                                }
+                            }
+                        }
+                        
+                        dependencies {
+                            implementation 'androidx.appcompat:appcompat:1.6.1'
+                            implementation 'com.google.android.material:material:1.8.0'
+                            implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+                        }
+                        EOF
+                        
+                        # Create AndroidManifest.xml
+                        cat > app/src/main/AndroidManifest.xml << 'EOF'
+                        <?xml version="1.0" encoding="utf-8"?>
+                        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+                            <application
+                                android:allowBackup="true"
+                                android:label="${APP_NAME}"
+                                android:theme="@style/Theme.AppCompat">
+                                <activity
+                                    android:name=".MainActivity"
+                                    android:exported="true">
+                                    <intent-filter>
+                                        <action android:name="android.intent.action.MAIN" />
+                                        <category android:name="android.intent.category.LAUNCHER" />
+                                    </intent-filter>
+                                </activity>
+                            </application>
+                        </manifest>
+                        EOF
+                        
+                        # Create basic MainActivity
+                        cat > app/src/main/java/com/example/app/MainActivity.java << 'EOF'
+                        package com.example.app;
+                        
+                        import android.app.Activity;
+                        import android.os.Bundle;
+                        
+                        public class MainActivity extends Activity {
+                            @Override
+                            protected void onCreate(Bundle savedInstanceState) {
+                                super.onCreate(savedInstanceState);
+                                setContentView(R.layout.activity_main);
+                            }
+                        }
+                        EOF
+                        
+                        # Create basic layout
+                        cat > app/src/main/res/layout/activity_main.xml << 'EOF'
+                        <?xml version="1.0" encoding="utf-8"?>
+                        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="16dp">
+                            
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="${APP_NAME}"
+                                android:textSize="24sp"
+                                android:layout_gravity="center" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Module: ${APP_MODULE}"
+                                android:textSize="16sp"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="8dp" />
+                                
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Server: ${SERVER_IP}"
+                                android:textSize="14sp"
+                                android:layout_gravity="center"
+                                android:layout_marginTop="4dp" />
+                        </LinearLayout>
+                        EOF
+                        
+                        # Create settings.gradle
+                        echo 'include ":app"' > settings.gradle
+                        
+                        # Create gradle.properties
+                        cat > gradle.properties << 'EOF'
+                        android.useAndroidX=true
+                        android.enableJetifier=true
+                        org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+                        android.nonTransitiveRClass=true
+                        EOF
+                    '''
+                }
+            }
+        }
+        
+        stage('Build APK') {
+            steps {
+                script {
+                    sh '''
+                        cd /workspace/app
+                        
+                        # Make gradlew executable
+                        chmod +x gradlew
+                        
+                        # Build the APK
+                        ./gradlew assembleDebug
+                        
+                        echo "APK built successfully"
+                        ls -la app/build/outputs/apk/debug/
+                    '''
+                }
+            }
+        }
+        
+        stage('Upload to MinIO') {
+            steps {
+                script {
+                    // Install MinIO client
+                    sh 'wget -q https://dl.min.io/client/mc/release/linux-amd64/mc && chmod +x mc'
+                    
+                    // Configure MinIO client
+                    sh '''
+                        ./mc alias set minio http://${MINIO_ENDPOINT} ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
+                        
+                        # Create bucket if it doesn't exist
+                        ./mc mb minio/${MINIO_BUCKET} --ignore-existing
+                        
+                        # Sanitize app name for filename
+                        SANITIZED_APP_NAME=$(echo "${APP_NAME}" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+                        APK_FILE="app/build/outputs/apk/debug/app-debug.apk"
+                        MINIO_PATH="${APP_ID}/${APP_MODULE}/${APP_ID}-${SANITIZED_APP_NAME}.apk"
+                        
+                        # Upload APK to MinIO
+                        ./mc cp ${APK_FILE} minio/${MINIO_BUCKET}/${MINIO_PATH}
+                        
+                        echo "Artifact uploaded to: minio://${MINIO_BUCKET}/${MINIO_PATH}"
+                        echo "Artifact path: ${MINIO_PATH}"
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            script {
+                echo "✅ Build completed successfully!"
+                echo "📦 Artifact uploaded to MinIO bucket: ${MINIO_BUCKET}"
+                echo "🔗 Download path: android-artifacts/${APP_ID}/${APP_MODULE}/${APP_ID}-${APP_NAME}.apk"
+            }
+        }
+        
+        failure {
+            script {
+                echo "❌ Build failed!"
+                echo "Check the console output above for error details"
+            }
+        }
+        
+        cleanup {
+            script {
+                echo "🧹 Cleaning up workspace"
+                sh 'rm -rf /workspace/app'
+            }
+        }
+    }
+}

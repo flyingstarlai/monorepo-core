@@ -1,0 +1,135 @@
+pipeline {
+  agent none
+
+  parameters {
+    string(name: 'APP_NAME', defaultValue: '', description: 'Display name shown to users')
+    string(name: 'APP_MODULE', defaultValue: '001', description: 'Module code, e.g., 001')
+    string(name: 'SERVER_IP', defaultValue: '', description: 'Backend server IP/host')
+    string(name: 'GOOGLE_SERVICES_URL', defaultValue: '', description: 'HTTP(S) URL to download google-services.json from API endpoint')
+    string(name: 'ANDROID_IMAGE', defaultValue: 'ghcr.io/cirruslabs/android-sdk:34', description: 'Docker image with Android SDK + JDK')
+    string(name: 'MINIO_PUBLIC_BASE', defaultValue: 'http://minio:9000', description: 'Public base URL to MinIO for final download link')
+  }
+
+  environment {
+    MINIO_ENDPOINT = credentials('minio-endpoint')
+    MINIO_ACCESS_KEY = credentials('minio-access-key')
+    MINIO_SECRET_KEY = credentials('minio-secret-key')
+    MINIO_BUCKET_ARTIFACTS = 'android-artifacts'
+  }
+
+  stages {
+    stage('Checkout') {
+      agent { label 'built-in' }
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Prepare Workspace') {
+      agent { label 'built-in' }
+      steps {
+        sh '''
+          set -e
+          mkdir -p app
+          if [ -n "$GOOGLE_SERVICES_URL" ]; then
+            echo "Downloading google-services.json..."
+            curl -fsSL "$GOOGLE_SERVICES_URL" -o app/google-services.json
+          fi
+          if [ ! -f app/google-services.json ]; then
+            echo "google-services.json not found. Provide GOOGLE_SERVICES_URL or place the file at app/google-services.json" >&2
+            exit 1
+          fi
+          echo "google-services.json present"
+        '''
+      }
+    }
+
+    stage('Derive APP_ID') {
+      agent { label 'built-in' }
+      steps {
+        sh '''
+          set -e
+          PACKAGE_NAME=$(jq -r '.client[0].client_info.android_client_info.package_name' app/google-services.json)
+          if [ -z "$PACKAGE_NAME" ] || [ "$PACKAGE_NAME" = "null" ]; then
+            echo "Failed to read package_name from google-services.json" >&2
+            exit 1
+          fi
+          # Prefer TCS pattern, fallback last segment
+          if echo "$PACKAGE_NAME" | grep -Eo 'TCS[0-9]+' >/dev/null 2>&1; then
+            APP_ID=$(echo "$PACKAGE_NAME" | grep -Eo 'TCS[0-9]+')
+          else
+            APP_ID=$(echo "$PACKAGE_NAME" | awk -F'.' '{print $NF}')
+          fi
+          echo "APP_ID=$APP_ID" | tee APP_ID.env
+        '''
+      }
+    }
+
+    stage('Build (Docker)') {
+      agent {
+        docker {
+          image "${params.ANDROID_IMAGE}"
+          args "--user root -v $WORKSPACE:/workspace -w /workspace"
+          reuseNode true
+        }
+      }
+      environment {
+        GRADLE_USER_HOME = '/workspace/.gradle'
+      }
+      steps {
+        sh '''
+          set -e
+          . ./APP_ID.env
+          # Place google-services.json into the Android module path (adjust if your module name differs)
+          mkdir -p android/app
+          cp app/google-services.json android/app/google-services.json
+
+          echo "Building with APP_NAME='$APP_NAME', APP_ID='$APP_ID', APP_MODULE='$APP_MODULE', SERVER_IP='$SERVER_IP'"
+
+          if [ -x ./gradlew ]; then
+            ./gradlew clean assembleRelease --no-daemon
+          elif command -v gradle >/dev/null 2>&1; then
+            gradle clean assembleRelease --no-daemon
+          else
+            echo "Gradle wrapper not found; please add it to your Android project." >&2
+            exit 1
+          fi
+        '''
+      }
+    }
+
+    stage('Collect & Upload Artifact') {
+      agent { label 'built-in' }
+      steps {
+        sh '''
+          set -e
+          . ./APP_ID.env
+          APK_PATH=$(find . -type f -name "*.apk" | grep -E "/(release|debug)/" | head -n1 || true)
+          if [ -z "$APK_PATH" ]; then
+            echo "No APK produced. Ensure your Gradle task outputs an APK." >&2
+            exit 1
+          fi
+          SAFE_APP_NAME=$(echo "$APP_NAME" | iconv -f utf-8 -t ascii//translit 2>/dev/null | tr -cs 'A-Za-z0-9._-' '-')
+          ARTIFACT_NAME="${APP_ID}-${SAFE_APP_NAME}.apk"
+          echo "Uploading $APK_PATH to MinIO as $ARTIFACT_NAME"
+          mc alias set minio "$MINIO_ENDPOINT" "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY"
+          mc cp "$APK_PATH" "minio/${MINIO_BUCKET_ARTIFACTS}/$APP_ID/$APP_MODULE/$ARTIFACT_NAME"
+          echo "ARTIFACT_URL=${params.MINIO_PUBLIC_BASE}/${MINIO_BUCKET_ARTIFACTS}/$APP_ID/$APP_MODULE/$ARTIFACT_NAME" | tee ARTIFACT_URL.env
+        '''
+        archiveArtifacts artifacts: '**/*.apk', fingerprint: true
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        def url = readFile('ARTIFACT_URL.env').trim().split('=')[1]
+        echo "Artifact available at: ${url}"
+      }
+    }
+    failure {
+      echo 'Build failed.'
+    }
+  }
+}

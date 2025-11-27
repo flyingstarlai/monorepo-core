@@ -19,7 +19,11 @@ export function DashboardHeader() {
   // Generate breadcrumbs based on current location
   const generateBreadcrumbs = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
-    const breadcrumbs = [];
+    const breadcrumbs: Array<{
+      label: string;
+      href: string;
+      isCurrentPage: boolean;
+    }> = [];
 
     // Remove '_authenticated' from path segments
     const filteredSegments = pathSegments.filter(
@@ -35,46 +39,80 @@ export function DashboardHeader() {
     });
 
     // Add other segments
-    if (filteredSegments.length > 1) {
-      if (
-        filteredSegments[0] === 'dashboard' &&
-        filteredSegments[1] === 'profile'
-      ) {
+    if (filteredSegments.length > 0) {
+      const [first, second, third] = filteredSegments;
+
+      // Dashboard subpages
+      if (first === 'dashboard' && second === 'profile') {
         breadcrumbs.push({
           label: '個人資料',
           href: '/dashboard/profile',
           isCurrentPage: true,
         });
-      } else if (filteredSegments[0] === 'users') {
+      }
+
+      // Users
+      else if (first === 'users') {
         breadcrumbs.push({
           label: '用戶管理',
           href: '/users',
           isCurrentPage: filteredSegments.length === 1,
         });
 
-        if (filteredSegments.length > 1) {
-          if (filteredSegments[1] === 'create') {
-            breadcrumbs.push({
-              label: '建立用戶',
-              href: '/users/create',
-              isCurrentPage: true,
-            });
-          } else if (filteredSegments[1] === '$id') {
-            breadcrumbs.push({
-              label: '用戶詳情',
-              href: location.pathname,
-              isCurrentPage: true,
-            });
-          } else if (
-            filteredSegments[1] === '$id' &&
-            filteredSegments[2] === 'edit'
-          ) {
-            breadcrumbs.push({
-              label: '編輯用戶',
-              href: location.pathname,
-              isCurrentPage: true,
-            });
-          }
+        if (second === 'create') {
+          breadcrumbs.push({
+            label: '建立用戶',
+            href: '/users/create',
+            isCurrentPage: true,
+          });
+        } else if (second && third === 'edit') {
+          breadcrumbs.push({
+            label: '編輯用戶',
+            href: location.pathname,
+            isCurrentPage: true,
+          });
+        } else if (second) {
+          // user detail (id present)
+          breadcrumbs.push({
+            label: '用戶詳情',
+            href: location.pathname,
+            isCurrentPage: true,
+          });
+        }
+      }
+
+      // App Builder
+      else if (first === 'app-builder') {
+        breadcrumbs.push({
+          label: 'App Builder',
+          href: '/app-builder',
+          isCurrentPage: filteredSegments.length === 1,
+        });
+
+        if (second === 'create') {
+          breadcrumbs.push({
+            label: 'Create Definition',
+            href: '/app-builder/create',
+            isCurrentPage: true,
+          });
+        } else if (second === 'identifier') {
+          breadcrumbs.push({
+            label: 'Identifiers',
+            href: '/app-builder/identifier',
+            isCurrentPage: true,
+          });
+        } else if (second && third === 'build') {
+          breadcrumbs.push({
+            label: 'Build',
+            href: location.pathname,
+            isCurrentPage: true,
+          });
+        } else if (second && third === 'history') {
+          breadcrumbs.push({
+            label: 'History',
+            href: location.pathname,
+            isCurrentPage: true,
+          });
         }
       }
     }

@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MobileAppsModule } from './mobile-apps/mobile-apps.module';
+import { AppBuilderModule } from './app-builder/app-builder.module';
 
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
@@ -23,6 +24,7 @@ import { AppController } from './app.controller';
     UsersModule,
     DashboardModule,
     MobileAppsModule,
+    AppBuilderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

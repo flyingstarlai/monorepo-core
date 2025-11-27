@@ -1,5 +1,10 @@
 import { DataSource } from 'typeorm';
 import { User } from './users/entities/user.entity';
+import {
+  MobileAppDefinition,
+  MobileAppBuild,
+  MobileAppIdentifier,
+} from './app-builder/entities/index';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -10,7 +15,7 @@ export const AppDataSource = new DataSource({
   database: 'TC_DEV',
   synchronize: false,
   logging: true,
-  entities: [User],
+  entities: [User, MobileAppDefinition, MobileAppBuild, MobileAppIdentifier],
   migrations: ['src/migrations/*.ts'],
   options: {
     encrypt: false,

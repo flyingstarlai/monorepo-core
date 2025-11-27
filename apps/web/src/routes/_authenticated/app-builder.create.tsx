@@ -1,0 +1,50 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { DefinitionForm } from '@/features/app-builder/components/definition-form';
+import { Button } from '@/components/ui/button';
+import { Link } from '@tanstack/react-router';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { useCreateDefinition } from '@/features/app-builder/hooks/use-app-builder';
+import type { CreateDefinitionData } from '@/features/app-builder/components/definition-form';
+
+export const Route = createFileRoute('/_authenticated/app-builder/create')({
+  component: AppBuilderCreate,
+});
+
+function AppBuilderCreate() {
+  const createDefinitionMutation = useCreateDefinition();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (data: CreateDefinitionData) => {
+    try {
+      await createDefinitionMutation.mutateAsync(data);
+      navigate({ to: '/app-builder' });
+    } catch (error) {
+      console.error('Create definition failed:', error);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl space-y-4">
+      {/* Back Button */}
+      <Link to="/app-builder">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center space-x-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>返回定義列表</span>
+        </Button>
+      </Link>
+
+      {/* Definition Form */}
+      <DefinitionForm
+        onSubmit={handleSubmit}
+        isLoading={createDefinitionMutation.isPending}
+        title="建立新的應用程式定義"
+        description="建立一個新的 Android 應用程式定義，用於建置和部署。"
+      />
+    </div>
+  );
+}

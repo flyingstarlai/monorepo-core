@@ -1,17 +1,18 @@
 ## 1. API Implementation
 
 - [x] 1.1 Database tables: MobileAppDefinition, MobileAppBuild (MSSQL, TypeORM)
-- [x] 1.2 Module Catalog API: read MSSQL table `TC_DASHBOARD_MODULE` and expose `GET /mobile-app-builder/modules` (value=`no`, label=`label`); validate APP_MODULE
-- [ ] 1.3 Global Google Services
-  - [ ] 1.3.1 `POST /mobile-app-builder/google-services` (upload a single global google-services.json, store latest only)
-  - [ ] 1.3.2 `GET /mobile-app-builder/app-ids` (derive list of APP_ID from stored google-services.json; prefer `TCS[0-9]+`, else last segment of package_name)
-- [ ] 1.4 Mobile App Builder Endpoints (RBAC: admin/manager)
-  - [ ] 1.4.1 CRUD definitions (no per-definition google-services upload)
-  - [ ] 1.4.2 Trigger build
-  - [ ] 1.4.3 List builds, get status
-  - [ ] 1.4.4 Presigned download endpoint
+- [x] 1.2 Module Catalog API: read MSSQL table `TC_DASHBOARD_MODULE` and expose `GET /app-builder/modules` (value=`no`, label=`label`); validate APP_MODULE
+- [x] 1.3 Global Google Services
+  - [x] 1.3.1 `POST /app-builder/google-services` (upload a single global google-services.json, store latest only)
+  - [x] 1.3.2 `GET /app-builder/app-ids` (derive list of APP_ID from stored google-services.json; prefer `TCS[0-9]+`, else last segment of package_name)
+  - [x] 1.3.3 `GET /app-builder/google-services/download` (download google-services.json for Jenkins)
+- [x] 1.4 Mobile App Builder Endpoints (RBAC: admin/manager)
+  - [x] 1.4.1 CRUD definitions (no per-definition google-services upload)
+  - [x] 1.4.2 Trigger build
+  - [x] 1.4.3 List builds, get status
+  - [x] 1.4.4 Presigned download endpoint
 - [x] 1.5 Jenkins integration service (env-based config, crumb support) and polling; do not pass version params
-- [ ] 1.6 Jenkins CI pipeline (Docker-based Android image) and MinIO upload step; print artifact location
+- [x] 1.6 Jenkins CI pipeline (Docker-based Android image) and MinIO upload step; print artifact location
 - [x] 1.7 CI stack: docker-compose.ci.yml for Jenkins + DinD + MinIO (bucket private by default)
 - [x] 1.8 RBAC and server-side validation (APP_MODULE exists in `TC_DASHBOARD_MODULE`)
 - [x] 1.9 Tests: unit (parser, module service), e2e (permissions, presigned download), smoke (Jenkins trigger mocked)
@@ -20,9 +21,9 @@
 ## 2. Web Implementation
 
 - [x] 2.1 Web UI base: Definitions list, create/edit, trigger build dialog, build history, admin/manager-only download (presigned)
-- [ ] 2.2 New page/route: Upload global google-services.json and preview parsed APP_ID list
-- [ ] 2.3 Create Definition form: APP_ID as dropdown from `GET /mobile-app-builder/app-ids` (no free text, no file upload)
-- [ ] 2.4 Module selector: fetch from API `GET /mobile-app-builder/modules` (no hardcoded values)
+- [x] 2.2 New page/route: Upload global google-services.json and preview parsed APP_ID list
+- [x] 2.3 Create Definition form: APP_ID as dropdown from `GET /app-builder/app-ids` (no free text, no file upload)
+- [x] 2.4 Module selector: fetch from API `GET /app-builder/modules` (no hardcoded values)
 - [x] 2.5 UI role enforcement (admin/manager) and validation rules (SERVER_IP free text)
 
 ## 3. Validation
@@ -45,3 +46,17 @@
 - [x] 4.11 Fixed hook implementation and removed dynamic import inconsistencies
 - [x] 4.12 Resolved all TypeScript compilation errors and lint warnings
 - [x] 4.13 Verified both API and web builds pass with zero errors
+
+## 5. Database Migration (Completed ✅)
+
+- [x] 5.1 Added migration for google-services content storage column
+- [x] 5.2 Updated MobileAppIdentifier entity to include file content
+- [x] 5.3 Modified service to store and retrieve file content
+
+## 6. Code Quality & Final Integration (Completed ✅)
+
+- [x] 6.1 Fixed all TypeScript compilation errors
+- [x] 6.2 Resolved lint warnings (reduced to minimal test file warnings)
+- [x] 6.3 Verified both API and web builds pass successfully
+- [x] 6.4 Ensured proper error handling throughout the application
+- [x] 6.5 Validated API endpoints match specification requirements

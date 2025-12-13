@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { UserGroupMembership } from '../../groups/entities/user-group-membership.entity';
 
 @Entity('TC_APP_ACCOUNT')
 export class User {
@@ -48,6 +50,9 @@ export class User {
     name: 'updated_at',
   })
   updatedAt: Date;
+
+  @OneToMany(() => UserGroupMembership, (membership) => membership.user)
+  groupMemberships: UserGroupMembership[];
 }
 
 export type UserRole = 'admin' | 'manager' | 'user';

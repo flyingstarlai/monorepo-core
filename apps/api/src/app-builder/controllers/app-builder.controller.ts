@@ -11,6 +11,7 @@ import {
   Query,
   HttpStatus,
   HttpCode,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -27,7 +28,6 @@ import {
   UpdateDefinitionDto,
   TriggerBuildDto,
 } from '../dto/app-definition.dto';
-import { MobileAppBuildDto } from '../dto/app-build.dto';
 import { PresignedDownloadDto } from '../dto/app-build.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
@@ -44,10 +44,17 @@ export class MobileAppBuilderController {
     private readonly jenkinsService: JenkinsService,
   ) {}
 
+  private checkFeatureFlag() {
+    if (process.env.FEATURE_APP_BUILDER !== 'true') {
+      throw new ForbiddenException('App Builder feature is disabled');
+    }
+  }
+
   @Get('definitions')
   @ApiOperation({ summary: 'Get all mobile app definitions' })
   @ApiResponse({ status: 200, description: 'List of mobile app definitions' })
   async getDefinitions() {
+    this.checkFeatureFlag();
     return this.mobileAppDefinitionService.findAll();
   }
 
@@ -57,6 +64,7 @@ export class MobileAppBuilderController {
   @ApiResponse({ status: 200, description: 'Mobile app definition details' })
   @ApiResponse({ status: 404, description: 'Definition not found' })
   async getDefinition(@Param('id') id: string) {
+    this.checkFeatureFlag();
     const definition = await this.mobileAppDefinitionService.findById(id);
     if (!definition) {
       throw new Error('Definition not found');
@@ -76,6 +84,7 @@ export class MobileAppBuilderController {
     @Body() createDefinitionDto: CreateDefinitionDto,
     @Request() req: { user: User },
   ) {
+    this.checkFeatureFlag();
     return this.mobileAppDefinitionService.create(
       createDefinitionDto,
       req.user.id,
@@ -96,6 +105,7 @@ export class MobileAppBuilderController {
     @Param('id') id: string,
     @Body() updateDefinitionDto: UpdateDefinitionDto,
   ) {
+    this.checkFeatureFlag();
     return this.mobileAppDefinitionService.update(id, updateDefinitionDto);
   }
 
@@ -111,6 +121,7 @@ export class MobileAppBuilderController {
   })
   @ApiResponse({ status: 404, description: 'Definition not found' })
   async deleteDefinition(@Param('id') id: string) {
+    this.checkFeatureFlag();
     await this.mobileAppDefinitionService.delete(id);
   }
 
@@ -129,6 +140,7 @@ export class MobileAppBuilderController {
     @Body() triggerDto: TriggerBuildDto,
     @Request() req: { user: User },
   ) {
+    this.checkFeatureFlag();
     const definition = await this.mobileAppDefinitionService.findById(id);
     if (!definition) {
       throw new Error('Definition not found');
@@ -174,6 +186,7 @@ export class MobileAppBuilderController {
     @Query('definitionId') definitionId?: string,
     @Query('status') status?: string,
   ) {
+    this.checkFeatureFlag();
     if (definitionId) {
       return this.mobileAppBuildService.findByDefinitionId(definitionId);
     }
@@ -189,6 +202,7 @@ export class MobileAppBuilderController {
   @ApiResponse({ status: 200, description: 'Build details' })
   @ApiResponse({ status: 404, description: 'Build not found' })
   async getBuild(@Param('id') id: string) {
+    this.checkFeatureFlag();
     const build = await this.mobileAppBuildService.findById(id);
     if (!build) {
       throw new Error('Build not found');
@@ -201,6 +215,7 @@ export class MobileAppBuilderController {
   @ApiParam({ name: 'id', description: 'Build ID' })
   @ApiResponse({ status: 200, description: 'Current build status' })
   async getBuildStatus(@Param('id') id: string) {
+    this.checkFeatureFlag();
     const build = await this.mobileAppBuildService.findById(id);
     if (!build) {
       throw new Error('Build not found');
@@ -232,7 +247,7 @@ export class MobileAppBuilderController {
       });
 
       return { status: mappedStatus, jenkinsStatus };
-    } catch (error) {
+    } catch {
       return { status: build.status, message: 'Failed to get Jenkins status' };
     }
   }
@@ -248,6 +263,7 @@ export class MobileAppBuilderController {
   })
   @ApiResponse({ status: 404, description: 'Build not found' })
   async getDownloadUrl(@Param('id') id: string): Promise<PresignedDownloadDto> {
+    this.checkFeatureFlag();
     const build = await this.mobileAppBuildService.findById(id);
     if (!build) {
       throw new Error('Build not found');

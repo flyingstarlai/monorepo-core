@@ -7,6 +7,7 @@ import {
   UpdateDefinitionDto,
 } from '../dto/app-definition.dto';
 import { DashboardModuleService } from './dashboard-module.service';
+import { IdGenerator } from '../../utils/id-generator';
 
 @Injectable()
 export class MobileAppDefinitionService {
@@ -29,7 +30,7 @@ export class MobileAppDefinitionService {
     }
 
     const definition = this.mobileAppDefinitionRepository.create({
-      id: `def_${Date.now()}`,
+      id: IdGenerator.generateDefinitionId(),
       ...createDefinitionDto,
       createdBy,
     });

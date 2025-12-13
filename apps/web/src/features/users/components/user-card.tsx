@@ -66,22 +66,24 @@ export function UserCard({
               <h3 className="font-semibold text-slate-900 text-lg">
                 {displayName}
               </h3>
-              <p className="text-sm text-slate-600">@{user.username}</p>
+              <p className="text-sm text-slate-600">
+                @{user.username || 'unknown'}
+              </p>
               <div className="flex items-center space-x-3 mt-2">
                 <span className="text-sm text-slate-500">
-                  {user.deptName} ({user.deptNo})
+                  {user.deptName || '未指定'} ({user.deptNo || '未指定'})
                 </span>
                 <Badge
-                  variant={getRoleVariant(user.role)}
+                  variant={getRoleVariant(user.role || 'user')}
                   style={{
-                    backgroundColor: getRoleColor(user.role),
+                    backgroundColor: getRoleColor(user.role || 'user'),
                     color: 'white',
-                    borderColor: getRoleColor(user.role),
+                    borderColor: getRoleColor(user.role || 'user'),
                   }}
                 >
-                  {user.role}
+                  {user.role || 'user'}
                 </Badge>
-                <Badge variant={getStatusVariant(user.isActive)}>
+                <Badge variant={getStatusVariant(user.isActive ?? false)}>
                   {user.isActive ? '啟用' : '停用'}
                 </Badge>
               </div>

@@ -1,10 +1,10 @@
 import { DataSource, DeepPartial } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { IdGenerator } from '../utils/id-generator';
 import * as bcrypt from 'bcrypt';
 
 const users = [
   {
-    id: 'admin-001',
     username: 'admin',
     password: 'nimda', // Will be hashed below
     fullName: 'System Administrator',
@@ -14,7 +14,6 @@ const users = [
     isActive: true,
   },
   {
-    id: 'manager-001',
     username: 'manager',
     password: 'manager', // Will be hashed below
     fullName: 'Manager User',
@@ -24,7 +23,6 @@ const users = [
     isActive: true,
   },
   {
-    id: 'user-001',
     username: 'user',
     password: 'user', // Will be hashed below
     fullName: 'Regular User',
@@ -48,6 +46,7 @@ export const seedUsers = async (dataSource: DataSource) => {
     const processedUsers = await Promise.all(
       users.map(async (user) => ({
         ...user,
+        id: IdGenerator.generateUserId(), // Use nanoid ID generation
         password: shouldHashPassword
           ? await bcrypt.hash(user.password, 10)
           : user.password,
@@ -108,6 +107,15 @@ export const seedUsers = async (dataSource: DataSource) => {
         });
       }
     }
+
+    // Return user ID mapping for membership seeding
+    const userIdMap: { [username: string]: string } = {
+      admin: processedUsers[0].id,
+      manager: processedUsers[1].id,
+      user: processedUsers[2].id,
+    };
+
+    return userIdMap;
   } catch (error) {
     console.error('❌ Error seeding users:', error);
     throw error;

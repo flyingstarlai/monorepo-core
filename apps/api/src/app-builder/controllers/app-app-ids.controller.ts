@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards, ForbiddenException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { MobileAppGoogleServicesService } from '../services/app-google-services.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -17,6 +17,12 @@ export class MobileAppAppIdsController {
   constructor(
     private readonly googleServicesService: MobileAppGoogleServicesService,
   ) {}
+
+  private checkFeatureFlag() {
+    if (process.env.FEATURE_APP_BUILDER !== 'true') {
+      throw new ForbiddenException('App Builder feature is disabled');
+    }
+  }
 
   @Get()
   @Roles('admin', 'manager')
@@ -42,6 +48,7 @@ export class MobileAppAppIdsController {
     description: 'Forbidden - insufficient permissions',
   })
   async getAppIds(): Promise<AppIdDto[]> {
+    this.checkFeatureFlag();
     const identifiers = await this.googleServicesService.getIdentifiers();
 
     return identifiers.map((identifier) => ({

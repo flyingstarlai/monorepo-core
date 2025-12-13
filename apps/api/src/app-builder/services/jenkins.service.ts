@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
-import * as crypto from 'crypto';
 
 export interface JenkinsQueueResponse {
   id: number;
@@ -104,7 +103,7 @@ export class JenkinsService {
       // Extract queue ID from location header or response
       const queueUrl = response.headers?.location;
       const queueIdMatch = queueUrl?.match(/queue\/item\/(\d+)/);
-      const queueId = queueIdMatch ? parseInt(queueIdMatch[1]) : 0;
+      const queueId = queueIdMatch ? parseInt(queueIdMatch[1], 10) : 0;
 
       return {
         queueId,

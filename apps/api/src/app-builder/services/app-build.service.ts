@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MobileAppBuild } from '../entities/app-build.entity';
-import { MobileAppBuildDto } from '../dto/app-build.dto';
+import { IdGenerator } from '../../utils/id-generator';
 
 @Injectable()
 export class MobileAppBuildService {
@@ -26,7 +26,10 @@ export class MobileAppBuildService {
   }
 
   async create(buildData: Partial<MobileAppBuild>): Promise<MobileAppBuild> {
-    const build = this.mobileAppBuildRepository.create(buildData);
+    const build = this.mobileAppBuildRepository.create({
+      id: IdGenerator.generateBuildId(),
+      ...buildData,
+    });
     return this.mobileAppBuildRepository.save(build);
   }
 

@@ -14,11 +14,11 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "migration:generate": "typeorm migration:generate",
-    "migration:run": "typeorm migration:run",
+    "migration:run": "ts-node run-migrations.ts",
     "migration:revert": "typeorm migration:revert",
     "migration:create": "typeorm migration:create",
     "seed": "ts-node src/seeds/index.ts",
-    "seed:clear": "ts-node src/seeds/clear-users.ts"
+    "seed:clear": "ts-node src/seeds/clear-users-groups.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -37,6 +37,7 @@
     "class-validator": "^0.14.2",
     "jsonwebtoken": "^9.0.2",
     "mssql": "^12.1.0",
+    "nanoid": "^5.1.6",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",

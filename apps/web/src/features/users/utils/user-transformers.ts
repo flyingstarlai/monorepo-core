@@ -40,6 +40,7 @@ const formatDateTime = (date: Date | string): string => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-export const formatDate = (date: Date): string => {
+export const formatDate = (date?: Date): string => {
+  if (!date) return '未指定';
   return formatDateTime(date);
 };

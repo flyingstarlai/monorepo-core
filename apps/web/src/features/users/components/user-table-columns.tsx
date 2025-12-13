@@ -69,7 +69,9 @@ export function createUserTableColumns({
             </div>
             <div>
               <div className="font-medium text-slate-900">{displayName}</div>
-              <div className="text-sm text-slate-500">@{user.username}</div>
+              <div className="text-sm text-slate-500">
+                @{user.username || 'unknown'}
+              </div>
             </div>
           </div>
         );
@@ -82,8 +84,10 @@ export function createUserTableColumns({
         const user = row.original;
         return (
           <div>
-            <div className="font-medium">{user.deptName}</div>
-            <div className="text-sm text-slate-500">{user.deptNo}</div>
+            <div className="font-medium">{user.deptName || '未指定'}</div>
+            <div className="text-sm text-slate-500">
+              {user.deptNo || '未指定'}
+            </div>
           </div>
         );
       },
@@ -95,14 +99,14 @@ export function createUserTableColumns({
         const user = row.original;
         return (
           <Badge
-            variant={getRoleVariant(user.role)}
+            variant={getRoleVariant(user.role || 'user')}
             style={{
-              backgroundColor: getRoleColor(user.role),
+              backgroundColor: getRoleColor(user.role || 'user'),
               color: 'white',
-              borderColor: getRoleColor(user.role),
+              borderColor: getRoleColor(user.role || 'user'),
             }}
           >
-            {user.role}
+            {user.role || 'user'}
           </Badge>
         );
       },
@@ -115,11 +119,11 @@ export function createUserTableColumns({
         return (
           <div className="flex items-center space-x-2">
             <Switch
-              checked={user.isActive}
+              checked={user.isActive ?? false}
               onCheckedChange={(checked) => onToggleStatus?.(user, checked)}
               disabled={!onToggleStatus}
             />
-            <Badge variant={getStatusVariant(user.isActive)}>
+            <Badge variant={getStatusVariant(user.isActive ?? false)}>
               {user.isActive ? '啟用' : '停用'}
             </Badge>
           </div>

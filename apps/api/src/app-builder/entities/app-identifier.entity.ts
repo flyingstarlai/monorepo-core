@@ -17,6 +17,9 @@ export class MobileAppIdentifier {
   @Column({ type: 'nvarchar', length: 200, name: 'package_name' })
   packageName: string;
 
+  @Column({ type: 'nvarchar', name: 'google_services_content', nullable: true })
+  googleServicesContent: string;
+
   @Column({ type: 'nvarchar', length: 50, name: 'created_by' })
   createdBy: string;
 

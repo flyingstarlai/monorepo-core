@@ -10,6 +10,8 @@ import {
   MobileAppIdentifier,
 } from '../app-builder/entities/index';
 import { ModuleEntity } from '../app-builder/entities/dashboard-module.entity';
+import { Group } from '../groups/entities/group.entity';
+import { UserGroupMembership } from '../groups/entities/user-group-membership.entity';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { ModuleEntity } from '../app-builder/entities/dashboard-module.entity';
           MobileAppBuild,
           MobileAppIdentifier,
           ModuleEntity,
+          Group,
+          UserGroupMembership,
         ],
         synchronize: false, // Don't auto-sync since we have existing table
         logging: configService.get<string>('NODE_ENV') === 'development',

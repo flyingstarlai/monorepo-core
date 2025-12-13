@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { MobileAppsModule } from './mobile-apps/mobile-apps.module';
 import { AppBuilderModule } from './app-builder/app-builder.module';
+import { GroupsModule } from './groups/groups.module';
 
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
@@ -22,9 +23,10 @@ import { AppController } from './app.controller';
     CoreModule,
     AuthModule,
     UsersModule,
+    GroupsModule,
     DashboardModule,
     MobileAppsModule,
-    AppBuilderModule,
+    ...(process.env.FEATURE_APP_BUILDER === 'true' ? [AppBuilderModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],

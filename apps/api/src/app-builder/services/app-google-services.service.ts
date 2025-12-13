@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MobileAppIdentifier } from '../entities/app-identifier.entity';
 import { UploadGoogleServicesDto } from '../dto/upload-google-services.dto';
+import { IdGenerator } from '../../utils/id-generator';
 
 @Injectable()
 export class MobileAppGoogleServicesService {
@@ -21,12 +22,13 @@ export class MobileAppGoogleServicesService {
     // Parse and extract identifiers
     const appIds = await this.parseAppIds(uploadDto.content);
 
-    // Save new identifiers
-    const identifiers = appIds.map((appId, index) =>
+    // Save new identifiers with content
+    const identifiers = appIds.map((appId) =>
       this.identifierRepository.create({
-        id: `id_${Date.now()}_${index}`,
+        id: IdGenerator.generateIdentifierId(),
         appId: appId.appId,
         packageName: appId.packageName,
+        googleServicesContent: uploadDto.content,
         createdBy,
       }),
     );
@@ -45,6 +47,15 @@ export class MobileAppGoogleServicesService {
     });
   }
 
+  async getGoogleServicesFile(): Promise<string | null> {
+    const identifier = await this.identifierRepository.findOne({
+      where: {},
+      order: { createdAt: 'DESC' },
+    });
+
+    return identifier?.googleServicesContent || null;
+  }
+
   async parseAppIds(
     content: string,
   ): Promise<Array<{ appId: string; packageName: string }>> {
@@ -58,19 +69,20 @@ export class MobileAppGoogleServicesService {
             client.client_info?.android_client_info?.package_name || '';
           let appId = packageName;
 
-          // Only process entries with TCS prefix
+          // If package_name contains TCS[0-9]+, use that match (uppercased)
           const tcsMatch = packageName.match(/TCS[0-9]+/);
           if (tcsMatch) {
-            appId = tcsMatch[0];
-            return { appId, packageName };
+            appId = tcsMatch[0].toUpperCase();
+          } else {
+            // ELSE use the last segment of the package name (text after the final .)
+            appId = packageName.split('.').pop() || packageName;
           }
 
-          // Skip entries without TCS prefix
-          return null;
+          return { appId, packageName };
         })
         .filter(
           (item): item is { appId: string; packageName: string } =>
-            item !== null,
+            item !== null && item.packageName,
         );
     } catch {
       return [];

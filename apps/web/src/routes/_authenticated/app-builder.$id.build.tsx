@@ -7,7 +7,7 @@ import {
 import { LoadingOverlay } from '@/components/ui/loading';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const Route = createFileRoute('/_authenticated/app-builder/$id/build')({
   component: AppBuilderBuildPage,
@@ -19,6 +19,24 @@ function AppBuilderBuildPage() {
   const { data: definition, isLoading, error } = useDefinition(id);
   const triggerBuild = useTriggerBuild();
   const [errorState, setErrorState] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+      navigate({ to: '/dashboard' });
+    }
+  }, [navigate]);
+
+  if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+    return (
+      <div className="space-y-6">
+        <Alert>
+          <AlertDescription>
+            App Builder feature is disabled. Please contact your administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   const handleTrigger = async () => {
     setErrorState(null);

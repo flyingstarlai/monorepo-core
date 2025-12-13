@@ -1,6 +1,10 @@
 {
   "$schema": "https://turborepo.com/schema.json",
-  "globalDependencies": ["**/.env.*local", "FEATURE_HASHED"],
+  "globalDependencies": [
+    "**/.env.*local",
+    "FEATURE_HASHED",
+    "FEATURE_APP_BUILDER"
+  ],
   "tasks": {
     "dev": {
       "cache": false,

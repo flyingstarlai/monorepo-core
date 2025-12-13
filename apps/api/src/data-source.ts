@@ -5,20 +5,29 @@ import {
   MobileAppBuild,
   MobileAppIdentifier,
 } from './app-builder/entities/index';
+import { Group } from './groups/entities/group.entity';
+import { UserGroupMembership } from './groups/entities/user-group-membership.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
-  host: '60.248.245.253',
-  port: 1433,
-  username: 'sa',
-  password: 'dsc',
-  database: 'TC_DEV',
+  host: process.env.DB_MIGRATION_HOST || 'localhost',
+  port: parseInt(process.env.DB_MIGRATION_PORT || '1433'),
+  username: process.env.DB_UMIGRATION_SERNAME || 'sa',
+  password: process.env.DB_MIGRATION_PASSWORD || '',
+  database: process.env.DB_MIGRATION_DATABASE || 'AccountManager',
   synchronize: false,
-  logging: true,
-  entities: [User, MobileAppDefinition, MobileAppBuild, MobileAppIdentifier],
+  logging: process.env.NODE_ENV === 'development',
+  entities: [
+    User,
+    MobileAppDefinition,
+    MobileAppBuild,
+    MobileAppIdentifier,
+    Group,
+    UserGroupMembership,
+  ],
   migrations: ['src/migrations/*.ts'],
   options: {
-    encrypt: false,
-    trustServerCertificate: true,
+    encrypt: process.env.DB_ENCRYPT === 'true',
+    trustServerCertificate: process.env.DB_TRUST_CERT === 'true',
   },
 });

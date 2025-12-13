@@ -21,6 +21,7 @@ import {
   LogOut,
   Smartphone,
   Hammer,
+  UserSquare2,
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -32,6 +33,10 @@ export function AppSidebar() {
     await logoutMutation.mutateAsync();
   };
 
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
+  const adminOrManager = isAdmin || isManager;
+
   const navigation = [
     {
       title: '儀表板',
@@ -39,7 +44,7 @@ export function AppSidebar() {
       icon: LayoutDashboard,
       isActive: location.pathname === '/dashboard',
     },
-    ...(user?.role && ['admin', 'manager'].includes(user.role)
+    ...(adminOrManager
       ? [
           {
             title: '用戶管理',
@@ -47,18 +52,32 @@ export function AppSidebar() {
             icon: Users,
             isActive: location.pathname.startsWith('/users'),
           },
+          ...(isAdmin
+            ? [
+                {
+                  title: '群組管理',
+                  url: '/groups',
+                  icon: UserSquare2,
+                  isActive: location.pathname.startsWith('/groups'),
+                },
+              ]
+            : []),
           {
             title: '應用程式',
             url: '/apps',
             icon: Smartphone,
             isActive: location.pathname.startsWith('/apps'),
           },
-          {
-            title: 'App Builder',
-            url: '/app-builder',
-            icon: Hammer,
-            isActive: location.pathname.startsWith('/app-builder'),
-          },
+          ...(import.meta.env.VITE_FEATURE_APP_BUILDER === 'true'
+            ? [
+                {
+                  title: 'App Builder',
+                  url: '/app-builder',
+                  icon: Hammer,
+                  isActive: location.pathname.startsWith('/app-builder'),
+                },
+              ]
+            : []),
         ]
       : []),
     {

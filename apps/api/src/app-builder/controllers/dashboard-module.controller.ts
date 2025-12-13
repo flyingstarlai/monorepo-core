@@ -1,10 +1,15 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  UseGuards,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DashboardModuleService } from '../services/dashboard-module.service';
 import { DashboardModuleDto } from '../dto/dashboard-module.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
-import { Roles } from '../../auth/decorators/roles.decorator';
 
 @ApiTags('Mobile App Builder - Modules')
 @Controller('app-builder/modules')
@@ -14,6 +19,12 @@ export class DashboardModuleController {
     private readonly dashboardModuleService: DashboardModuleService,
   ) {}
 
+  private checkFeatureFlag() {
+    if (process.env.FEATURE_APP_BUILDER !== 'true') {
+      throw new ForbiddenException('App Builder feature is disabled');
+    }
+  }
+
   @Get()
   @ApiOperation({ summary: 'Get all dashboard modules' })
   @ApiResponse({
@@ -22,6 +33,7 @@ export class DashboardModuleController {
     type: [DashboardModuleDto],
   })
   async findAll(): Promise<DashboardModuleDto[]> {
+    this.checkFeatureFlag();
     return this.dashboardModuleService.findAll();
   }
 
@@ -34,6 +46,7 @@ export class DashboardModuleController {
   })
   @ApiResponse({ status: 404, description: 'Module not found' })
   async findById(@Param('id') id: string): Promise<DashboardModuleDto> {
+    this.checkFeatureFlag();
     const module = await this.dashboardModuleService.findById(id);
     if (!module) {
       throw new Error('Module not found');

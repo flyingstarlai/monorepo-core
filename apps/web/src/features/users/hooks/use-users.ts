@@ -15,7 +15,17 @@ export const useUsers = () => {
       // Request all users with increased limit for client-side pagination
       const response = await api.get('/users?limit=300');
       // Handle both response formats - direct array or wrapped in users property
-      return response.data.users || response.data;
+      const data = response.data.users || response.data;
+
+      if (!Array.isArray(data)) {
+        console.error('Invalid response format: expected array of users', data);
+        return [];
+      }
+
+      // Filter out null/invalid users and ensure required fields exist
+      return data.filter(
+        (user) => user != null && user.id != null && user.username != null,
+      );
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

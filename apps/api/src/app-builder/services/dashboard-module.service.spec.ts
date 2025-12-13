@@ -3,7 +3,6 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DashboardModuleService } from '../services/dashboard-module.service';
 import { ModuleEntity } from '../entities/dashboard-module.entity';
-import { DashboardModuleDto } from '../dto/dashboard-module.dto';
 
 describe('DashboardModuleService', () => {
   let service: DashboardModuleService;

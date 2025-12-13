@@ -13,6 +13,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
 import { FactoryDepartmentDto } from './dto/factory-department.dto';
+import { IdGenerator } from '../utils/id-generator';
 import { formatDateUTC8 } from '../utils/date-formatter';
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
@@ -70,7 +71,7 @@ export class UsersService implements IUsersService {
     const finalPassword = await this.processPassword(password);
 
     const user = this.usersRepository.create({
-      id: this.generateId(),
+      id: IdGenerator.generateUserId(),
       username,
       password: finalPassword,
       fullName,
@@ -139,15 +140,6 @@ export class UsersService implements IUsersService {
         `Cannot create user with role "${roleToCreate}". Available roles: ${availableRoles.join(', ') || 'None'}`,
       );
     }
-  }
-
-  private generateId(): string {
-    const timestamp = Date.now();
-    const randomChars = Math.random().toString(36).substring(2, 8);
-    const randomNum = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, '0');
-    return `user_${timestamp}_${randomChars}${randomNum}`;
   }
 
   private async getLatestMobileLoginForUser(

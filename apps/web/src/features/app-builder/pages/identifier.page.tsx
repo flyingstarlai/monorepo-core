@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
   Card,
@@ -22,10 +22,30 @@ import { Upload, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import mobileAppBuilderService, {
   type AppIdDto,
 } from '../../../lib/app-builder.service';
+import { useNavigate } from '@tanstack/react-router';
 
 export function IdentifierPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+      navigate({ to: '/dashboard' });
+    }
+  }, [navigate]);
+
+  if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+    return (
+      <div className="space-y-6">
+        <Alert>
+          <AlertDescription>
+            App Builder feature is disabled. Please contact your administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   const uploadMutation = useMutation({
     mutationFn: (data: { content: string }) =>

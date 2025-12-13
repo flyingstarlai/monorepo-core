@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   useDefinition,
   useBuilds,
@@ -21,7 +21,7 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 import type { MobileAppBuild } from '@/features/app-builder/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const Route = createFileRoute('/_authenticated/app-builder/$id/history')(
   {
@@ -46,6 +46,7 @@ function getStatusBadge(status: string) {
 
 function AppBuilderHistoryPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const {
     data: definition,
     isLoading: defLoading,
@@ -55,6 +56,24 @@ function AppBuilderHistoryPage() {
   const downloadArtifact = useDownloadArtifact();
   const { user } = useAuth();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+      navigate({ to: '/dashboard' });
+    }
+  }, [navigate]);
+
+  if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+    return (
+      <div className="space-y-6">
+        <Alert>
+          <AlertDescription>
+            App Builder feature is disabled. Please contact your administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (defLoading) {
     return (

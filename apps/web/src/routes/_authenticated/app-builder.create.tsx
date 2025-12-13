@@ -6,6 +6,8 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { useCreateDefinition } from '@/features/app-builder/hooks/use-app-builder';
 import type { CreateDefinitionData } from '@/features/app-builder/components/definition-form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useEffect } from 'react';
 
 export const Route = createFileRoute('/_authenticated/app-builder/create')({
   component: AppBuilderCreate,
@@ -14,6 +16,24 @@ export const Route = createFileRoute('/_authenticated/app-builder/create')({
 function AppBuilderCreate() {
   const createDefinitionMutation = useCreateDefinition();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+      navigate({ to: '/dashboard' });
+    }
+  }, [navigate]);
+
+  if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
+    return (
+      <div className="max-w-2xl space-y-4">
+        <Alert>
+          <AlertDescription>
+            App Builder feature is disabled. Please contact your administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   const handleSubmit = async (data: CreateDefinitionData) => {
     try {

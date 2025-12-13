@@ -89,9 +89,11 @@ export function UserForm({
       deptNo: user?.deptNo || '',
       deptName: user?.deptName || '',
       role:
-        (user?.role as User['role']) ||
-        (availableRoles[0] as User['role']) ||
-        'user',
+        (user?.role as User['role']) || // Use existing role when editing
+        (availableRoles.includes('user')
+          ? 'user'
+          : (availableRoles[0] as User['role'])) || // Prefer 'user' for new users, fallback to first available
+        'user', // Ultimate fallback
       isActive: user?.isActive ?? true,
     },
     validators: {

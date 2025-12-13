@@ -22,6 +22,8 @@ import { UserResponseDto } from './dto/user-response.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { MobileLoginHistoryDto } from './dto/mobile-login-history.dto';
 import { RoleService } from './role.service';
+import { UserGroupResponseDto } from './dto/user-group-response.dto';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
@@ -228,5 +230,36 @@ export class UsersController {
       id,
       limit ? Number(limit) : 100,
     );
+  }
+
+  @Get(':id/groups')
+  @ApiOperation({ summary: 'Get groups for a specific user' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of user groups',
+    type: [UserGroupResponseDto],
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  async getUserGroups(
+    @Param('id') id: string,
+    @Request() req: { user: User },
+  ): Promise<UserGroupResponseDto[]> {
+    // Check if user exists
+    const targetUser = await this.usersService.findOne(id);
+    if (!targetUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Check permissions: users can only see their own groups, admins can see anyone's groups
+    const requestingUser = req.user;
+    if (requestingUser.role !== 'admin' && requestingUser.id !== id) {
+      throw new BadRequestException('You can only view your own groups');
+    }
+
+    return this.usersService.getUserGroups(id);
   }
 }

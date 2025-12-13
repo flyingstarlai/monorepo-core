@@ -5,6 +5,8 @@ import { CoreModule } from '../core/core.module';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { JwtStrategy } from '../auth/strategies/jwt.strategy';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserGroupMembership } from '../groups/entities/user-group-membership.entity';
 
 @Module({
   imports: [
@@ -17,6 +19,7 @@ import { JwtStrategy } from '../auth/strategies/jwt.strategy';
       }),
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature([UserGroupMembership]),
   ],
   controllers: [UsersController],
   providers: [UsersService, JwtStrategy],

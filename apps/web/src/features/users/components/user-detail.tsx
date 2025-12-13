@@ -8,6 +8,7 @@ import {
   Trash2,
   User as UserIcon,
   Smartphone,
+  Users,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import type { User } from '../types/user.types';
@@ -20,6 +21,8 @@ import {
 } from '../utils/user-transformers';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { UserLoginHistory } from './user-login-history';
+import { UserGroupsInfo } from './user-groups-info';
+import { UserGroups } from '@/features/users/components/user-groups.tsx';
 
 export interface UserDetailProps {
   user: User;
@@ -178,7 +181,7 @@ export function UserDetail({
 
       {/* Tabs */}
       <Tabs defaultValue="account-info" className="w-full">
-        <TabsList className="inline-flex h-9 w-80 items-center rounded-lg bg-slate-100 p-1">
+        <TabsList className="inline-flex h-9 w-96 items-center rounded-lg bg-slate-100 p-1">
           <TabsTrigger
             value="account-info"
             className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200"
@@ -196,7 +199,7 @@ export function UserDetail({
         </TabsList>
 
         <TabsContent value="account-info" className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Personal Information */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-4">
@@ -281,6 +284,9 @@ export function UserDetail({
                 </div>
               </CardContent>
             </Card>
+
+            {/* Group Information */}
+            <UserGroupsInfo userId={user.id} />
           </div>
         </TabsContent>
 
@@ -288,6 +294,14 @@ export function UserDetail({
           <Card className="border-0 shadow-sm">
             <CardContent className="p-6">
               <UserLoginHistory userId={user.id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="groups" className="mt-6">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <UserGroups userId={user.id} />
             </CardContent>
           </Card>
         </TabsContent>

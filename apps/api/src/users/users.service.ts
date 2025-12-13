@@ -19,6 +19,7 @@ import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
 import { MobileLoginHistoryDto } from './dto/mobile-login-history.dto';
+import { UserGroupMembership } from '../groups/entities/user-group-membership.entity';
 import { IUsersService } from './interfaces/users-service.interface';
 import { LoginHistoryQueryDto } from '../mobile-apps/dto/login-history-query.dto';
 import { PaginatedLoginHistoryDto } from '../mobile-apps/dto/paginated-login-history.dto';
@@ -48,6 +49,8 @@ export class UsersService implements IUsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(LoginHistory)
     private readonly loginHistoryRepo: Repository<LoginHistory>,
+    @InjectRepository(UserGroupMembership)
+    private readonly membershipRepository: Repository<UserGroupMembership>,
     private jwtService: JwtService,
   ) {
     this.shouldHashPassword = process.env.FEATURE_HASHED === 'true';
@@ -600,6 +603,25 @@ export class UsersService implements IUsersService {
     const mobile = await this.getLatestMobileLoginForUser(user.id);
     const userWithMobile = { ...user, ...mobile };
     return this.formatUserDates(userWithMobile) as UserResponseDto;
+  }
+
+  async getUserGroups(userId: string): Promise<any[]> {
+    const memberships = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .leftJoinAndSelect('membership.group', 'group')
+      .where('membership.userId = :userId', { userId })
+      .andWhere('group.isActive = :isActive', { isActive: true })
+      .orderBy('group.name', 'ASC')
+      .getMany();
+
+    return memberships.map((membership) => ({
+      id: membership.group.id,
+      name: membership.group.name,
+      description: membership.group.description,
+      isActive: membership.group.isActive,
+      memberCount: 0, // TODO: Add member count query
+      membershipCreatedAt: membership.createdAt,
+    }));
   }
 
   private formatUserDates(user: Partial<User>): Partial<UserResponseDto> {

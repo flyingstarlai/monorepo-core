@@ -1,11 +1,15 @@
 import type { User } from '../types/user.types';
 import { RoleService } from '@/lib/role.service';
 
-export const getUserInitials = (user: User): string => {
+export const getUserInitials = (
+  user: Pick<User, 'fullName' | 'username'>,
+): string => {
   return user.fullName?.charAt(0) || user.username?.charAt(0) || '?';
 };
 
-export const getUserDisplayName = (user: User): string => {
+export const getUserDisplayName = (
+  user: Pick<User, 'fullName' | 'username'>,
+): string => {
   return user.fullName || user.username;
 };
 

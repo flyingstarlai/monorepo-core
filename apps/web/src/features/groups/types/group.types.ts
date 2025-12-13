@@ -1,3 +1,5 @@
+import type { User } from '../../users/types/user.types';
+
 export interface Group {
   id: string;
   name: string;
@@ -23,7 +25,7 @@ export interface GroupMember {
   id: string;
   username: string;
   fullName: string;
-  role: string;
+  role: User['role'];
   deptNo: string;
   deptName: string;
   isActive: boolean;

@@ -4,14 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingOverlay } from '@/components/ui/loading';
 import { useUserGroups } from '../hooks/use-user-groups';
 import { format } from 'date-fns';
-import type { UserGroupResponseDto } from '../dto/user-group-response.dto';
 
 interface UserGroupsProps {
   userId: string;
 }
 
 export function UserGroups({ userId }: UserGroupsProps) {
-  const { data: groups, isLoading, error } = useUserGroups(userId);
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useUserGroups(userId) as { data: any[]; isLoading: boolean; error: any };
 
   if (isLoading) {
     return (
@@ -21,7 +24,9 @@ export function UserGroups({ userId }: UserGroupsProps) {
             isLoading={true}
             message="載入群組資訊..."
             className="w-full"
-          />
+          >
+            <div className="h-24" />
+          </LoadingOverlay>
         </CardContent>
       </Card>
     );
@@ -39,7 +44,7 @@ export function UserGroups({ userId }: UserGroupsProps) {
     );
   }
 
-  if (!groups?.length) {
+  if (!groups.length) {
     return (
       <Card className="border-0 shadow-sm">
         <CardContent className="p-6">

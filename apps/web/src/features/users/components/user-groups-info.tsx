@@ -2,14 +2,17 @@ import { Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useUserGroups } from '../hooks/use-user-groups';
-import type { UserGroupResponseDto } from '../dto/user-group-response.dto';
 
 interface UserGroupsInfoProps {
   userId: string;
 }
 
 export function UserGroupsInfo({ userId }: UserGroupsInfoProps) {
-  const { data: groups, isLoading, error } = useUserGroups(userId);
+  const {
+    data: groups = [],
+    isLoading,
+    error,
+  } = useUserGroups(userId) as { data: any[]; isLoading: boolean; error: any };
 
   if (isLoading) {
     return (
@@ -33,7 +36,7 @@ export function UserGroupsInfo({ userId }: UserGroupsInfoProps) {
     );
   }
 
-  if (!groups?.length) {
+  if (!groups.length) {
     return (
       <Card className="border-0 shadow-sm">
         <CardContent className="p-4">

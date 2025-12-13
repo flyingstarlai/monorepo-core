@@ -8,7 +8,6 @@ import {
   Trash2,
   User as UserIcon,
   Smartphone,
-  Users,
 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import type { User } from '../types/user.types';

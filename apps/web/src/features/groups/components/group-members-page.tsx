@@ -200,18 +200,14 @@ export function GroupMembersPage({ groupId }: GroupMembersPageProps) {
                           </TableCell>
                           <TableCell className="py-3 px-4">
                             <Badge
-                              variant={getRoleVariant(member.role || 'user')}
+                              variant={getRoleVariant(member.role)}
                               style={{
-                                backgroundColor: getRoleColor(
-                                  member.role || 'user',
-                                ),
+                                backgroundColor: getRoleColor(member.role),
                                 color: 'white',
-                                borderColor: getRoleColor(
-                                  member.role || 'user',
-                                ),
+                                borderColor: getRoleColor(member.role),
                               }}
                             >
-                              {member.role || 'user'}
+                              {member.role}
                             </Badge>
                           </TableCell>
                           <TableCell className="py-3 px-4">

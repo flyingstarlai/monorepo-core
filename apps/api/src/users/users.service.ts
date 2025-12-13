@@ -305,7 +305,6 @@ export class UsersService implements IUsersService {
     username: string,
     password: string,
   ): Promise<Omit<User, 'password'> | null> {
-    console.log({ username, passwordLength: password.length });
 
     const user = await this.usersRepository.findOne({
       where: { username, isActive: true },

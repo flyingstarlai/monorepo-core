@@ -9,22 +9,21 @@ pipeline {
         string(name: 'MINIO_BUCKET', defaultValue: 'android-builds', description: 'MinIO bucket for artifact storage')
         string(name: 'GIT_BRANCH', defaultValue: 'ci', description: 'Git branch to build from https://github.com/twsbp/tc-app-kotlin.git')
         string(name: 'COMPANY', defaultValue: 'TWSBP', description: 'Company identifier for MinIO bucket organization')
-        string(name: 'GOOGLE_SERVICES_URL', defaultValue: '', description: 'HTTP(S) URL to download google-services.json from API endpoint')
-        string(name: 'ANDROID_IMAGE', defaultValue: 'twsbpmac/ci-android:api36-jdk17', description: 'Docker image with Android SDK + JDK')
-        string(name: 'MINIO_PUBLIC_BASE', defaultValue: 'http://60.248.245.252:9000', description: 'Public base URL to MinIO for final download link')
+        string(name: 'BUILD_ID', defaultValue: '', description: 'Build ID from API for webhook callback')
     }
 
     environment {
-        // Initialize pipeline start time at very beginning
+        // Initialize pipeline start time at the very beginning
         PIPELINE_START_TIME = "${System.currentTimeMillis()}"
-        
+
         // Custom Android builder image built from ci/docker/android-builder.Dockerfile
         DOCKER_IMAGE_TAG = 'twsbpmac/ci-android:api36-jdk17'
-        MINIO_ENDPOINT = 'http://minio:9000'  # Internal access (Jenkins and MinIO on same server)
+        MINIO_ENDPOINT = 'http://minio:9000'
         MINIO_ACCESS_KEY = 'minioadmin'
         MINIO_SECRET_KEY = 'minioadmin123'
         GIT_REPO_URL = 'https://github.com/twsbp/tc-app-kotlin.git'
         GIT_CREDENTIALS_ID = 'github-token'
+        API_ENDPOINT = 'http://acm-api:3000/api/v1/app-builder'
     }
 
     options {
@@ -73,7 +72,7 @@ pipeline {
             steps {
                 script {
                     def stageStartTime = System.currentTimeMillis()
-                    def checkoutBranch = params.GIT_BRANCH
+                    def checkoutBranch = 'ci'
                     env.EFFECTIVE_GIT_BRANCH = checkoutBranch
                     echo "=== BUILD CONFIGURATION ==="
                     echo "Docker Image: ${env.DOCKER_IMAGE_TAG}"
@@ -161,58 +160,16 @@ pipeline {
             }
         }
 
-        stage('Prepare Workspace') {
-            steps {
-                script {
-                    echo "=== PREPARING WORKSPACE ==="
-                    sh '''
-                        set -e
-                        mkdir -p app
-                        if [ -n "$GOOGLE_SERVICES_URL" ]; then
-                            echo "Downloading google-services.json..."
-                            curl -fsSL "$GOOGLE_SERVICES_URL" -o app/google-services.json
-                        fi
-                        if [ ! -f app/google-services.json ]; then
-                            echo "google-services.json not found. Provide GOOGLE_SERVICES_URL or place file at app/google-services.json" >&2
-                            exit 1
-                        fi
-                        echo "google-services.json present"
-                    '''
-                }
-            }
-        }
-
-        stage('Derive APP_ID') {
-            steps {
-                script {
-                    echo "=== DERIVING APP_ID ==="
-                    sh '''
-                        set -e
-                        PACKAGE_NAME=$(jq -r '.client[0].client_info.android_client_info.package_name' app/google-services.json)
-                        if [ -z "$PACKAGE_NAME" ] || [ "$PACKAGE_NAME" = "null" ]; then
-                            echo "Failed to read package_name from google-services.json" >&2
-                            exit 1
-                        fi
-                        # Prefer TCS pattern, fallback last segment
-                        if echo "$PACKAGE_NAME" | grep -Eo 'TCS[0-9]+' >/dev/null 2>&1; then
-                            APP_ID=$(echo "$PACKAGE_NAME" | grep -Eo 'TCS[0-9]+')
-                        else
-                            APP_ID=$(echo "$PACKAGE_NAME" | awk -F'.' '{print $NF}')
-                        fi
-                        echo "APP_ID=$APP_ID" | tee APP_ID.env
-                    '''
-                }
-            }
-        }
-
         stage('Validate Parameters') {
             steps {
                 script {
                     echo "Validating build parameters..."
 
-                    // Validate APP_ID format (full, e.g. com.twsbp.XXXX)
-                    if (!params.APP_ID.matches(/^com\.twsbp\.[a-zA-Z0-9_]+$/)) {
-                        error("Invalid APP_ID format: '${params.APP_ID}'. Expected format: com.twsbp.XXXX")
+                    // Validate APP_ID format (allow full package or derived TCS code)
+                    def appIdIsFull = params.APP_ID ==~ /^com\.twsbp\.[a-zA-Z0-9_]+$/
+                    def appIdIsTcsCode = params.APP_ID ==~ /^TCS[0-9]+$/
+                    if (!appIdIsFull && !appIdIsTcsCode) {
+                        error("Invalid APP_ID format: '${params.APP_ID}'. Expected format: com.twsbp.XXXX or TCS##")
                     }
 
                     // Validate SERVER_IP (IP address or hostname)
@@ -245,8 +202,8 @@ pipeline {
                 script {
                     echo "=== DOCKER IMAGE VERIFICATION ==="
                     echo "Using Docker image: ${env.DOCKER_IMAGE_TAG}"
- 
-                    // Ensure Android SDK build image is available locally (skip pull if already present)
+
+                    // Ensure the Android SDK build image is available locally (skip pull if already present)
                     if (!sh(script: "docker image inspect ${env.DOCKER_IMAGE_TAG} >/dev/null 2>&1", returnStatus: true)) {
                         sh "docker pull ${env.DOCKER_IMAGE_TAG}"
                     }
@@ -255,9 +212,9 @@ pipeline {
                     // Clean up any existing container
                     sh 'docker rm -f android-builder >/dev/null 2>&1 || true'
 
-                    // Determine actual Jenkins home volume name so builder container
-                    // can see checked-out workspace. Docker Compose prefixes named volumes,
-                    // so we inspect running Jenkins container to find correct volume.
+                    // Determine the actual Jenkins home volume name so the builder container
+                    // can see the checked-out workspace. Docker Compose prefixes named volumes,
+                    // so we inspect the running Jenkins container to find the correct volume.
                     def jenkinsHomeVolume = sh(returnStdout: true, script: """
                         docker inspect -f '{{ range .Mounts }}{{ if eq .Destination "/var/jenkins_home" }}{{ .Name }}{{ end }}{{ end }}' jenkins-android-ci
                     """).trim()
@@ -265,8 +222,8 @@ pipeline {
                         error "Failed to determine Jenkins home volume name from container jenkins-android-ci"
                     }
 
-                    // Run Android SDK container sharing the same Jenkins home volume
-                    // (resolved above) so it can access workspace files.
+                    // Run the Android SDK container sharing the same Jenkins home volume
+                    // (resolved above) so it can access the workspace files.
                     sh """
                         docker run --rm -d --name android-builder \
                             --user root \
@@ -305,7 +262,7 @@ pipeline {
                     // Set up Gradle wrapper permissions
                     sh 'chmod +x gradlew'
 
-                    // Verify Android tools and Gradle in Android SDK container
+                    // Verify Android tools and Gradle in the Android SDK container
                     echo "=== ANDROID BUILD ENVIRONMENT VERIFICATION ==="
                     sh '''
                         echo "Gradle version (via wrapper):"
@@ -319,6 +276,9 @@ pipeline {
 
                         echo "Java version:"
                         docker exec android-builder java -version
+
+                        echo "Available Android components (first 10):"
+                        docker exec android-builder sh -c '$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --list 2>/dev/null | head -10 || echo "SDK manager not available"'
 
                         echo "User home directory:"
                         docker exec android-builder sh -c 'echo "HOME: $HOME"'
@@ -349,7 +309,7 @@ pipeline {
                         "-PBUILD_NUMBER=${env.BUILD_NUMBER}"
 
                     echo "=== ANDROID BUILD EXECUTION ==="
-                    echo "Executing Gradle build in Android SDK container"
+                    echo "Executing Gradle build in the Android SDK container"
                     echo "Working directory: ${env.WORKSPACE}"
                     echo "APP_ID (full): ${params.APP_ID}"
                     echo "APP_ID suffix passed to Gradle: ${appIdSuffix}"
@@ -378,10 +338,10 @@ pipeline {
                     def gradleStartTime = System.currentTimeMillis()
                     echo "Gradle build starting at ${new Date(gradleStartTime)}"
 
-                    // Execute build in container with proper working directory
+                    // Execute build in the container with proper working directory
                     // NOTE: android-builder shares the jenkins_home volume, so
                     // ${env.WORKSPACE} inside the container has the same contents
-                    // as the Jenkins workspace used for checkout.
+                    // as the Jenkins workspace used for the checkout.
                     sh """
                         docker exec -w ${env.WORKSPACE} android-builder ${gradleCommand} --build-cache
                     """
@@ -405,7 +365,7 @@ pipeline {
                     def efficiency = totalDuration > 0 ? ((gradleDuration * 100) / totalDuration) as int : 0
                     echo "Build stage completed in ${totalDuration}ms (${totalSeconds}s)"
                     echo "Pre-Gradle setup time: ${setupDuration}ms"
-                    echo "Gradle accounted for ${efficiency}% of Build stage"
+                    echo "Gradle accounted for ${efficiency}% of the Build stage"
                     if (totalSeconds > 900) {
                         echo "ALERT: Build stage exceeded 15 minutes."
                     } else if (totalSeconds > 600) {
@@ -421,45 +381,19 @@ pipeline {
                     def buildType = 'release'
                     def apkPattern = "app/build/outputs/apk/${buildType}/*.apk"
 
+
                     echo "Archiving build artifacts..."
 
                     // Archive APK files
                     archiveArtifacts artifacts: apkPattern, fingerprint: true
+
+
 
                     // Archive mapping files (if available)
                     archiveArtifacts artifacts: 'app/build/outputs/mapping/**/*.txt', allowEmptyArchive: true
 
                     // Archive build reports
                     archiveArtifacts artifacts: 'app/build/reports/**/*', allowEmptyArchive: true
-                }
-            }
-        }
-
-        stage('Collect & Upload Artifact') {
-            when {
-                expression {
-                    def effectiveBranch = env.EFFECTIVE_GIT_BRANCH ?: params.GIT_BRANCH
-                    return effectiveBranch in ['main', 'develop', 'ci']
-                }
-            }
-            steps {
-                script {
-                    echo "=== COLLECTING & UPLOADING ARTIFACTS ==="
-                    sh '''
-                        set -e
-                        . ./APP_ID.env
-                        APK_PATH=$(find . -type f -name "*.apk" | grep -E "/(release|debug)/" | head -n1 || true)
-                        if [ -z "$APK_PATH" ]; then
-                            echo "No APK produced. Ensure your Gradle task outputs an APK." >&2
-                            exit 1
-                        fi
-                        SAFE_APP_NAME=$(echo "$APP_NAME" | iconv -f utf-8 -t ascii//translit 2>/dev/null | tr -cs 'A-Za-z0-9._-' '-')
-                        ARTIFACT_NAME="${APP_ID}-${SAFE_APP_NAME}.apk"
-                        echo "Uploading $APK_PATH to MinIO as $ARTIFACT_NAME"
-                        mc alias set minio "$MINIO_ENDPOINT" "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY"
-                        mc cp "$APK_PATH" "minio/${MINIO_BUCKET}/${COMPANY}/${APP_ID}/${APP_MODULE}/${ARTIFACT_NAME}"
-                        echo "ARTIFACT_URL=${MINIO_PUBLIC_BASE}/${MINIO_BUCKET}/${COMPANY}/${APP_ID}/${APP_MODULE}/${ARTIFACT_NAME}" | tee ARTIFACT_URL.env
-                    '''
                 }
             }
         }
@@ -476,7 +410,7 @@ pipeline {
                     echo "Uploading artifacts to MinIO..."
 
                     def buildType = 'release'
-                    
+
                     // Get app version from AppConstants.kt with robust fallback
                     def appVersion = ''
                     try {
@@ -496,12 +430,12 @@ pipeline {
                         echo "Failed to extract app version: ${err.getMessage()}"
                         appVersion = "build-${env.BUILD_NUMBER}"
                     }
-                    
+
                     // Ensure we have a valid version
                     if (!appVersion || appVersion.trim().isEmpty()) {
                         appVersion = "build-${env.BUILD_NUMBER}"
                     }
-                    
+
                     echo "Using app version for MinIO path: v${appVersion}"
                     def minioPath = "${params.MINIO_BUCKET}/${params.COMPANY}/v${appVersion}"
 
@@ -535,6 +469,8 @@ pipeline {
                         mc admin info minio || echo "Admin info failed (may be permissions issue)"
                         mc ls minio/ || echo "List buckets failed (may be permissions issue)"
                     """
+
+
 
                     // Upload APK files (MinIO auto-creates bucket if needed)
                     sh """
@@ -616,6 +552,7 @@ pipeline {
                         echo "Build timing data uploaded"
                     """
 
+
                     echo "=== MINIO UPLOAD SUMMARY ==="
                     echo "Company: ${params.COMPANY}"
                     echo "Version: v${appVersion}"
@@ -635,17 +572,70 @@ pipeline {
                 def successBranch = env.EFFECTIVE_GIT_BRANCH ?: params.GIT_BRANCH
                 if (successBranch in ['main', 'develop', 'ci']) {
                     echo "Artifacts uploaded to MinIO bucket: ${params.MINIO_BUCKET}"
-                }
-                
-                // Print artifact URL if available
-                def artifactUrl = null
-                try {
-                    if (fileExists('ARTIFACT_URL.env')) {
-                        artifactUrl = readFile('ARTIFACT_URL.env').trim().split('=')[1]
-                        echo "Artifact available at: ${artifactUrl}"
+                    
+                    // Construct artifact path for the main APK file
+                    // Expected format: company/v{version}/{filename}.apk
+                    def mainApkPath = ''
+                    try {
+                        // Find the main APK file (usually the release APK)
+                        def apkFiles = sh(returnStdout: true, script: """
+                            find app/build/outputs/apk/release -name "*.apk" -not -name "*-unsigned.apk" -not -name "*-unaligned.apk" | head -1 || echo ''
+                        """).trim()
+                        
+                        if (apkFiles) {
+                            def apkFileName = apkFiles.split('/').last()
+                            // Build path: {company}/v{version}/{filename}.apk
+                            mainApkPath = "${params.COMPANY}/v${appVersion}/${apkFileName}"
+                            echo "Main APK path for webhook: ${mainApkPath}"
+                        } else {
+                            echo "Warning: Could not find main APK file for webhook"
+                        }
+                    } catch (err) {
+                        echo "Error constructing APK path for webhook: ${err.getMessage()}"
                     }
-                } catch (Exception ignored) {
-                    echo "Could not read artifact URL"
+                    
+                    // Call API webhook with artifact path
+                    if (mainApkPath) {
+                        try {
+                            def buildId = params.BUILD_ID ?: ''
+                            if (!buildId) {
+                                echo "Warning: BUILD_ID parameter not set, cannot call webhook"
+                                echo "Build ID should be passed from API when triggering Jenkins build"
+                            } else {
+                                echo "Calling webhook for build ${buildId} with artifact path: ${mainApkPath}"
+                                
+                                def webhookPayload = """
+                                {
+                                    "status": "completed",
+                                    "stage": "Upload to MinIO",
+                                    "progress": 100,
+                                    "artifactPath": "${mainApkPath}",
+                                    "startTime": ${env.PIPELINE_START_TIME ?: 'null'},
+                                    "endTime": ${System.currentTimeMillis()},
+                                    "metrics": {
+                                        "jenkinsBuildNumber": ${env.BUILD_NUMBER},
+                                        "gitCommit": "${env.GIT_COMMIT ?: ''}",
+                                        "gitBranch": "${env.EFFECTIVE_GIT_BRANCH ?: params.GIT_BRANCH}"
+                                    }
+                                }
+                                """.trim()
+                                
+                                sh """
+                                    echo "Sending webhook payload: ${webhookPayload}"
+                                    curl -X POST "${env.API_ENDPOINT}/builds/${buildId}/webhook" \\
+                                        -H "Content-Type: application/json" \\
+                                        -d '${webhookPayload}' \\
+                                        --connect-timeout 30 \\
+                                        --max-time 60 \\
+                                        --retry 3 \\
+                                        --retry-delay 5 || echo "Webhook call failed"
+                                """
+                            }
+                        } catch (err) {
+                            echo "Error calling webhook: ${err.getMessage()}"
+                            echo "Build artifacts were uploaded to MinIO but API was not notified"
+                        }
+                    }
                 }
             }
         }
@@ -671,7 +661,7 @@ pipeline {
                 // Debug: Log timing values for troubleshooting
                 echo "DEBUG: PIPELINE_START_TIME = '${env.PIPELINE_START_TIME}'"
                 echo "DEBUG: pipelineEndTime = ${pipelineEndTime}"
-                
+
                 // More robust parsing with fallback
                 long pipelineStart = 0
                 try {
@@ -686,7 +676,7 @@ pipeline {
                     echo "DEBUG: Failed to parse PIPELINE_START_TIME: ${e.getMessage()}"
                     pipelineStart = pipelineEndTime
                 }
-                
+
                 long totalDuration = pipelineEndTime - pipelineStart
                 env.TOTAL_PIPELINE_DURATION = totalDuration.toString()
                 long totalDurationSeconds = Math.floorDiv(totalDuration, 1000L)

@@ -1,6 +1,4 @@
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
-
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,47 +6,60 @@ import {
   DialogTitle,
 } from '../../../components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../../components/ui/table';
-import { Skeleton } from '../../../components/ui/skeleton';
-import { useBuilds, useDownloadArtifact } from '../hooks/use-app-builder';
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../../components/ui/tabs';
+import {
+  useBuilds,
+  useDownloadArtifact,
+  useDefinitions,
+  useModules,
+} from '../hooks/use-app-builder';
 import type { MobileAppDefinition, MobileAppBuild } from '../types';
-import { formatDistanceToNow } from 'date-fns';
 import { useAuth } from '../../../features/auth/hooks/use-auth';
+import { BuildHistoryTable } from './build-history-table';
+import { BuildHistoryFilters, type BuildFilters } from './build-history-filters';
+import { BuildErrorDisplay } from './build-error-display';
+import { BuildHistoryDetailDrawer } from './build-history-detail-drawer';
+// import { BuildComparisonTool } from './BuildComparisonTool';
+// import { BuildAnalyticsDashboard } from './BuildAnalyticsDashboard';
+// import { BuildActionButtons } from './build-action-buttons';
 
 interface BuildHistoryDialogProps {
-  definition: MobileAppDefinition;
+  definition?: MobileAppDefinition;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-}
-
-function getStatusBadge(status: string) {
-  const variants = {
-    queued: 'secondary',
-    building: 'default',
-    completed: 'default',
-    failed: 'destructive',
-    cancelled: 'secondary',
-  } as const;
-
-  return (
-    <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-      {status.toUpperCase()}
-    </Badge>
-  );
+  mode?: 'app' | 'global';
 }
 
 export function BuildHistoryDialog({
   definition,
   open,
   onOpenChange,
+  mode = 'app',
 }: BuildHistoryDialogProps) {
-  const { data: builds, isLoading } = useBuilds(definition.id);
+  const [activeTab, setActiveTab] = useState('history');
+  const [filters, setFilters] = useState<BuildFilters>({
+    statuses: [],
+    appIds: [],
+    modules: [],
+  });
+  const [selectedBuilds, setSelectedBuilds] = useState<string[]>([]);
+  const [sortField, setSortField] = useState('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedBuildForDetail, setSelectedBuildForDetail] =
+    useState<MobileAppBuild | null>(null);
+
+  // Global builds for mode='global', app-specific for mode='app'
+  const {
+    data: builds,
+    isLoading,
+    refetch,
+  } = useBuilds(mode === 'app' && definition ? definition.id : undefined);
+  const { data: definitions } = useDefinitions();
+  const { data: modules } = useModules();
   const downloadArtifact = useDownloadArtifact();
   const { user } = useAuth();
 
@@ -79,122 +90,151 @@ export function BuildHistoryDialog({
     }
   };
 
-  const filteredBuilds = builds?.filter(
-    (build) => build.appDefinitionId === definition.id,
+  const handleBuildAction = async (build: MobileAppBuild, action: string) => {
+    switch (action) {
+      case 'download':
+        await handleDownload(build);
+        break;
+      case 'view':
+        setSelectedBuildForDetail(build);
+        break;
+      case 'retry':
+        // Handle retry build
+        break;
+      case 'cancel':
+        // Handle cancel build
+        break;
+      case 'compare':
+        setSelectedBuilds((prev) => [...prev, build.id]);
+        setActiveTab('compare');
+        break;
+      case 'delete':
+        // Handle delete build
+        break;
+      default:
+        console.log('Unknown action:', action);
+    }
+  };
+
+  const filteredBuilds = builds?.filter((build) =>
+    mode === 'app' && definition
+      ? build.appDefinitionId === definition.id
+      : true,
   );
 
+  const handleFiltersChange = (newFilters: BuildFilters) => {
+    setFilters(newFilters);
+    refetch();
+  };
+
+  const handleSort = (field: string, direction: 'asc' | 'desc') => {
+    setSortField(field);
+    setSortDirection(direction);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle>Build History - {definition.appName}</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>
+              Build History -{' '}
+              {mode === 'app' && definition ? definition.appName : 'All Builds'}
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="overflow-auto">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-4 w-1/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-4 w-3/4" />
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="h-full"
+          >
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="history">History</TabsTrigger>
+              <TabsTrigger value="filters">Filters</TabsTrigger>
+              <TabsTrigger value="compare">Compare</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="errors">Errors</TabsTrigger>
+            </TabsList>
+
+            <div className="overflow-auto flex-1 mt-4">
+              <TabsContent value="history" className="space-y-4">
+                <BuildHistoryTable
+                  builds={filteredBuilds || []}
+                  definitions={definitions || []}
+                  isLoading={isLoading}
+                  onBuildAction={handleBuildAction}
+                  onSort={handleSort}
+                  sortField={sortField}
+                  sortDirection={sortDirection}
+                  selectedBuildIds={selectedBuilds}
+                  onSelectionChange={setSelectedBuilds}
+                />
+              </TabsContent>
+
+              <TabsContent value="filters" className="space-y-4">
+                <BuildHistoryFilters
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  definitions={definitions || []}
+                  modules={modules || []}
+                  onReset={() => {
+                    setFilters({
+                      statuses: [],
+                      appIds: [],
+                      modules: [],
+                    });
+                    refetch();
+                  }}
+                />
+              </TabsContent>
+
+              <TabsContent value="compare" className="space-y-4">
+                <div className="text-center py-8 text-muted-foreground">
+                  Build comparison tool coming soon
                 </div>
-              ))}
-            </div>
-          ) : filteredBuilds?.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                No builds found for this app
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Build ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Build Number</TableHead>
-                  <TableHead>Started By</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredBuilds?.map((build: MobileAppBuild) => {
-                  const duration =
-                    build.startedAt && build.completedAt
-                      ? formatDistanceToNow(new Date(build.completedAt), {
-                          addSuffix: false,
-                        })
-                      : build.startedAt
-                        ? formatDistanceToNow(new Date(build.startedAt), {
-                            addSuffix: false,
-                          })
-                        : '-';
+              </TabsContent>
 
-                  return (
-                    <TableRow key={build.id}>
-                      <TableCell className="font-mono text-sm">
-                        {build.id.slice(-8)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          {getStatusBadge(build.status)}
-                          {build.errorMessage && (
-                            <div
-                              className="text-xs text-destructive max-w-xs truncate"
-                              title={build.errorMessage}
-                            >
-                              {build.errorMessage}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {build.startedAt
-                          ? formatDistanceToNow(new Date(build.startedAt), {
-                              addSuffix: true,
-                            })
-                          : '-'}
-                      </TableCell>
-                      <TableCell>{duration}</TableCell>
-                      <TableCell>{build.jenkinsBuildNumber || '-'}</TableCell>
-                      <TableCell>{build.startedBy}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          {build.consoleUrl && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                window.open(build.consoleUrl, '_blank')
-                              }
-                            >
-                              Console
-                            </Button>
-                          )}
-                          {build.status === 'completed' &&
-                            ['admin', 'manager'].includes(user?.role || '') && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDownload(build)}
-                                disabled={downloadArtifact.isPending}
-                              >
-                                Download
-                              </Button>
-                            )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
+              <TabsContent value="analytics" className="space-y-4">
+                <div className="text-center py-8 text-muted-foreground">
+                  Build analytics dashboard coming soon
+                </div>
+              </TabsContent>
+
+              <TabsContent value="errors" className="space-y-4">
+                <div className="grid gap-4">
+                  {filteredBuilds
+                    ?.filter((build) => build.status === 'failed')
+                    .map((build) => (
+                      <BuildErrorDisplay
+                        key={build.id}
+                        build={build}
+                        onRetry={(build) => handleBuildAction(build, 'retry')}
+                        onViewFullLog={(build) => {
+                          if (build.consoleUrl) {
+                            window.open(build.consoleUrl, '_blank');
+                          }
+                        }}
+                      />
+                    ))}
+                  {(!filteredBuilds ||
+                    filteredBuilds.filter((build) => build.status === 'failed')
+                      .length === 0) && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No failed builds found in the current time range
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
+      <BuildHistoryDetailDrawer
+        build={selectedBuildForDetail}
+        open={!!selectedBuildForDetail}
+        onOpenChange={(open) => !open && setSelectedBuildForDetail(null)}
+      />
+    </>
   );
 }

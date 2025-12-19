@@ -126,13 +126,46 @@ The system SHALL provide endpoints for managing definitions, modules, and builds
 - WHEN a client fetches builds filtered by `definitionId`
 - THEN the system returns builds ordered by time with status and the ability for authorized users to get a presigned download link.
 
+### Requirement: Jenkins Connection Status And Queue
+
+The system SHALL expose Jenkins connectivity and queue state in the App Builder API and UI.
+
+- The API SHALL provide endpoints under `/app-builder/jenkins` that return:
+  - current Jenkins connection and authentication status for the configured `JENKINS_URL`, and
+  - the current Jenkins build queue items and counts for the configured job(s).
+- The App Builder Settings or System Status view SHALL surface this information by:
+  - showing whether Jenkins is connected, misconfigured (authentication issue), or unreachable, and
+  - showing the current number of queued items and a short list of recent queue items.
+- The implementation SHALL use the configured Jenkins URL and credentials (external or internal), including development setups where Jenkins and MinIO are reachable via external IPs, and SHALL NOT hard-code hostnames or ports.
+
+#### Scenario: Jenkins connected in development via external IP
+
+- GIVEN a development environment where `JENKINS_URL` points to an externally reachable Jenkins server and the credentials are valid
+- WHEN an admin opens the App Builder Settings / System Status page
+- THEN the UI shows Jenkins as connected with basic server metadata
+- AND the queue panel shows the current number of queued builds (which may be zero).
+
+#### Scenario: Jenkins unreachable or misconfigured
+
+- GIVEN `JENKINS_URL` or credentials are invalid or Jenkins is unavailable
+- WHEN an admin opens the App Builder Settings / System Status page
+- THEN the UI shows Jenkins as disconnected or in an authentication error state with a short explanation
+- AND the queue information is either empty or marked as unavailable without breaking other App Builder functionality.
+
+#### Scenario: Queue items visible from App Builder
+
+- GIVEN one or more Jenkins builds are queued for the configured job
+- WHEN an admin opens the App Builder Settings / System Status page
+- THEN the UI shows a count of queued items
+- AND displays at least the job name and queued time for the most recent items.
+
 ### Requirement: Web UI (Admin/Manager)
 
 The web application SHALL provide pages for App Builder management.
 
 - Definitions page with create (upload json), edit, and trigger build actions.
 - Module selector lists labels from `TC_DASHBOARD_MODULE` while submitting the matching `no` value.
-- Build dialog shows parameters and current status (queued/building/success/failed); a download button appears only for admin/manager and uses presigned URLs.
+- Build dialog and the build page implemented in `apps/web/src/routes/_authenticated/app-builder.$id.build.tsx` SHALL show the build parameters, overall status (queued/building/success/failed), and a Jenkins pipeline stage progress indicator based on the stages defined in `devops/pipelines/app-builder/Jenkinsfile`; a download button appears only for admin/manager and uses presigned URLs.
 
 #### Scenario: Admin triggers build from UI
 

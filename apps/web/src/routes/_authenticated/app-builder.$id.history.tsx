@@ -1,4 +1,10 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useNavigate,
+  useRouterState,
+} from '@tanstack/react-router';
 import {
   useDefinition,
   useBuilds,
@@ -19,9 +25,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye } from 'lucide-react';
 import type { MobileAppBuild } from '@/features/app-builder/types';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export const Route = createFileRoute('/_authenticated/app-builder/$id/history')(
   {
@@ -47,6 +53,13 @@ function getStatusBadge(status: string) {
 function AppBuilderHistoryPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  });
+  const historyPath = `/app-builder/${id}/history`;
+  const showDetailPage = pathname.startsWith(`${historyPath}/`);
+
+  // Call ALL hooks before any conditional returns
   const {
     data: definition,
     isLoading: defLoading,
@@ -62,6 +75,10 @@ function AppBuilderHistoryPage() {
       navigate({ to: '/dashboard' });
     }
   }, [navigate]);
+
+  if (showDetailPage) {
+    return <Outlet />;
+  }
 
   if (import.meta.env.VITE_FEATURE_APP_BUILDER !== 'true') {
     return (
@@ -114,6 +131,13 @@ function AppBuilderHistoryPage() {
     } catch (e) {
       setErrorMsg('Failed to download artifact. Please try again.');
     }
+  };
+
+  const handleViewDetails = (buildId: string) => {
+    navigate({
+      to: '/app-builder/$id/history/$buildId',
+      params: { id, buildId },
+    });
   };
 
   return (
@@ -212,6 +236,14 @@ function AppBuilderHistoryPage() {
                   <TableCell>{build.startedBy}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(build.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Details
+                      </Button>
                       {build.consoleUrl && (
                         <Button
                           variant="outline"

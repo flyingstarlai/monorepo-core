@@ -10,6 +10,7 @@ Admins and managers need a self‑serve way to generate Android application buil
 - Add role‑based access: only admin or manager can create/regenerate builds and download artifacts (regular users cannot download).
 - Artifact naming: APK saved as `APP_ID-<sanitized-APP_NAME>.apk` and uploaded to MinIO under bucket `android-artifacts/<APP_ID>/<APP_MODULE>/`.
 - APP_MODULE selection backed by existing MSSQL table `TC_DASHBOARD_MODULE`; map column `no` → `APP_MODULE`, display `label` in UI; the Web UI must fetch this list from the API (no hardcoded values).
+- Expose Jenkins connection status and build queue information in the App Builder UI (Settings/System Status), driven by the configured `JENKINS_URL` and MinIO endpoints so that development environments using external IPs are supported without code changes.
 - Versioning is derived by Jenkins from the source; no version params in the API/UI.
 
 ## Impact

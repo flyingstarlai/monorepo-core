@@ -7,6 +7,9 @@ import type {
   TriggerBuildRequest,
   PresignedDownloadResponse,
   AppIdDto,
+  JenkinsConnectionStatus,
+  JenkinsQueueInfo,
+  BuildStageProgress,
 } from './types';
 
 // Mock service for development - replace with actual API calls
@@ -93,11 +96,43 @@ const mobileAppBuilderService = {
     await apiClient.delete(`/app-builder/definitions/${id}`);
   },
 
-  async getBuilds(appDefinitionId?: string): Promise<MobileAppBuild[]> {
+  async getBuilds(
+    appDefinitionId?: string,
+    filters?: any,
+  ): Promise<MobileAppBuild[]> {
     const { apiClient } = await import('./api-client');
-    const res = await apiClient.get<MobileAppBuild[]>('/app-builder/builds', {
-      params: appDefinitionId ? { definitionId: appDefinitionId } : undefined,
-    });
+    const params = new URLSearchParams();
+
+    if (appDefinitionId) params.append('definitionId', appDefinitionId);
+
+    if (filters?.statuses?.length)
+      params.append('status', filters.statuses.join(','));
+    if (filters?.appIds?.length)
+      params.append('appIds', filters.appIds.join(','));
+    if (filters?.modules?.length)
+      params.append('modules', filters.modules.join(','));
+    if (filters?.startedBy) params.append('startedBy', filters.startedBy);
+    if (filters?.buildNumber?.from)
+      params.append('buildNumberFrom', filters.buildNumber.from.toString());
+    if (filters?.buildNumber?.to)
+      params.append('buildNumberTo', filters.buildNumber.to.toString());
+    if (filters?.dateRange?.from)
+      params.append('dateFrom', filters.dateRange.from.toISOString());
+    if (filters?.dateRange?.to)
+      params.append('dateTo', filters.dateRange.to.toISOString());
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.sort) params.append('sort', filters.sort);
+    if (filters?.order) params.append('order', filters.order);
+
+    const url = `/app-builder/builds${params.toString() ? `?${params.toString()}` : ''}`;
+    const res = await apiClient.get<MobileAppBuild[] | any>(url);
+
+    // Handle paginated response if returned
+    if (res.data?.data) {
+      return res.data.data; // Return just the builds array for backward compatibility
+    }
+
     return res.data || [];
   },
 
@@ -142,6 +177,109 @@ const mobileAppBuilderService = {
     );
     return res.data;
   },
+
+  async getJenkinsStatus(): Promise<JenkinsConnectionStatus> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.get<JenkinsConnectionStatus>(
+      '/app-builder/jenkins/status',
+    );
+    return res.data;
+  },
+
+  async getJenkinsQueue(): Promise<JenkinsQueueInfo> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.get<JenkinsQueueInfo>(
+      '/app-builder/jenkins/queue',
+    );
+    return res.data;
+  },
+
+  async getBuildStages(buildId: string): Promise<BuildStageProgress> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.get<BuildStageProgress>(
+      `/app-builder/builds/${buildId}/stages`,
+    );
+    return res.data;
+  },
+
+  async getBuildConsole(buildId: string): Promise<string> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.get(`/app-builder/builds/${buildId}/console`, {
+      responseType: 'text',
+    });
+    return res.data ?? '';
+  },
+
+  async getBuildsWithFilters(filters?: any, pagination?: any): Promise<any> {
+    const { apiClient } = await import('./api-client');
+    const params = new URLSearchParams();
+
+    if (filters?.definitionId)
+      params.append('definitionId', filters.definitionId);
+    if (filters?.statuses?.length)
+      params.append('status', filters.statuses.join(','));
+    if (filters?.appIds?.length)
+      params.append('appIds', filters.appIds.join(','));
+    if (filters?.modules?.length)
+      params.append('modules', filters.modules.join(','));
+    if (filters?.startedBy) params.append('startedBy', filters.startedBy);
+    if (filters?.buildNumber?.from)
+      params.append('buildNumberFrom', filters.buildNumber.from.toString());
+    if (filters?.buildNumber?.to)
+      params.append('buildNumberTo', filters.buildNumber.to.toString());
+    if (filters?.dateRange?.from)
+      params.append('dateFrom', filters.dateRange.from.toISOString());
+    if (filters?.dateRange?.to)
+      params.append('dateTo', filters.dateRange.to.toISOString());
+
+    if (pagination) {
+      params.append('page', pagination.page.toString());
+      params.append('limit', pagination.limit.toString());
+      params.append('sort', pagination.sort);
+      params.append('order', pagination.order);
+    }
+
+    const res = await apiClient.get(`/app-builder/builds?${params.toString()}`);
+    return res.data;
+  },
+
+  async getBuildAnalytics(timeRange?: number, groupBy?: string): Promise<any> {
+    const { apiClient } = await import('./api-client');
+    const params = new URLSearchParams();
+
+    if (timeRange) params.append('timeRange', timeRange.toString());
+    if (groupBy) params.append('groupBy', groupBy);
+
+    const res = await apiClient.get(
+      `/app-builder/builds/analytics?${params.toString()}`,
+    );
+    return res.data;
+  },
+
+  async compareBuilds(build1Id: string, build2Id: string): Promise<any> {
+    const { apiClient } = await import('./api-client');
+    const params = new URLSearchParams({
+      build1Id,
+      build2Id,
+    });
+
+    const res = await apiClient.get(
+      `/app-builder/builds/compare?${params.toString()}`,
+    );
+    return res.data;
+  },
+
+  async getBuildSummary(timeRange?: number): Promise<any> {
+    const { apiClient } = await import('./api-client');
+    const params = new URLSearchParams();
+
+    if (timeRange) params.append('timeRange', timeRange.toString());
+
+    const res = await apiClient.get(
+      `/app-builder/builds/summary?${params.toString()}`,
+    );
+    return res.data;
+  },
 };
 
 export type {
@@ -153,6 +291,9 @@ export type {
   TriggerBuildRequest,
   PresignedDownloadResponse,
   AppIdDto,
+  JenkinsConnectionStatus,
+  JenkinsQueueInfo,
+  BuildStageProgress,
 };
 
 export default mobileAppBuilderService;

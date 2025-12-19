@@ -1,14 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { describe, it, beforeEach } from '@jest/globals';
 import * as request from 'supertest';
-import { AppModule } from '../app.module';
+import { AppModule } from '../src/app.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   User,
   MobileAppDefinition,
   MobileAppBuild,
-} from './app-builder/entities';
+} from '../src/app-builder/entities';
 import { JwtService } from '@nestjs/jwt';
 
 describe('Mobile App Builder E2E', () => {
@@ -206,6 +207,94 @@ describe('Mobile App Builder E2E', () => {
         .expect(403);
 
       await mobileAppBuildRepository.delete(incompleteBuild.id);
+    });
+  });
+
+  describe('Webhook Integration', () => {
+    it('should handle build completion webhook and set artifactPath', async () => {
+      // Create a build record
+      const testBuild = await mobileAppBuildRepository.save({
+        id: 'webhook-test-build',
+        appDefinitionId: testDefinition.id,
+        status: 'building',
+        startedBy: 'admin_test',
+      });
+
+      // Send webhook with artifactPath
+      const webhookPayload = {
+        status: 'completed',
+        stage: 'Upload to MinIO',
+        progress: 100,
+        artifactPath: 'TWSBP/v1.0.0/app-release.apk',
+        startTime: Date.now() - 60000, // 1 minute ago
+        endTime: Date.now(),
+        metrics: {
+          jenkinsBuildNumber: 42,
+          gitCommit: 'abc123',
+        },
+      };
+
+      const response = await request(app.getHttpServer())
+        .post(`/app-builder/builds/${testBuild.id}/webhook`)
+        .send(webhookPayload)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.build.id).toBe(testBuild.id);
+      expect(response.body.build.artifactPath).toBe(
+        'TWSBP/v1.0.0/app-release.apk',
+      );
+      expect(response.body.build.status).toBe('completed');
+
+      // Verify download endpoint now works
+      const downloadResponse = await request(app.getHttpServer())
+        .get(`/app-builder/builds/${testBuild.id}/download`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      // Should return 200 with proper structure (even if MinIO is not available)
+      expect(downloadResponse.status).toBe(200);
+      expect(downloadResponse.body.url).toBeDefined();
+      expect(downloadResponse.body.fileName).toBe('app-release.apk');
+      expect(downloadResponse.body.expiresAt).toBeDefined();
+
+      await mobileAppBuildRepository.delete(testBuild.id);
+    });
+
+    it('should not set artifactPath on failed builds', async () => {
+      const testBuild = await mobileAppBuildRepository.save({
+        id: 'webhook-failed-build',
+        appDefinitionId: testDefinition.id,
+        status: 'building',
+        startedBy: 'admin_test',
+      });
+
+      const webhookPayload = {
+        status: 'failed',
+        artifactPath: 'TWSBP/v1.0.0/app-release.apk', // Should be ignored
+        error: 'Build failed due to compilation error',
+      };
+
+      const response = await request(app.getHttpServer())
+        .post(`/app-builder/builds/${testBuild.id}/webhook`)
+        .send(webhookPayload)
+        .expect(200);
+
+      expect(response.body.build.status).toBe('failed');
+      expect(response.body.build.artifactPath).toBeNull(); // Should not be set
+
+      await mobileAppBuildRepository.delete(testBuild.id);
+    });
+
+    it('should return 404 for webhook with invalid build ID', async () => {
+      const webhookPayload = {
+        status: 'completed',
+        artifactPath: 'TWSBP/v1.0.0/app-release.apk',
+      };
+
+      await request(app.getHttpServer())
+        .post('/app-builder/builds/invalid-build-id/webhook')
+        .send(webhookPayload)
+        .expect(404);
     });
   });
 });

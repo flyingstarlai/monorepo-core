@@ -29,6 +29,8 @@ services:
       - MINIO_BUCKET_ARTIFACTS=android-artifacts
       - MINIO_ACCESS_KEY=miniouser
       - MINIO_SECRET_KEY=miniosecret
+      # API endpoint for webhook callbacks
+      - API_ENDPOINT=http://host.docker.internal:3000/api/v1/app-builder
     volumes:
       - jenkins_home:/var/jenkins_home
     depends_on:

@@ -60,3 +60,14 @@
 - [x] 6.3 Verified both API and web builds pass successfully
 - [x] 6.4 Ensured proper error handling throughout the application
 - [x] 6.5 Validated API endpoints match specification requirements
+
+## 7. Jenkins Status & Queue Visibility
+
+- [x] 7.1 Add API endpoints under `/app-builder/jenkins` for connection/health status and queue introspection, using the configured `JENKINS_URL` and credentials.
+- [x] 7.2 Add App Builder Settings/System Status UI to display Jenkins connection status and a summarized view of the build queue.
+- [x] 7.3 Update developer documentation to mention external Jenkins/MinIO IP usage in development and how the status UI reflects connectivity.
+
+## 8. Build Stage Progress & Jenkins Parameters
+
+- [ ] 8.1 Implement build stage progress UI in `apps/web/src/routes/_authenticated/app-builder.$id.build.tsx` based on Jenkins pipeline stages defined in `devops/pipelines/app-builder/Jenkinsfile`.
+- [ ] 8.2 Ensure Jenkins build trigger parameters (`APP_NAME`, `APP_ID`, `APP_MODULE`, `SERVER_IP`, `MINIO_BUCKET`, `GIT_BRANCH`, `COMPANY`) and their values are consistent between the API (`JenkinsService.queueBuild`) and `devops/pipelines/app-builder/Jenkinsfile`; update tests and documentation as needed.

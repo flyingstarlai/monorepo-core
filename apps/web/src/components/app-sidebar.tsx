@@ -1,4 +1,5 @@
 import { Link, useLocation } from '@tanstack/react-router';
+import * as React from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useLogout } from '@/features/auth/hooks/use-auth';
 import { NavUser } from '@/components/nav-user';
@@ -13,6 +14,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -20,14 +24,22 @@ import {
   Settings,
   LogOut,
   Smartphone,
-  Hammer,
+  Layers,
   UserSquare2,
+  Fingerprint,
+  ChevronDown,
+  UsersRound,
 } from 'lucide-react';
 
 export function AppSidebar() {
   const { user } = useAuthContext();
   const location = useLocation();
   const logoutMutation = useLogout();
+
+  const [appBuilderExpanded, setAppBuilderExpanded] = React.useState(
+    location.pathname.startsWith('/app-builder'),
+  );
+  const [userGroupExpanded, setUserGroupExpanded] = React.useState(true);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -47,23 +59,33 @@ export function AppSidebar() {
     ...(adminOrManager
       ? [
           {
-            title: '用戶管理',
-            url: '/users',
+            title: '用戶與群組管理',
             icon: Users,
-            isActive: location.pathname.startsWith('/users'),
+            isActive:
+              location.pathname.startsWith('/users') ||
+              location.pathname.startsWith('/groups'),
+            hasSubmenu: true,
+            items: [
+              {
+                title: '用戶列表',
+                url: '/users',
+                icon: UsersRound,
+                isActive: location.pathname === '/users',
+              },
+              ...(isAdmin
+                ? [
+                    {
+                      title: '群組列表',
+                      url: '/groups',
+                      icon: UserSquare2,
+                      isActive: location.pathname === '/groups',
+                    },
+                  ]
+                : []),
+            ],
           },
-          ...(isAdmin
-            ? [
-                {
-                  title: '群組管理',
-                  url: '/groups',
-                  icon: UserSquare2,
-                  isActive: location.pathname.startsWith('/groups'),
-                },
-              ]
-            : []),
           {
-            title: '應用程式',
+            title: '行動應用管理',
             url: '/apps',
             icon: Smartphone,
             isActive: location.pathname.startsWith('/apps'),
@@ -72,9 +94,30 @@ export function AppSidebar() {
             ? [
                 {
                   title: 'App Builder',
-                  url: '/app-builder',
-                  icon: Hammer,
+                  icon: Layers,
                   isActive: location.pathname.startsWith('/app-builder'),
+                  hasSubmenu: true,
+                  items: [
+                    {
+                      title: 'Definitions',
+                      url: '/app-builder',
+                      icon: Smartphone,
+                      isActive: location.pathname === '/app-builder',
+                    },
+
+                    {
+                      title: 'Identifiers',
+                      url: '/app-builder/identifier',
+                      icon: Fingerprint,
+                      isActive: location.pathname.includes('/identifier'),
+                    },
+                    {
+                      title: 'Settings',
+                      url: '/app-builder/settings',
+                      icon: Settings,
+                      isActive: location.pathname === '/app-builder/settings',
+                    },
+                  ],
                 },
               ]
             : []),
@@ -117,12 +160,59 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={item.isActive}>
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
+                  {item.hasSubmenu ? (
+                    <>
+                      <SidebarMenuButton
+                        onClick={() => {
+                          if (item.title === 'App Builder') {
+                            setAppBuilderExpanded(!appBuilderExpanded);
+                          } else if (item.title === '用戶與群組管理') {
+                            setUserGroupExpanded(!userGroupExpanded);
+                          }
+                        }}
+                        isActive={item.isActive}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                        <ChevronDown
+                          className={`ml-auto transition-transform ${
+                            (item.title === 'App Builder' &&
+                              appBuilderExpanded) ||
+                            (item.title === '用戶與群組管理' &&
+                              userGroupExpanded)
+                              ? 'rotate-180'
+                              : ''
+                          }`}
+                        />
+                      </SidebarMenuButton>
+                      {((item.title === 'App Builder' && appBuilderExpanded) ||
+                        (item.title === '用戶與群組管理' &&
+                          userGroupExpanded)) && (
+                        <SidebarMenuSub>
+                          {item.items?.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={subItem.isActive}
+                              >
+                                <Link to={subItem.url}>
+                                  <subItem.icon className="w-4 h-4" />
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      )}
+                    </>
+                  ) : (
+                    <SidebarMenuButton asChild isActive={item.isActive}>
+                      <Link to={item.url}>
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

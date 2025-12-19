@@ -23,6 +23,12 @@ export interface MobileAppBuild {
   updatedAt: string;
   startedAt?: string;
   completedAt?: string;
+  durationMs?: number;
+  buildType?: 'release' | 'debug' | 'profile';
+  buildParameters?: string;
+  performanceMetrics?: string;
+  stagesSnapshot?: any;
+  stageSnapshotFetchedAt?: string;
 }
 
 export interface DashboardModule {
@@ -61,4 +67,53 @@ export interface PresignedDownloadResponse {
 export interface AppIdDto {
   appId: string;
   packageName: string;
+}
+
+export interface JenkinsConnectionStatus {
+  connected: boolean;
+  authenticated: boolean;
+  message?: string;
+  serverVersion?: string;
+  jobName?: string;
+  url?: string;
+  fetchedAt: string;
+}
+
+export interface JenkinsQueueItem {
+  id: number;
+  jobName?: string;
+  queuedAt?: string;
+  url?: string;
+  stuck?: boolean;
+  why?: string;
+}
+
+export interface JenkinsQueueInfo {
+  available: boolean;
+  totalItems: number;
+  fetchedAt: string;
+  items: JenkinsQueueItem[];
+  message?: string;
+}
+
+export type PipelineStageStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'skipped';
+
+export interface BuildStageDetail {
+  name: string;
+  status: PipelineStageStatus;
+  startTimeMillis?: number;
+  durationMillis?: number;
+  pauseDurationMillis?: number;
+}
+
+export interface BuildStageProgress {
+  fetchedAt: string;
+  source: 'jenkins' | 'fallback';
+  message?: string;
+  stages: BuildStageDetail[];
 }

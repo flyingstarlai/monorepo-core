@@ -4,31 +4,35 @@ import { Repository } from 'typeorm';
 import { MobileAppIdentifier } from '../entities/app-identifier.entity';
 import { UploadGoogleServicesDto } from '../dto/upload-google-services.dto';
 import { IdGenerator } from '../../utils/id-generator';
+import { MinioService } from '../../minio/minio.service';
 
 @Injectable()
 export class MobileAppGoogleServicesService {
   constructor(
     @InjectRepository(MobileAppIdentifier)
     private readonly identifierRepository: Repository<MobileAppIdentifier>,
+    private readonly minioService: MinioService,
   ) {}
 
   async uploadGlobal(
     uploadDto: UploadGoogleServicesDto,
     createdBy: string,
   ): Promise<{ message: string; count: number }> {
-    // Delete existing identifiers
-    await this.identifierRepository.clear();
-
     // Parse and extract identifiers
     const appIds = await this.parseAppIds(uploadDto.content);
 
-    // Save new identifiers with content
+    // Upload to Minio (single file for all APP_IDs)
+    await this.minioService.uploadGoogleServices(uploadDto.content);
+
+    // Delete existing identifiers
+    await this.identifierRepository.clear();
+
+    // Save new identifiers (without content)
     const identifiers = appIds.map((appId) =>
       this.identifierRepository.create({
         id: IdGenerator.generateIdentifierId(),
         appId: appId.appId,
         packageName: appId.packageName,
-        googleServicesContent: uploadDto.content,
         createdBy,
       }),
     );
@@ -36,24 +40,38 @@ export class MobileAppGoogleServicesService {
     await this.identifierRepository.save(identifiers);
 
     return {
-      message: 'Successfully extracted and saved identifiers',
+      message: 'Successfully uploaded Google Services file',
       count: identifiers.length,
     };
   }
 
   async getIdentifiers(): Promise<MobileAppIdentifier[]> {
-    return this.identifierRepository.find({
+    const identifiers = await this.identifierRepository.find({
       order: { createdAt: 'DESC' },
+    });
+
+    // Sort by appId in alphanumeric order (TCS01, TCS02, TCS03, etc.)
+    return identifiers.sort((a, b) => {
+      // Extract numeric part from appId (e.g., TCS01 -> 01)
+      const extractNumber = (appId: string): number => {
+        const match = appId.match(/TCS(\d+)/);
+        return match ? parseInt(match[1], 10) : 0;
+      };
+
+      const numA = extractNumber(a.appId);
+      const numB = extractNumber(b.appId);
+
+      return numA - numB;
     });
   }
 
   async getGoogleServicesFile(): Promise<string | null> {
-    const identifier = await this.identifierRepository.findOne({
-      where: {},
-      order: { createdAt: 'DESC' },
-    });
-
-    return identifier?.googleServicesContent || null;
+    try {
+      const buffer = await this.minioService.downloadLatestGoogleServices();
+      return buffer.toString('utf-8');
+    } catch {
+      return null;
+    }
   }
 
   async parseAppIds(
@@ -67,17 +85,14 @@ export class MobileAppGoogleServicesService {
         .map((client: any) => {
           const packageName =
             client.client_info?.android_client_info?.package_name || '';
-          let appId = packageName;
 
-          // If package_name contains TCS[0-9]+, use that match (uppercased)
+          // Only process packages that contain TCS[0-9]+ pattern
           const tcsMatch = packageName.match(/TCS[0-9]+/);
-          if (tcsMatch) {
-            appId = tcsMatch[0].toUpperCase();
-          } else {
-            // ELSE use the last segment of the package name (text after the final .)
-            appId = packageName.split('.').pop() || packageName;
+          if (!tcsMatch) {
+            return null;
           }
 
+          const appId = tcsMatch[0].toUpperCase();
           return { appId, packageName };
         })
         .filter(

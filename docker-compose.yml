@@ -15,6 +15,22 @@ services:
       - DB_DATABASE=account_manager
       - JWT_SECRET=your_jwt_secret_key_here
       - JWT_EXPIRES_IN=24h
+      - FEATURE_APP_BUILDER=true
+      # MinIO Configuration
+      - MINIO_ENDPOINT=localhost:9000
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin123
+      - MINIO_GOOGLE_SERVICES_BUCKET=google-services
+      - MINIO_ANDROID_ARTIFACTS_BUCKET=android-builds
+      # Jenkins Configuration
+      - JENKINS_URL=http://localhost:8080
+      - JENKINS_USERNAME=admin
+      - JENKINS_PASSWORD=admin123
+      - JENKINS_JOB_NAME=android-app-builder
+      - JENKINS_GIT_BRANCH=ci
+      - JENKINS_COMPANY=TWSBP
     volumes:
       - ./apps/api/src:/app/apps/api/src
       - ./packages:/app/packages

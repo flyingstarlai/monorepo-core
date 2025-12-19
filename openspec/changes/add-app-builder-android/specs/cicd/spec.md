@@ -36,9 +36,17 @@ CI/CD sensitive values MUST be provided via environment variables or Jenkins cre
 
 - Jenkins URL, user, and API token used by the API SHALL be configurable via environment variables.
 - MinIO endpoint and access keys SHALL be set as Jenkins credentials or environment variables used by the pipeline.
+- Development environments MAY configure Jenkins and MinIO to use externally reachable IP addresses; the API and Jenkins pipeline SHALL honor the endpoints provided via environment variables without assuming `localhost`.
 
 #### Scenario: Credentials configured
 
 - GIVEN Jenkins has credentials for MinIO and the API has Jenkins credentials
 - WHEN a build is triggered
 - THEN the build succeeds without exposing secrets in logs beyond what is necessary.
+
+#### Scenario: Development uses external Jenkins and MinIO IPs
+
+- GIVEN `JENKINS_URL` and the MinIO endpoint environment variables point to externally reachable IP addresses instead of `localhost`
+- WHEN a build is triggered from the App Builder API
+- THEN the API successfully authenticates to Jenkins using the external URL
+- AND the Jenkins pipeline uploads artifacts to MinIO using the external endpoint without requiring code changes.

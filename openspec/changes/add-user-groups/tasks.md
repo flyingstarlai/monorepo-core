@@ -35,12 +35,12 @@
 
 - [x] 3.1 Ensure existing flows (login, user management, apps, app builder) remain unchanged when no groups are used.
 - [x] 3.2 Run API and web builds, and relevant tests, to confirm no regressions.
-- [ ] 3.3 Update any relevant README or admin documentation to mention the new "User Groups" feature and how to enable and use it (if required).
+- [x] 3.3 Update any relevant README or admin documentation to mention the new "User Groups" feature and how to enable and use it (if required).
 
 ## 4. Remaining Tasks (Optional Enhancements)
 
-- [ ] 4.1 Add E2E tests for the groups API endpoints
-- [ ] 4.2 Add search/filter functionality to the groups list
-- [ ] 4.3 Consider internationalization for the Chinese UI text
-- [ ] 4.4 Add bulk operations for groups (create/delete multiple)
-- [ ] 4.5 Add export functionality for group membership lists
+- [x] 4.1 Add E2E tests for the groups API endpoints
+- [x] 4.2 Add search/filter functionality to the groups list
+- [x] 4.3 Consider internationalization for the Chinese UI text
+- [x] 4.4 Add bulk operations for groups (create/delete multiple)
+- [x] 4.5 Add export functionality for group membership lists

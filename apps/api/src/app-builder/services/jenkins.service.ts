@@ -209,7 +209,7 @@ export class JenkinsService {
       const queueIdMatch = queueUrl?.match(/queue\/item\/(\d+)/);
       const queueId = queueIdMatch ? parseInt(queueIdMatch[1], 10) : 0;
 
-return {
+      return {
         queueId,
         buildUrl: `${this.jenkinsClient.defaults.baseURL}/job/${jobName}`,
       };
@@ -272,7 +272,6 @@ return {
       this.logger.error('Failed to queue Jenkins build with ID:', error);
       throw new Error('Failed to queue Jenkins build');
     }
-  }
   }
 
   async stopBuild(buildNumber: number): Promise<void> {

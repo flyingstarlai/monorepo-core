@@ -168,24 +168,13 @@ export class MobileAppBuilderController {
       throw new Error('Definition not found');
     }
 
-    const buildRequest = {
-      appDefinitionId: id,
-      appName: definition.appName,
-      appId: definition.appId,
-      appModule: definition.appModule,
-      serverIp: definition.serverIp,
-      parameters: triggerDto.parameters,
-    };
-
-    const result = await this.jenkinsService.queueBuild(buildRequest);
-
-    // Create build record in database
+    // Create build record in database first
     const buildId = IdGenerator.generateBuildId();
     const buildData = {
       id: buildId,
       appDefinitionId: id,
       status: 'queued' as const,
-      jenkinsQueueId: result.queueId,
+      jenkinsQueueId: 0, // Will be updated after Jenkins call
       startedBy: req.user.id,
     };
 
@@ -202,7 +191,12 @@ export class MobileAppBuilderController {
       buildId: buildId, // Pass build ID for webhook
     };
 
-    await this.jenkinsService.queueBuildWithId(buildRequest);
+    const result = await this.jenkinsService.queueBuildWithId(buildRequest);
+
+    // Update build record with Jenkins queue ID
+    await this.mobileAppBuildService.update(buildId, {
+      jenkinsQueueId: result.queueId,
+    });
 
     return build;
   }
@@ -890,10 +884,10 @@ export class BuildWebSocketGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: { userId?: string },
   ) {
-    client.join('builds');
+    void client.join('builds');
 
     if (data.userId) {
-      client.join(`builds-user-${data.userId}`);
+      void client.join(`builds-user-${data.userId}`);
     }
 
     this.logger.log(`Client ${client.id} subscribed to build updates`);
@@ -902,7 +896,7 @@ export class BuildWebSocketGateway
 
   @SubscribeMessage('unsubscribeFromBuilds')
   handleUnsubscribeFromBuilds(@ConnectedSocket() client: Socket) {
-    client.leave('builds');
+    void client.leave('builds');
     this.logger.log(`Client ${client.id} unsubscribed from build updates`);
     return { status: 'unsubscribed' };
   }

@@ -29,6 +29,7 @@ import {
   Fingerprint,
   ChevronDown,
   UsersRound,
+  FileText,
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -90,6 +91,17 @@ export function AppSidebar() {
             icon: Smartphone,
             isActive: location.pathname.startsWith('/apps'),
           },
+          ...(import.meta.env.DEV ||
+          import.meta.env.VITE_FEATURE_DOC_UPLOAD === 'true'
+            ? [
+                {
+                  title: 'Documents',
+                  icon: FileText,
+                  url: '/documents',
+                  isActive: location.pathname.startsWith('/documents'),
+                },
+              ]
+            : []),
           ...(import.meta.env.VITE_FEATURE_APP_BUILDER === 'true'
             ? [
                 {
@@ -159,7 +171,9 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navigation.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem
+                  key={item.title || item.url || JSON.stringify(item)}
+                >
                   {item.hasSubmenu ? (
                     <>
                       <SidebarMenuButton
@@ -190,7 +204,13 @@ export function AppSidebar() {
                           userGroupExpanded)) && (
                         <SidebarMenuSub>
                           {item.items?.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubItem
+                              key={
+                                subItem.title ||
+                                subItem.url ||
+                                JSON.stringify(subItem)
+                              }
+                            >
                               <SidebarMenuSubButton
                                 asChild
                                 isActive={subItem.isActive}
@@ -206,11 +226,21 @@ export function AppSidebar() {
                       )}
                     </>
                   ) : (
-                    <SidebarMenuButton asChild isActive={item.isActive}>
-                      <Link to={item.url}>
-                        <item.icon className="w-4 h-4" />
-                        <span>{item.title}</span>
-                      </Link>
+                    <SidebarMenuButton
+                      asChild={!!item.url}
+                      isActive={item.isActive}
+                    >
+                      {item.url ? (
+                        <Link to={item.url}>
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </>
+                      )}
                     </SidebarMenuButton>
                   )}
                 </SidebarMenuItem>

@@ -1,0 +1,257 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Res,
+  HttpStatus,
+  HttpCode,
+  Logger,
+  Query,
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+  Req,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+  ApiConsumes,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { DocumentsService, DocumentKindsService } from './documents.service';
+import { CreateDocumentDto } from './dto/create-document.dto';
+import { UpdateDocumentDto } from './dto/update-document.dto';
+import { ListDocumentsDto } from './dto/list-documents.dto';
+import { DocumentResponseDto } from './dto/document-response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { User } from '../users/entities/user.entity';
+import { Response } from 'express';
+import { FilesInterceptor } from '@nestjs/platform-express';
+
+@ApiTags('Documents')
+@Controller('documents')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
+export class DocumentsController {
+  private readonly logger = new Logger(DocumentsController.name);
+
+  constructor(private readonly documentsService: DocumentsService) {}
+
+  private checkFeatureFlag() {
+    if (process.env.FEATURE_DOC_UPLOAD !== 'true') {
+      throw new NotFoundException('Document center is not available');
+    }
+  }
+
+  @Get()
+  @Roles('admin', 'manager', 'user')
+  @ApiOperation({ summary: 'Get all documents' })
+  @ApiQuery({ name: 'kind', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiResponse({
+    status: 200,
+    description: 'List of documents',
+    type: [DocumentResponseDto],
+  })
+  async findAll(
+    @Query() query: ListDocumentsDto,
+  ): Promise<DocumentResponseDto[]> {
+    this.checkFeatureFlag();
+    return this.documentsService.findAll(query);
+  }
+
+  @Get(':id')
+  @Roles('admin', 'manager', 'user')
+  @ApiOperation({ summary: 'Get document by ID' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Document details',
+    type: DocumentResponseDto,
+  })
+  async findOne(@Param('id') id: number): Promise<DocumentResponseDto> {
+    this.checkFeatureFlag();
+    return this.documentsService.findOne(id);
+  }
+
+  @Post()
+  @Roles('admin', 'manager')
+  @HttpCode(HttpStatus.CREATED)
+  @UseInterceptors(FilesInterceptor('files', 2))
+  @ApiOperation({ summary: 'Create new document' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 201,
+    description: 'Document created',
+    type: DocumentResponseDto,
+  })
+  async create(
+    @Req() req: any,
+    @Body() createDocumentDto: CreateDocumentDto,
+    @UploadedFiles() files: any[],
+  ): Promise<DocumentResponseDto> {
+    this.checkFeatureFlag();
+
+    const user = req.user as User;
+    if (!user) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
+    // Separate office and pdf files
+    let officeFile: any | undefined;
+    let pdfFile: any | undefined;
+
+    if (files) {
+      officeFile = files.find(
+        (file) =>
+          file.mimetype.includes('wordprocessingml.document') ||
+          file.mimetype.includes('spreadsheetml.sheet'),
+      );
+      pdfFile = files.find((file) => file.mimetype === 'application/pdf');
+    }
+
+    return this.documentsService.createWithFiles(
+      createDocumentDto,
+      user,
+      officeFile,
+      pdfFile,
+    );
+  }
+
+  @Post(':id')
+  @Roles('admin', 'manager')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FilesInterceptor('files', 2))
+  @ApiOperation({ summary: 'Update existing document' })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Document updated',
+    type: DocumentResponseDto,
+  })
+  async update(
+    @Param('id') id: number,
+    @Req() req: any,
+    @Body() updateDocumentDto: UpdateDocumentDto,
+    @UploadedFiles() files: any[],
+  ): Promise<DocumentResponseDto> {
+    this.checkFeatureFlag();
+
+    const user = req.user as User;
+    if (!user) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
+    // Separate office and pdf files
+    let officeFile: any | undefined;
+    let pdfFile: any | undefined;
+
+    if (files) {
+      officeFile = files.find(
+        (file) =>
+          file.mimetype.includes('wordprocessingml.document') ||
+          file.mimetype.includes('spreadsheetml.sheet'),
+      );
+      pdfFile = files.find((file) => file.mimetype === 'application/pdf');
+    }
+
+    return this.documentsService.updateWithFiles(
+      id,
+      updateDocumentDto,
+      user,
+      officeFile,
+      pdfFile,
+    );
+  }
+
+  @Delete(':id')
+  @Roles('admin', 'manager')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete document' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({ status: 204, description: 'Document deleted' })
+  async remove(@Param('id') id: number): Promise<void> {
+    this.checkFeatureFlag();
+    await this.documentsService.remove(id);
+  }
+
+  @Get(':id/download')
+  @Roles('admin', 'manager', 'user')
+  @ApiOperation({ summary: 'Download document' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiQuery({
+    name: 'type',
+    enum: ['office', 'pdf'],
+    description: 'Download type: office for Word/Excel, pdf for PDF',
+  })
+  @ApiResponse({ status: 200, description: 'File download' })
+  async download(
+    @Param('id') id: number,
+    @Query('type') type: 'office' | 'pdf' = 'pdf',
+    @Req() req: any,
+    @Res() res: Response,
+  ): Promise<void> {
+    this.checkFeatureFlag();
+
+    const user = req.user as User;
+    if (!user) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
+    // Check download permissions
+    if (
+      type === 'office' &&
+      !this.documentsService.canDownloadOfficeFile(user)
+    ) {
+      throw new ForbiddenException(
+        'You are not authorized to download Office files',
+      );
+    }
+
+    if (type === 'pdf' && !this.documentsService.canDownloadPdfFile(user)) {
+      throw new ForbiddenException(
+        'You are not authorized to download PDF files',
+      );
+    }
+
+    try {
+      // Get file stream
+      const { stream, contentType, fileName } =
+        await this.documentsService.getFileStream(id, type);
+
+      // Record download
+      await this.documentsService.recordDownload(id, user);
+
+      // Set headers
+      res.setHeader('Content-Type', contentType);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileName}"`,
+      );
+      res.setHeader('Cache-Control', 'no-cache');
+
+      // Pipe file stream to response
+      stream.pipe(res);
+    } catch (error) {
+      this.logger.error(`Failed to download document ${id}`, error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to download file');
+    }
+  }
+}
+
+export { DocumentKindsController } from './document-kinds.controller';

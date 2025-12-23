@@ -9,6 +9,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { MobileAppsModule } from './mobile-apps/mobile-apps.module';
 import { AppBuilderModule } from './app-builder/app-builder.module';
 import { GroupsModule } from './groups/groups.module';
+import { DocumentsModule } from './documents/documents.module';
 
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
@@ -27,6 +28,7 @@ import { AppController } from './app.controller';
     DashboardModule,
     MobileAppsModule,
     ...(process.env.FEATURE_APP_BUILDER === 'true' ? [AppBuilderModule] : []),
+    ...(process.env.FEATURE_DOC_UPLOAD === 'true' ? [DocumentsModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],

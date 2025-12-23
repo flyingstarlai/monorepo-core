@@ -49,6 +49,14 @@ export const getAndroidArtifactsBucket = (
   return bucket;
 };
 
+export const getDocumentsBucket = (configService: ConfigService): string => {
+  const bucket = configService.get<string>('MINIO_DOCUMENTS_BUCKET');
+  if (!bucket) {
+    throw new Error('MINIO_DOCUMENTS_BUCKET is not configured');
+  }
+  return bucket;
+};
+
 export const createMinioClient = (config: MinioConfig): Minio.Client => {
   return new Minio.Client(config);
 };

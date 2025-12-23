@@ -19,6 +19,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users.index'
 import { Route as AuthenticatedGroupsIndexRouteImport } from './routes/_authenticated/groups.index'
+import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents.index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps.index'
 import { Route as AuthenticatedAppBuilderIndexRouteImport } from './routes/_authenticated/app-builder.index'
 import { Route as AuthenticatedUsersGroupsRouteImport } from './routes/_authenticated/users/groups'
@@ -28,6 +29,7 @@ import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
 import { Route as AuthenticatedGroupsCreateRouteImport } from './routes/_authenticated/groups/create'
 import { Route as AuthenticatedGroupsIdRouteImport } from './routes/_authenticated/groups.$id'
+import { Route as AuthenticatedDocumentsCreateRouteImport } from './routes/_authenticated/documents.create'
 import { Route as AuthenticatedAppsIdRouteImport } from './routes/_authenticated/apps.$id'
 import { Route as AuthenticatedAppBuilderSystemStatusRouteImport } from './routes/_authenticated/app-builder.system-status'
 import { Route as AuthenticatedAppBuilderSettingsRouteImport } from './routes/_authenticated/app-builder/settings'
@@ -91,6 +93,12 @@ const AuthenticatedGroupsIndexRoute =
     path: '/groups/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDocumentsIndexRoute =
+  AuthenticatedDocumentsIndexRouteImport.update({
+    id: '/documents/',
+    path: '/documents/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -142,6 +150,12 @@ const AuthenticatedGroupsIdRoute = AuthenticatedGroupsIdRouteImport.update({
   path: '/groups/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDocumentsCreateRoute =
+  AuthenticatedDocumentsCreateRouteImport.update({
+    id: '/documents/create',
+    path: '/documents/create',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppsIdRoute = AuthenticatedAppsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -227,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
   '/app-builder/system-status': typeof AuthenticatedAppBuilderSystemStatusRoute
   '/apps/$id': typeof AuthenticatedAppsIdRouteWithChildren
+  '/documents/create': typeof AuthenticatedDocumentsCreateRoute
   '/groups/$id': typeof AuthenticatedGroupsIdRoute
   '/groups/create': typeof AuthenticatedGroupsCreateRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -236,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/app-builder': typeof AuthenticatedAppBuilderIndexRoute
   '/apps/': typeof AuthenticatedAppsIndexRoute
+  '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/groups': typeof AuthenticatedGroupsIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
@@ -256,6 +272,7 @@ export interface FileRoutesByTo {
   '/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
   '/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
   '/app-builder/system-status': typeof AuthenticatedAppBuilderSystemStatusRoute
+  '/documents/create': typeof AuthenticatedDocumentsCreateRoute
   '/groups/$id': typeof AuthenticatedGroupsIdRoute
   '/groups/create': typeof AuthenticatedGroupsCreateRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -265,6 +282,7 @@ export interface FileRoutesByTo {
   '/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/app-builder': typeof AuthenticatedAppBuilderIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
+  '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/groups': typeof AuthenticatedGroupsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
@@ -290,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
   '/_authenticated/app-builder/system-status': typeof AuthenticatedAppBuilderSystemStatusRoute
   '/_authenticated/apps/$id': typeof AuthenticatedAppsIdRouteWithChildren
+  '/_authenticated/documents/create': typeof AuthenticatedDocumentsCreateRoute
   '/_authenticated/groups/$id': typeof AuthenticatedGroupsIdRoute
   '/_authenticated/groups/create': typeof AuthenticatedGroupsCreateRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
@@ -299,6 +318,7 @@ export interface FileRoutesById {
   '/_authenticated/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/_authenticated/app-builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
+  '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/groups/': typeof AuthenticatedGroupsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
@@ -324,6 +344,7 @@ export interface FileRouteTypes {
     | '/app-builder/settings'
     | '/app-builder/system-status'
     | '/apps/$id'
+    | '/documents/create'
     | '/groups/$id'
     | '/groups/create'
     | '/settings/account'
@@ -333,6 +354,7 @@ export interface FileRouteTypes {
     | '/users/groups'
     | '/app-builder'
     | '/apps/'
+    | '/documents'
     | '/groups'
     | '/users/'
     | '/app-builder/$id/build'
@@ -353,6 +375,7 @@ export interface FileRouteTypes {
     | '/app-builder/identifier'
     | '/app-builder/settings'
     | '/app-builder/system-status'
+    | '/documents/create'
     | '/groups/$id'
     | '/groups/create'
     | '/settings/account'
@@ -362,6 +385,7 @@ export interface FileRouteTypes {
     | '/users/groups'
     | '/app-builder'
     | '/apps'
+    | '/documents'
     | '/groups'
     | '/users'
     | '/app-builder/$id/build'
@@ -386,6 +410,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app-builder/settings'
     | '/_authenticated/app-builder/system-status'
     | '/_authenticated/apps/$id'
+    | '/_authenticated/documents/create'
     | '/_authenticated/groups/$id'
     | '/_authenticated/groups/create'
     | '/_authenticated/settings/account'
@@ -395,6 +420,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users/groups'
     | '/_authenticated/app-builder/'
     | '/_authenticated/apps/'
+    | '/_authenticated/documents/'
     | '/_authenticated/groups/'
     | '/_authenticated/users/'
     | '/_authenticated/app-builder/$id/build'
@@ -485,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGroupsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/documents/': {
+      id: '/_authenticated/documents/'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AuthenticatedDocumentsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/apps/': {
       id: '/_authenticated/apps/'
       path: '/'
@@ -546,6 +579,13 @@ declare module '@tanstack/react-router' {
       path: '/groups/$id'
       fullPath: '/groups/$id'
       preLoaderRoute: typeof AuthenticatedGroupsIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/documents/create': {
+      id: '/_authenticated/documents/create'
+      path: '/documents/create'
+      fullPath: '/documents/create'
+      preLoaderRoute: typeof AuthenticatedDocumentsCreateRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/apps/$id': {
@@ -730,9 +770,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppBuilderIdentifierRoute: typeof AuthenticatedAppBuilderIdentifierRoute
   AuthenticatedAppBuilderSettingsRoute: typeof AuthenticatedAppBuilderSettingsRoute
   AuthenticatedAppBuilderSystemStatusRoute: typeof AuthenticatedAppBuilderSystemStatusRoute
+  AuthenticatedDocumentsCreateRoute: typeof AuthenticatedDocumentsCreateRoute
   AuthenticatedGroupsIdRoute: typeof AuthenticatedGroupsIdRoute
   AuthenticatedGroupsCreateRoute: typeof AuthenticatedGroupsCreateRoute
   AuthenticatedAppBuilderIndexRoute: typeof AuthenticatedAppBuilderIndexRoute
+  AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
   AuthenticatedAppBuilderIdBuildRoute: typeof AuthenticatedAppBuilderIdBuildRoute
   AuthenticatedAppBuilderIdHistoryRoute: typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
@@ -749,9 +791,11 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppBuilderSettingsRoute: AuthenticatedAppBuilderSettingsRoute,
   AuthenticatedAppBuilderSystemStatusRoute:
     AuthenticatedAppBuilderSystemStatusRoute,
+  AuthenticatedDocumentsCreateRoute: AuthenticatedDocumentsCreateRoute,
   AuthenticatedGroupsIdRoute: AuthenticatedGroupsIdRoute,
   AuthenticatedGroupsCreateRoute: AuthenticatedGroupsCreateRoute,
   AuthenticatedAppBuilderIndexRoute: AuthenticatedAppBuilderIndexRoute,
+  AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedGroupsIndexRoute: AuthenticatedGroupsIndexRoute,
   AuthenticatedAppBuilderIdBuildRoute: AuthenticatedAppBuilderIdBuildRoute,
   AuthenticatedAppBuilderIdHistoryRoute:

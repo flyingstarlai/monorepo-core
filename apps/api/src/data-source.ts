@@ -7,6 +7,7 @@ import {
 } from './app-builder/entities/index';
 import { Group } from './groups/entities/group.entity';
 import { UserGroupMembership } from './groups/entities/user-group-membership.entity';
+import { DocumentsEntity } from './documents/entities/documents.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -24,6 +25,7 @@ export const AppDataSource = new DataSource({
     MobileAppIdentifier,
     Group,
     UserGroupMembership,
+    DocumentsEntity,
   ],
   migrations: ['src/migrations/*.ts'],
   options: {

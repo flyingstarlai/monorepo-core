@@ -190,12 +190,13 @@ export function DocumentsPage() {
               <TableCell>
                 <div className="flex items-center space-x-2">
                   {/* Download Office file - only admin/manager */}
-                  {canUpload && (
+                  {canUpload && doc.officeFilePath && (
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => handleDownload(doc.id, 'office')}
                       disabled={downloadMutation.isPending}
+                      title={doc.officeFilePath}
                     >
                       <FileText className="mr-1 h-4 w-4" />
                       Office
@@ -203,15 +204,18 @@ export function DocumentsPage() {
                   )}
 
                   {/* Download PDF file - all authenticated users */}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDownload(doc.id, 'pdf')}
-                    disabled={downloadMutation.isPending}
-                  >
-                    <Download className="mr-1 h-4 w-4" />
-                    PDF
-                  </Button>
+                  {doc.pdfFilePath && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownload(doc.id, 'pdf')}
+                      disabled={downloadMutation.isPending}
+                      title={doc.pdfFilePath}
+                    >
+                      <Download className="mr-1 h-4 w-4" />
+                      PDF
+                    </Button>
+                  )}
 
                   {/* Edit/Delete actions - only admin/manager */}
                   {canUpload && (

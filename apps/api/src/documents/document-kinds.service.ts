@@ -145,7 +145,7 @@ export class DocumentKindsService {
     const documentsRepository =
       this.documentKindsRepository.manager.getRepository(DocumentEntity);
     const documentsCount = await documentsRepository.count({
-      where: { documentKindId: id },
+      where: { documentKind: { id } },
     });
 
     if (documentsCount > 0) {

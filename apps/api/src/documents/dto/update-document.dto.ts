@@ -8,23 +8,23 @@ export class UpdateDocumentDto {
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  dockind?: string; // Now accepts any string, validation in service
+  documentKindCode?: string;
 
   @ApiProperty({ description: 'Document code/number' })
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  docno?: string;
+  documentNumber?: string;
 
   @ApiProperty({ description: 'Document name' })
   @IsOptional()
   @IsString()
   @MaxLength(50)
-  docna?: string;
+  documentName?: string;
 
   @ApiProperty({ description: 'Document version' })
   @IsOptional()
   @IsString()
   @MaxLength(10)
-  docver?: string;
+  version?: string;
 }

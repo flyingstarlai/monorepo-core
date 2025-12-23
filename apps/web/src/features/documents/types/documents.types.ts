@@ -19,29 +19,34 @@ export interface DocumentKindDto {
 
 export interface DocumentResponseDto {
   id: number;
-  dockind: string;
-  docno: string;
-  docna: string;
-  docver: string;
-  docfile?: string;
-  docfilepdf?: string;
-  docCreator: string;
-  docCreate: string;
-  docModifier?: string;
-  docModiDate?: string;
-  docLoader?: string;
-  docLoaderDate?: string;
+  documentKindCode: string;
+  documentNumber: string;
+  documentName: string;
+  version: string;
+  officeFilePath?: string;
+  pdfFilePath?: string;
+  createdBy: string;
+  createdAtUser: string;
+  modifiedBy?: string;
+  modifiedAtUser?: string;
+  downloadedBy?: string;
+  downloadedAtUser?: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface CreateDocumentDto {
-  dockind: string; // Change from enum to string to support dynamic kinds
-  docno: string;
-  docna: string;
-  docver: string;
-  docfile?: File;
-  docfilepdf?: File;
+  documentKindCode: string;
+  documentNumber: string;
+  documentName: string;
+  version: string;
+  officeFile?: File;
+  pdfFile?: File;
+}
+
+export interface ListDocumentsDto {
+  documentKindCode?: string;
+  search?: string;
 }
 
 export interface ListDocumentsDto {

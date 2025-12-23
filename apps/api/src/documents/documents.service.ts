@@ -41,24 +41,24 @@ export class DocumentsService {
   async findAll(query: any = {}): Promise<DocumentResponseDto[]> {
     this.logger.log(`Finding documents with query: ${JSON.stringify(query)}`);
 
-    const { dockind, search } = query;
+    const { documentKindCode, search } = query;
     const qb = this.documentsRepository
       .createQueryBuilder('document')
       .leftJoinAndSelect('document.documentKind', 'documentKind')
       .orderBy('document.createdAt', 'DESC');
 
-    if (dockind) {
+    if (documentKindCode) {
       qb.andWhere(
-        '(document.dockind = :dockind OR documentKind.code = :dockind)',
+        '(document.documentKindCode = :documentKindCode OR documentKind.code = :documentKindCode)',
         {
-          dockind,
+          documentKindCode,
         },
       );
     }
 
     if (search) {
       qb.andWhere(
-        '(document.docno LIKE :search OR document.docna LIKE :search)',
+        '(document.documentNumber LIKE :search OR document.documentName LIKE :search)',
         { search: `%${search}%` },
       );
     }
@@ -93,23 +93,23 @@ export class DocumentsService {
     officeFile?: MulterFile,
     pdfFile?: MulterFile,
   ): Promise<DocumentResponseDto> {
-    this.logger.log(`Creating new document: ${createDocumentDto.docna}`);
+    this.logger.log(`Creating new document: ${createDocumentDto.documentName}`);
 
     // Validate that document kind exists
     const documentKind = await this.documentKindsRepository.findOne({
-      where: { code: createDocumentDto.dockind },
+      where: { code: createDocumentDto.documentKindCode },
     });
 
     if (!documentKind || !documentKind.isActive) {
       throw new NotFoundException(
-        `Document kind '${createDocumentDto.dockind}' not found or is not active`,
+        `Document kind '${createDocumentDto.documentKindCode}' not found or is not active`,
       );
     }
 
     const document = this.documentsRepository.create({
       ...createDocumentDto,
-      docCreator: user.username,
-      docCreate: formatDateUTC8(new Date()),
+      createdBy: user.username,
+      createdAtUser: formatDateUTC8(new Date()),
       documentKind, // Set the relationship
     });
 
@@ -118,26 +118,26 @@ export class DocumentsService {
       if (officeFile) {
         const officeFilePath = await this.minioService.uploadDocumentFile(
           null, // document ID will be set after save
-          createDocumentDto.dockind,
+          createDocumentDto.documentKindCode,
           'office',
           officeFile.buffer,
           officeFile.originalname,
           officeFile.mimetype,
         );
-        document.docfile = officeFilePath;
+        document.officeFilePath = officeFilePath;
       }
 
       // Handle PDF file upload
       if (pdfFile) {
         const pdfFilePath = await this.minioService.uploadDocumentFile(
           null, // document ID will be set after save
-          createDocumentDto.dockind,
+          createDocumentDto.documentKindCode,
           'pdf',
           pdfFile.buffer,
           pdfFile.originalname,
           pdfFile.mimetype,
         );
-        document.docfilepdf = pdfFilePath;
+        document.pdfFilePath = pdfFilePath;
       }
 
       const savedDocument = await this.documentsRepository.save(document);
@@ -168,24 +168,24 @@ export class DocumentsService {
 
     // Get existing file paths to delete later if new files are uploaded
     const filesToDelete: string[] = [];
-    if (officeFile && document.docfile) {
-      filesToDelete.push(document.docfile);
+    if (officeFile && document.officeFilePath) {
+      filesToDelete.push(document.officeFilePath);
     }
-    if (pdfFile && document.docfilepdf) {
-      filesToDelete.push(document.docfilepdf);
+    if (pdfFile && document.pdfFilePath) {
+      filesToDelete.push(document.pdfFilePath);
     }
 
     try {
       // Validate that document kind exists if provided
       let docKindEntity: DocumentKindEntity | undefined;
-      if (updateDocumentDto.dockind) {
+      if (updateDocumentDto.documentKindCode) {
         docKindEntity = await this.documentKindsRepository.findOne({
-          where: { code: updateDocumentDto.dockind },
+          where: { code: updateDocumentDto.documentKindCode },
         });
 
         if (!docKindEntity || !docKindEntity.isActive) {
           throw new NotFoundException(
-            `Document kind '${updateDocumentDto.dockind}' not found or is not active`,
+            `Document kind '${updateDocumentDto.documentKindCode}' not found or is not active`,
           );
         }
       }
@@ -194,33 +194,33 @@ export class DocumentsService {
       if (officeFile) {
         const officeFilePath = await this.minioService.uploadDocumentFile(
           id,
-          updateDocumentDto.dockind || document.dockind,
+          updateDocumentDto.documentKindCode || document.documentKindCode,
           'office',
           officeFile.buffer,
           officeFile.originalname,
           officeFile.mimetype,
         );
-        document.docfile = officeFilePath;
+        document.officeFilePath = officeFilePath;
       }
 
       // Handle new PDF file upload
       if (pdfFile) {
         const pdfFilePath = await this.minioService.uploadDocumentFile(
           id,
-          updateDocumentDto.dockind || document.dockind,
+          updateDocumentDto.documentKindCode || document.documentKindCode,
           'pdf',
           pdfFile.buffer,
           pdfFile.originalname,
           pdfFile.mimetype,
         );
-        document.docfilepdf = pdfFilePath;
+        document.pdfFilePath = pdfFilePath;
       }
 
       // Update document metadata
       const updatedDocument = this.documentsRepository.merge(document, {
         ...updateDocumentDto,
-        docModifier: user.username,
-        docModiDate: formatDateUTC8(new Date()),
+        modifiedBy: user.username,
+        modifiedAtUser: formatDateUTC8(new Date()),
         documentKind: docKindEntity ? docKindEntity : undefined,
       });
 
@@ -252,11 +252,11 @@ export class DocumentsService {
     try {
       // Delete associated files from MinIO
       const filesToDelete: string[] = [];
-      if (document.docfile) {
-        filesToDelete.push(document.docfile);
+      if (document.officeFilePath) {
+        filesToDelete.push(document.officeFilePath);
       }
-      if (document.docfilepdf) {
-        filesToDelete.push(document.docfilepdf);
+      if (document.pdfFilePath) {
+        filesToDelete.push(document.pdfFilePath);
       }
 
       if (filesToDelete.length > 0) {
@@ -286,7 +286,8 @@ export class DocumentsService {
     this.logger.log(`Getting ${type} file stream for document ID: ${id}`);
     const document = await this.findOne(id);
 
-    const filePath = type === 'office' ? document.docfile : document.docfilepdf;
+    const filePath =
+      type === 'office' ? document.officeFilePath : document.pdfFilePath;
 
     if (!filePath) {
       throw new NotFoundException(`${type} file not found for document ${id}`);
@@ -332,8 +333,8 @@ export class DocumentsService {
     const document = await this.findOne(id);
 
     const updatedDocument = this.documentsRepository.merge(document, {
-      docLoader: user.username,
-      docLoaderDate: formatDateUTC8(new Date()),
+      downloadedBy: user.username,
+      downloadedAtUser: formatDateUTC8(new Date()),
     });
 
     await this.documentsRepository.save(updatedDocument);
@@ -345,18 +346,19 @@ export class DocumentsService {
   private mapToResponse(document: DocumentsEntity): DocumentResponseDto {
     return {
       id: document.id,
-      dockind: document.documentKind?.code || document.dockind,
-      docno: document.docno,
-      docna: document.docna,
-      docver: document.docver,
-      docfile: document.docfile,
-      docfilepdf: document.docfilepdf,
-      docCreator: document.docCreator,
-      docCreate: document.docCreate,
-      docModifier: document.docModifier,
-      docModiDate: document.docModiDate,
-      docLoader: document.docLoader,
-      docLoaderDate: document.docLoaderDate,
+      documentKindCode:
+        document.documentKind?.code || document.documentKindCode,
+      documentNumber: document.documentNumber,
+      documentName: document.documentName,
+      version: document.version,
+      officeFilePath: document.officeFilePath,
+      pdfFilePath: document.pdfFilePath,
+      createdBy: document.createdBy,
+      createdAtUser: document.createdAtUser,
+      modifiedBy: document.modifiedBy,
+      modifiedAtUser: document.modifiedAtUser,
+      downloadedBy: document.downloadedBy,
+      downloadedAtUser: document.downloadedAtUser,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     };

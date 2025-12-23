@@ -39,7 +39,7 @@ export function DocumentsPage() {
 
   // Build query parameters
   const queryParams = {
-    ...(selectedKind !== 'all' && { dockind: selectedKind }),
+    ...(selectedKind !== 'all' && { documentKindCode: selectedKind }),
     ...(searchTerm && { search: searchTerm }),
   };
 
@@ -91,8 +91,8 @@ export function DocumentsPage() {
   const filteredDocuments = safeDocuments.filter((doc) => {
     const matchesSearch =
       searchTerm === '' ||
-      doc.docno.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.docna.toLowerCase().includes(searchTerm.toLowerCase());
+      doc.documentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doc.documentName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
@@ -176,16 +176,17 @@ export function DocumentsPage() {
             <TableRow key={doc.id}>
               <TableCell>
                 <Badge variant="secondary">
-                  {safeDocumentKinds.find((k) => k.code === doc.dockind)
-                    ?.name || doc.dockind}
+                  {safeDocumentKinds.find(
+                    (k) => k.code === doc.documentKindCode,
+                  )?.name || doc.documentKindCode}
                 </Badge>
               </TableCell>
-              <TableCell>{doc.docno}</TableCell>
-              <TableCell>{doc.docna}</TableCell>
-              <TableCell>{doc.docver}</TableCell>
-              <TableCell>{doc.docCreator}</TableCell>
-              <TableCell>{doc.docCreate}</TableCell>
-              <TableCell>{doc.docModiDate || '-'}</TableCell>
+              <TableCell>{doc.documentNumber}</TableCell>
+              <TableCell>{doc.documentName}</TableCell>
+              <TableCell>{doc.version}</TableCell>
+              <TableCell>{doc.createdBy}</TableCell>
+              <TableCell>{doc.createdAtUser}</TableCell>
+              <TableCell>{doc.modifiedAtUser || '-'}</TableCell>
               <TableCell>
                 <div className="flex items-center space-x-2">
                   {/* Download Office file - only admin/manager */}

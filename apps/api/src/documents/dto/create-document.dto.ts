@@ -8,23 +8,23 @@ export class CreateDocumentDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
-  dockind: string; // Now accepts any string, validation in service
+  documentKindCode: string;
 
   @ApiProperty({ description: 'Document code/number' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(20)
-  docno: string;
+  documentNumber: string;
 
   @ApiProperty({ description: 'Document name' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  docna: string;
+  documentName: string;
 
   @ApiProperty({ description: 'Document version', default: '1.0' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(10)
-  docver: string;
+  version: string;
 }

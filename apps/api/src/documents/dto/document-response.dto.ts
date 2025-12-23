@@ -5,40 +5,40 @@ export class DocumentResponseDto {
   id: number;
 
   @ApiProperty({ description: 'Document kind code' })
-  dockind: string;
+  documentKindCode: string;
 
   @ApiProperty({ description: 'Document code/number' })
-  docno: string;
+  documentNumber: string;
 
   @ApiProperty({ description: 'Document name' })
-  docna: string;
+  documentName: string;
 
   @ApiProperty({ description: 'Document version' })
-  docver: string;
+  version: string;
 
   @ApiProperty({ description: 'Office file reference (Word/Excel)' })
-  docfile: string;
+  officeFilePath: string;
 
   @ApiProperty({ description: 'PDF file reference' })
-  docfilepdf: string;
+  pdfFilePath: string;
 
   @ApiProperty({ description: 'Document creator' })
-  docCreator: string;
+  createdBy: string;
 
   @ApiProperty({ description: 'Document create date' })
-  docCreate: string;
+  createdAtUser: string;
 
   @ApiProperty({ description: 'Document modifier' })
-  docModifier: string;
+  modifiedBy: string;
 
   @ApiProperty({ description: 'Document modified date' })
-  docModiDate: string;
+  modifiedAtUser: string;
 
   @ApiProperty({ description: 'Last downloader' })
-  docLoader: string;
+  downloadedBy: string;
 
   @ApiProperty({ description: 'Last download date' })
-  docLoaderDate: string;
+  downloadedAtUser: string;
 
   @ApiProperty({ description: 'Created at' })
   createdAt: Date;

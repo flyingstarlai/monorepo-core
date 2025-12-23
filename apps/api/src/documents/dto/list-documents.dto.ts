@@ -11,7 +11,7 @@ export enum DocumentKind {
 export class ListDocumentsDto {
   @IsOptional()
   @IsString()
-  dockind?: string; // Support both code and legacy string values
+  documentKindCode?: string;
 
   @IsOptional()
   @IsString()

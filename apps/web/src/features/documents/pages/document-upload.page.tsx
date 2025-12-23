@@ -48,12 +48,12 @@ export function DocumentUploadPage() {
 
   // Form data state
   const [formData, setFormData] = useState({
-    dockind: '' as DocumentKind | '',
-    docno: '',
-    docna: '',
-    docver: '1.0',
-    docfile: null as File | null,
-    docfilepdf: null as File | null,
+    documentKindCode: '' as DocumentKind | '',
+    documentNumber: '',
+    documentName: '',
+    version: '1.0',
+    officeFile: null as File | null,
+    pdfFile: null as File | null,
   });
 
   const isAdmin = user?.role === 'admin';
@@ -65,7 +65,9 @@ export function DocumentUploadPage() {
     onSuccess: (data) => {
       setIsUploading(false);
       setUploadProgress(100);
-      setUploadSuccess(`Document "${data.docna}" uploaded successfully!`);
+      setUploadSuccess(
+        `Document "${data.documentName}" uploaded successfully!`,
+      );
       setTimeout(() => {
         setUploadSuccess(null);
         navigate({ to: '/documents' });
@@ -106,9 +108,9 @@ export function DocumentUploadPage() {
 
     // Update form data with the selected file
     if (type === 'office') {
-      setFormData((prev) => ({ ...prev, docfile: file }));
+      setFormData((prev) => ({ ...prev, officeFile: file }));
     } else {
-      setFormData((prev) => ({ ...prev, docfilepdf: file }));
+      setFormData((prev) => ({ ...prev, pdfFile: file }));
     }
   };
 
@@ -120,7 +122,7 @@ export function DocumentUploadPage() {
     event.preventDefault();
 
     // Validate document kind exists
-    if (formData.dockind) {
+    if (formData.documentKindCode) {
       try {
         // This will be handled by the API service validation
         // For now, just ensure it's not empty
@@ -130,10 +132,10 @@ export function DocumentUploadPage() {
     }
 
     const validationErrors = validateDocumentFormData({
-      dockind: formData.dockind,
-      docno: formData.docno,
-      docna: formData.docna,
-      docver: formData.docver,
+      documentKindCode: formData.documentKindCode,
+      documentNumber: formData.documentNumber,
+      documentName: formData.documentName,
+      version: formData.version,
     });
 
     if (validationErrors.length > 0) {
@@ -143,7 +145,7 @@ export function DocumentUploadPage() {
       return;
     }
 
-    if (!formData.docfile && !formData.docfilepdf) {
+    if (!formData.officeFile && !formData.pdfFile) {
       setUploadError('Please select at least one file (Office or PDF).');
       return;
     }
@@ -153,13 +155,13 @@ export function DocumentUploadPage() {
 
     const formDataToSend = documentsApi.prepareDocumentFormData(
       {
-        dockind: formData.dockind,
-        docno: formData.docno,
-        docna: formData.docna,
-        docver: formData.docver,
+        documentKindCode: formData.documentKindCode,
+        documentNumber: formData.documentNumber,
+        documentName: formData.documentName,
+        version: formData.version,
       },
-      formData.docfile || undefined,
-      formData.docfilepdf || undefined,
+      formData.officeFile || undefined,
+      formData.pdfFile || undefined,
       user?.id,
     );
 
@@ -236,8 +238,10 @@ export function DocumentUploadPage() {
               <div className="space-y-2">
                 <Label htmlFor="kind">Document Kind</Label>
                 <Select
-                  value={formData.dockind}
-                  onValueChange={(value) => handleInputChange('dockind', value)}
+                  value={formData.documentKindCode}
+                  onValueChange={(value) =>
+                    handleInputChange('documentKindCode', value)
+                  }
                   required
                 >
                   <SelectTrigger>
@@ -254,33 +258,37 @@ export function DocumentUploadPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="docno">Document Code</Label>
+                <Label htmlFor="documentNumber">Document Code</Label>
                 <Input
-                  id="docno"
-                  value={formData.docno}
-                  onChange={(e) => handleInputChange('docno', e.target.value)}
+                  id="documentNumber"
+                  value={formData.documentNumber}
+                  onChange={(e) =>
+                    handleInputChange('documentNumber', e.target.value)
+                  }
                   placeholder="Enter document code"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="docna">Document Name</Label>
+                <Label htmlFor="documentName">Document Name</Label>
                 <Input
-                  id="docna"
-                  value={formData.docna}
-                  onChange={(e) => handleInputChange('docna', e.target.value)}
+                  id="documentName"
+                  value={formData.documentName}
+                  onChange={(e) =>
+                    handleInputChange('documentName', e.target.value)
+                  }
                   placeholder="Enter document name"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="docver">Version</Label>
+                <Label htmlFor="version">Version</Label>
                 <Input
-                  id="docver"
-                  value={formData.docver}
-                  onChange={(e) => handleInputChange('docver', e.target.value)}
+                  id="version"
+                  value={formData.version}
+                  onChange={(e) => handleInputChange('version', e.target.value)}
                   placeholder="Enter version (e.g., 1.0)"
                   required
                 />
@@ -297,9 +305,9 @@ export function DocumentUploadPage() {
                   accept=".docx,.xlsx"
                   onChange={(e) => handleFileChange(e, 'office')}
                 />
-                {formData.docfile && (
+                {formData.officeFile && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Selected: {formData.docfile.name}
+                    Selected: {formData.officeFile.name}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
@@ -315,9 +323,9 @@ export function DocumentUploadPage() {
                   accept=".pdf"
                   onChange={(e) => handleFileChange(e, 'pdf')}
                 />
-                {formData.docfilepdf && (
+                {formData.pdfFile && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Selected: {formData.docfilepdf.name}
+                    Selected: {formData.pdfFile.name}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">

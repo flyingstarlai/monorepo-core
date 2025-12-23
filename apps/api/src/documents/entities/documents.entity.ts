@@ -18,42 +18,41 @@ export class DocumentsEntity {
   @JoinColumn({ name: 'document_kind_id' })
   documentKind?: DocumentKindEntity;
 
-  // Keep the old string field for backward compatibility during migration
   @Column({ name: 'document_kind', length: '10', nullable: true })
-  dockind: string;
+  documentKindCode: string;
 
   @Column({ name: 'document_number', length: '20', nullable: true })
-  docno: string;
+  documentNumber: string;
 
   @Column({ name: 'document_name', length: '50', nullable: true })
-  docna: string;
+  documentName: string;
 
   @Column({ name: 'office_file_path', length: '100', nullable: true })
-  docfile: string;
+  officeFilePath: string;
 
   @Column({ name: 'pdf_file_path', length: '100', nullable: true })
-  docfilepdf: string;
+  pdfFilePath: string;
 
   @Column({ name: 'version', length: '10', nullable: true })
-  docver: string;
+  version: string;
 
   @Column({ name: 'created_by', length: '20', nullable: true })
-  docCreator: string;
+  createdBy: string;
 
   @Column({ name: 'created_at_user', length: '20', nullable: true })
-  docCreate: string;
+  createdAtUser: string;
 
   @Column({ name: 'modified_by', length: '20', nullable: true })
-  docModifier: string;
+  modifiedBy: string;
 
   @Column({ name: 'modified_at_user', length: '20', nullable: true })
-  docModiDate: string;
+  modifiedAtUser: string;
 
   @Column({ name: 'downloaded_by', length: '20', nullable: true })
-  docLoader: string;
+  downloadedBy: string;
 
   @Column({ name: 'downloaded_at_user', length: '20', nullable: true })
-  docLoaderDate: string;
+  downloadedAtUser: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

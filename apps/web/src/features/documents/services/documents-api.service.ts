@@ -28,8 +28,8 @@ class Logger {
 }
 
 interface DocumentUploadPayload extends CreateDocumentDto {
-  docfile?: File;
-  docfilepdf?: File;
+  officeFile?: File;
+  pdfFile?: File;
   createdBy?: number | string;
 }
 
@@ -73,35 +73,35 @@ const mockDocumentKinds: DocumentKindDto[] = [
 const mockDocuments: DocumentResponseDto[] = [
   {
     id: 1,
-    dockind: DocumentKind.PROCEDURE,
-    docno: 'PROC-001',
-    docna: 'Onboarding Procedure',
-    docver: '1.0',
-    docfile: 'documents/PROCEDURE/1/office/proc-001.docx',
-    docfilepdf: 'documents/PROCEDURE/1/pdf/proc-001.pdf',
-    docCreator: 'admin',
-    docCreate: '2024-01-01',
-    docModifier: 'admin',
-    docModiDate: '2024-02-10',
-    docLoader: 'manager',
-    docLoaderDate: '2024-02-15',
+    documentKindCode: DocumentKind.PROCEDURE,
+    documentNumber: 'PROC-001',
+    documentName: 'Onboarding Procedure',
+    version: '1.0',
+    officeFilePath: 'documents/PROCEDURE/1/office/proc-001.docx',
+    pdfFilePath: 'documents/PROCEDURE/1/pdf/proc-001.pdf',
+    createdBy: 'admin',
+    createdAtUser: '2024-01-01',
+    modifiedBy: 'admin',
+    modifiedAtUser: '2024-02-10',
+    downloadedBy: 'manager',
+    downloadedAtUser: '2024-02-15',
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-02-10'),
   },
   {
     id: 2,
-    dockind: DocumentKind.FORM,
-    docno: 'FORM-010',
-    docna: 'Expense Claim Form',
-    docver: '2.3',
-    docfile: 'documents/FORM/2/office/form-010.docx',
-    docfilepdf: 'documents/FORM/2/pdf/form-010.pdf',
-    docCreator: 'manager',
-    docCreate: '2024-03-05',
-    docModifier: 'finance',
-    docModiDate: '2024-03-12',
-    docLoader: 'staff',
-    docLoaderDate: '2024-03-20',
+    documentKindCode: DocumentKind.FORM,
+    documentNumber: 'FORM-010',
+    documentName: 'Expense Claim Form',
+    version: '2.3',
+    officeFilePath: 'documents/FORM/2/office/form-010.docx',
+    pdfFilePath: 'documents/FORM/2/pdf/form-010.pdf',
+    createdBy: 'manager',
+    createdAtUser: '2024-03-05',
+    modifiedBy: 'finance',
+    modifiedAtUser: '2024-03-12',
+    downloadedBy: 'staff',
+    downloadedAtUser: '2024-03-20',
     createdAt: new Date('2024-03-05'),
     updatedAt: new Date('2024-03-12'),
   },
@@ -113,10 +113,12 @@ function simulateDelay<T>(value: T, delay = 150): Promise<T> {
 
 function matchesQuery(doc: DocumentResponseDto, query?: ListDocumentsDto) {
   if (!query) return true;
-  const matchesKind = query.dockind ? doc.dockind === query.dockind : true;
+  const matchesKind = query.documentKindCode
+    ? doc.documentKindCode === query.documentKindCode
+    : true;
   const matchesSearch = query.search
-    ? doc.docno.toLowerCase().includes(query.search.toLowerCase()) ||
-      doc.docna.toLowerCase().includes(query.search.toLowerCase())
+    ? doc.documentNumber.toLowerCase().includes(query.search.toLowerCase()) ||
+      doc.documentName.toLowerCase().includes(query.search.toLowerCase())
     : true;
   return matchesKind && matchesSearch;
 }
@@ -145,18 +147,18 @@ export class DocumentsApiService {
     documentIdCounter += 1;
     const newDoc: DocumentResponseDto = {
       id: documentIdCounter,
-      dockind: data.dockind,
-      docno: data.docno,
-      docna: data.docna,
-      docver: data.docver,
-      docfile: data.docfile?.name,
-      docfilepdf: data.docfilepdf?.name,
-      docCreator: data.createdBy ? String(data.createdBy) : 'system',
-      docCreate: new Date().toISOString(),
-      docModifier: undefined,
-      docModiDate: undefined,
-      docLoader: undefined,
-      docLoaderDate: undefined,
+      documentKindCode: data.documentKindCode,
+      documentNumber: data.documentNumber,
+      documentName: data.documentName,
+      version: data.version,
+      officeFilePath: data.officeFile?.name,
+      pdfFilePath: data.pdfFile?.name,
+      createdBy: data.createdBy ? String(data.createdBy) : 'system',
+      createdAtUser: new Date().toISOString(),
+      modifiedBy: undefined,
+      modifiedAtUser: undefined,
+      downloadedBy: undefined,
+      downloadedAtUser: undefined,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as DocumentResponseDto;
@@ -288,8 +290,8 @@ export class DocumentsApiService {
   ): DocumentUploadPayload {
     return {
       ...metadata,
-      docfile: officeFile,
-      docfilepdf: pdfFile,
+      officeFile,
+      pdfFile,
       createdBy,
     };
   }

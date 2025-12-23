@@ -76,10 +76,10 @@ export async function getDocumentKindOptions(): Promise<
 }
 
 export interface DocumentFormData {
-  dockind: string;
-  docno: string;
-  docna: string;
-  docver: string;
+  documentKindCode: string;
+  documentNumber: string;
+  documentName: string;
+  version: string;
 }
 
 export interface DocumentValidationError {
@@ -95,25 +95,34 @@ export function validateDocumentFormData(
 ): DocumentValidationError[] {
   const errors: DocumentValidationError[] = [];
 
-  if (!data.dockind) {
-    errors.push({ field: 'dockind', message: 'Document kind is required' });
-  } else if (!isValidDocumentKind(data.dockind)) {
+  if (!data.documentKindCode) {
     errors.push({
-      field: 'dockind',
+      field: 'documentKindCode',
+      message: 'Document kind is required',
+    });
+  } else if (!isValidDocumentKind(data.documentKindCode)) {
+    errors.push({
+      field: 'documentKindCode',
       message: 'Invalid document kind. Please select from available options.',
     });
   }
 
-  if (!data.docno) {
-    errors.push({ field: 'docno', message: 'Document number is required' });
+  if (!data.documentNumber) {
+    errors.push({
+      field: 'documentNumber',
+      message: 'Document number is required',
+    });
   }
 
-  if (!data.docna) {
-    errors.push({ field: 'docna', message: 'Document name is required' });
+  if (!data.documentName) {
+    errors.push({
+      field: 'documentName',
+      message: 'Document name is required',
+    });
   }
 
-  if (!data.docver) {
-    errors.push({ field: 'docver', message: 'Document version is required' });
+  if (!data.version) {
+    errors.push({ field: 'version', message: 'Document version is required' });
   }
 
   return errors;

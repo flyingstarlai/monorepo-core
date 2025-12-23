@@ -32,4 +32,15 @@ export class UserResponseDto {
   @IsString()
   @IsOptional()
   updatedAt?: string | null;
+
+  @IsString()
+  @IsOptional()
+  email?: string | null;
+
+  @IsString()
+  @IsOptional()
+  managerId?: string | null;
+
+  @IsOptional()
+  signLevel?: number;
 }

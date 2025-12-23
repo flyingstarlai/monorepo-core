@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsBoolean,
   IsEnum,
+  IsEmail,
 } from 'class-validator';
 
 export class UpdateUserDto {
@@ -37,4 +38,15 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsEmail({}, { message: 'Please provide a valid email address' })
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  managerId?: string;
+
+  @IsOptional()
+  signLevel?: number;
 }

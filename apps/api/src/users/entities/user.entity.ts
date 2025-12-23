@@ -25,11 +25,20 @@ export class User {
   @Column({ type: 'nvarchar', length: 100, name: 'full_name' })
   fullName: string;
 
-  @Column({ type: 'nvarchar', length: 20, name: 'dept_no' })
+  @Column({ type: 'nvarchar', length: 50, name: 'dept_no' })
   deptNo: string;
 
   @Column({ type: 'nvarchar', length: 100, name: 'dept_name' })
   deptName: string;
+
+  @Column({ type: 'nvarchar', length: 50, nullable: true, name: 'manager_id' })
+  managerId: string;
+
+  @Column({ type: 'int', default: 1, name: 'sign_level' })
+  signLevel: number;
+
+  @Column({ type: 'nvarchar', length: 100, nullable: true, name: 'email' })
+  email: string;
 
   @Column({ type: 'bit', default: 1, name: 'is_active' })
   isActive: boolean;

@@ -37,10 +37,15 @@ export class AddDocumentKindsTable1765900000001 implements MigrationInterface {
       ('OTHER', 'Other', 'Other document types not covered by standard categories', 5, 1);
     `);
 
-    // Add foreign key constraint to documents table
+    // Add foreign key column to documents table
     await queryRunner.query(`
       ALTER TABLE TC_APP_DOCS 
-      ADD document_kind_id int NULL,
+      ADD document_kind_id int NULL;
+    `);
+
+    // Add foreign key constraint
+    await queryRunner.query(`
+      ALTER TABLE TC_APP_DOCS 
       ADD CONSTRAINT FK_TC_APP_DOCS_DOCUMENT_KIND 
       FOREIGN KEY (document_kind_id) REFERENCES TC_DOC_KINDS(id);
     `);
@@ -57,15 +62,21 @@ export class AddDocumentKindsTable1765900000001 implements MigrationInterface {
       AFTER INSERT, UPDATE
       AS
       BEGIN
-        IF UPDATE(document_kind_id) IS NULL AND INSERTED.document_kind IS NOT NULL
-        AND EXISTS (SELECT 1 FROM TC_DOC_KINDS WHERE code = INSERTED.document_kind)
+        DECLARE @doc_kind_value nvarchar(20)
+        DECLARE @inserted_id int
+        
+        SELECT @inserted_id = id, @doc_kind_value = document_kind 
+        FROM INSERTED 
+        WHERE document_kind_id IS NULL AND document_kind IS NOT NULL
+        
+        IF @doc_kind_value IS NOT NULL
+          AND EXISTS (SELECT 1 FROM TC_DOC_KINDS WHERE code = @doc_kind_value)
         BEGIN
           UPDATE TC_APP_DOCS
           SET document_kind_id = (
-            SELECT id FROM TC_DOC_KINDS 
-            WHERE code = INSERTED.document_kind
+            SELECT id FROM TC_DOC_KINDS WHERE code = @doc_kind_value
           )
-          WHERE id = INSERTED.id;
+          WHERE id = @inserted_id
         END
       END
     `);
@@ -77,10 +88,15 @@ export class AddDocumentKindsTable1765900000001 implements MigrationInterface {
       'DROP TRIGGER IF EXISTS TR_TC_APP_DOCS_UPDATE_KIND_ID;',
     );
 
-    // Drop foreign key and new column
+    // Drop foreign key constraint
     await queryRunner.query(`
       ALTER TABLE TC_APP_DOCS 
-      DROP CONSTRAINT FK_TC_APP_DOCS_DOCUMENT_KIND,
+      DROP CONSTRAINT FK_TC_APP_DOCS_DOCUMENT_KIND;
+    `);
+
+    // Drop new column
+    await queryRunner.query(`
+      ALTER TABLE TC_APP_DOCS 
       DROP COLUMN document_kind_id;
     `);
 

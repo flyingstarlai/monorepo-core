@@ -1,57 +1,58 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
-import { DocumentKindEntity } from './document-kind.entity';
 
 @Entity('TC_APP_DOCS')
 export class DocumentsEntity {
-  @PrimaryGeneratedColumn({ name: 'id' })
-  id: number;
+  @PrimaryColumn({ name: 'id', length: '20' })
+  id: string;
 
-  @ManyToOne(() => DocumentKindEntity, { nullable: true })
-  @JoinColumn({ name: 'document_kind_id' })
-  documentKind?: DocumentKindEntity;
+  @Column({ name: 'document_kind', length: '20', nullable: true })
+  documentKind: string;
 
-  @Column({ name: 'document_kind', length: '10', nullable: true })
-  documentKindCode: string;
-
-  @Column({ name: 'document_number', length: '20', nullable: true })
+  @Column({ name: 'document_number', length: '20', unique: true })
   documentNumber: string;
 
   @Column({ name: 'document_name', length: '50', nullable: true })
   documentName: string;
 
-  @Column({ name: 'office_file_path', length: '100', nullable: true })
+  @Column({ name: 'office_file_path', length: '255', nullable: true })
   officeFilePath: string;
 
-  @Column({ name: 'pdf_file_path', length: '100', nullable: true })
+  @Column({ name: 'pdf_file_path', length: '255', nullable: true })
   pdfFilePath: string;
+
+  @Column({
+    name: 'document_access_level',
+    type: 'int',
+    nullable: true,
+    default: 1,
+  })
+  documentAccessLevel: number;
 
   @Column({ name: 'version', length: '10', nullable: true })
   version: string;
 
-  @Column({ name: 'created_by', length: '20', nullable: true })
+  @Column({ name: 'created_by', length: '50', nullable: true })
   createdBy: string;
 
-  @Column({ name: 'created_at_user', length: '20', nullable: true })
+  @Column({ name: 'created_at_user', length: '50', nullable: true })
   createdAtUser: string;
 
-  @Column({ name: 'modified_by', length: '20', nullable: true })
+  @Column({ name: 'modified_by', length: '50', nullable: true })
   modifiedBy: string;
 
-  @Column({ name: 'modified_at_user', length: '20', nullable: true })
+  @Column({ name: 'modified_at_user', length: '50', nullable: true })
   modifiedAtUser: string;
 
-  @Column({ name: 'downloaded_by', length: '20', nullable: true })
+  @Column({ name: 'downloaded_by', length: '50', nullable: true })
   downloadedBy: string;
 
-  @Column({ name: 'downloaded_at_user', length: '20', nullable: true })
+  @Column({ name: 'downloaded_at_user', length: '50', nullable: true })
   downloadedAtUser: string;
 
   @CreateDateColumn({ name: 'created_at' })

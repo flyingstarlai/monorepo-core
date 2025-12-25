@@ -27,7 +27,7 @@ import {
   ApiConsumes,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { DocumentsService, DocumentKindsService } from './documents.service';
+import { DocumentsService } from './documents.service';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { ListDocumentsDto } from './dto/list-documents.dto';
@@ -66,9 +66,11 @@ export class DocumentsController {
   })
   async findAll(
     @Query() query: ListDocumentsDto,
+    @Req() req: any,
   ): Promise<DocumentResponseDto[]> {
     this.checkFeatureFlag();
-    return this.documentsService.findAll(query);
+    const user = req.user as User;
+    return this.documentsService.findAll(query, user);
   }
 
   @Get(':id')
@@ -80,9 +82,13 @@ export class DocumentsController {
     description: 'Document details',
     type: DocumentResponseDto,
   })
-  async findOne(@Param('id') id: number): Promise<DocumentResponseDto> {
+  async findOne(
+    @Param('id') id: string,
+    @Req() req: any,
+  ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
-    return this.documentsService.findOne(id);
+    const user = req.user as User;
+    return this.documentsService.findOne(id, user);
   }
 
   @Post()
@@ -98,7 +104,6 @@ export class DocumentsController {
   })
   async create(
     @Req() req: any,
-    @Body() createDocumentDto: CreateDocumentDto,
     @UploadedFiles() files: any[],
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
@@ -107,6 +112,14 @@ export class DocumentsController {
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
+
+    const createDocumentDto = {
+      documentKind: req.body.documentKind,
+      documentNumber: req.body.documentNumber,
+      documentName: req.body.documentName,
+      version: req.body.version,
+      documentAccessLevel: req.body.documentAccessLevel,
+    } as CreateDocumentDto;
 
     // Separate office and pdf files
     let officeFile: any | undefined;
@@ -142,9 +155,8 @@ export class DocumentsController {
     type: DocumentResponseDto,
   })
   async update(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Req() req: any,
-    @Body() updateDocumentDto: UpdateDocumentDto,
     @UploadedFiles() files: any[],
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
@@ -153,6 +165,14 @@ export class DocumentsController {
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
+
+    const updateDocumentDto = {
+      documentKind: req.body.documentKind,
+      documentNumber: req.body.documentNumber,
+      documentName: req.body.documentName,
+      version: req.body.version,
+      documentAccessLevel: req.body.documentAccessLevel,
+    } as UpdateDocumentDto;
 
     // Separate office and pdf files
     let officeFile: any | undefined;
@@ -182,9 +202,10 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Delete document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 204, description: 'Document deleted' })
-  async remove(@Param('id') id: number): Promise<void> {
+  async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
     this.checkFeatureFlag();
-    await this.documentsService.remove(id);
+    const user = req.user as User;
+    await this.documentsService.remove(id, user);
   }
 
   @Get(':id/download')
@@ -198,7 +219,7 @@ export class DocumentsController {
   })
   @ApiResponse({ status: 200, description: 'File download' })
   async download(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Query('type') type: 'office' | 'pdf' = 'pdf',
     @Req() req: any,
     @Res() res: Response,
@@ -229,7 +250,7 @@ export class DocumentsController {
     try {
       // Get file stream
       const { stream, contentType, fileName } =
-        await this.documentsService.getFileStream(id, type);
+        await this.documentsService.getFileStream(id, type, user);
 
       // Record download
       await this.documentsService.recordDownload(id, user);
@@ -253,5 +274,3 @@ export class DocumentsController {
     }
   }
 }
-
-export { DocumentKindsController } from './document-kinds.controller';

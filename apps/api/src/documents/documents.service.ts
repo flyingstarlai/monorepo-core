@@ -3,24 +3,34 @@ import {
   NotFoundException,
   InternalServerErrorException,
   Logger,
-  UnauthorizedException,
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DocumentsEntity, DocumentKindEntity } from './entities';
+import { DocumentsEntity } from './entities';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
-import { MinioService } from '../minio/minio.service';
 import { formatDateUTC8 } from '../utils/date-formatter';
 import { User } from '../users/entities/user.entity';
+import { IdGenerator } from '../utils/id-generator';
+import {
+  existsSync,
+  unlinkSync,
+  mkdirSync,
+  renameSync,
+  createReadStream,
+} from 'fs';
+import { join } from 'path';
+import { UPLOAD_DEST_DIR, getDocumentFilePath } from '../config/multer.config';
 
 // Multer file type
 interface MulterFile {
   buffer: Buffer;
   originalname: string;
   mimetype: string;
+  filename: string;
+  path: string;
 }
 
 @Injectable()
@@ -30,30 +40,28 @@ export class DocumentsService {
   constructor(
     @InjectRepository(DocumentsEntity)
     private readonly documentsRepository: Repository<DocumentsEntity>,
-    @InjectRepository(DocumentKindEntity)
-    private readonly documentKindsRepository: Repository<DocumentKindEntity>,
-    private readonly minioService: MinioService,
   ) {}
 
   /**
    * Get all documents
    */
-  async findAll(query: any = {}): Promise<DocumentResponseDto[]> {
+  async findAll(query: any = {}, user: User): Promise<DocumentResponseDto[]> {
     this.logger.log(`Finding documents with query: ${JSON.stringify(query)}`);
 
-    const { documentKindCode, search } = query;
+    const { documentKind, search } = query;
+    const userAccessLevel = this.getUserAccessLevel(user);
+
     const qb = this.documentsRepository
       .createQueryBuilder('document')
-      .leftJoinAndSelect('document.documentKind', 'documentKind')
-      .orderBy('document.createdAt', 'DESC');
+      .orderBy('document.createdAt', 'DESC')
+      .where('document.documentAccessLevel <= :userAccessLevel', {
+        userAccessLevel,
+      });
 
-    if (documentKindCode) {
-      qb.andWhere(
-        '(document.documentKindCode = :documentKindCode OR documentKind.code = :documentKindCode)',
-        {
-          documentKindCode,
-        },
-      );
+    if (documentKind) {
+      qb.andWhere('document.documentKind = :documentKind', {
+        documentKind,
+      });
     }
 
     if (search) {
@@ -70,15 +78,20 @@ export class DocumentsService {
   /**
    * Get document by ID
    */
-  async findOne(id: number): Promise<DocumentResponseDto> {
+  async findOne(id: string, user: User): Promise<DocumentResponseDto> {
     this.logger.log(`Finding document with ID: ${id}`);
     const document = await this.documentsRepository.findOne({
       where: { id },
-      relations: ['documentKind'],
     });
 
     if (!document) {
       throw new NotFoundException('Document not found');
+    }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
     }
 
     return this.mapToResponse(document);
@@ -95,57 +108,85 @@ export class DocumentsService {
   ): Promise<DocumentResponseDto> {
     this.logger.log(`Creating new document: ${createDocumentDto.documentName}`);
 
-    // Validate that document kind exists
-    const documentKind = await this.documentKindsRepository.findOne({
-      where: { code: createDocumentDto.documentKindCode },
-    });
-
-    if (!documentKind || !documentKind.isActive) {
-      throw new NotFoundException(
-        `Document kind '${createDocumentDto.documentKindCode}' not found or is not active`,
-      );
-    }
-
     const document = this.documentsRepository.create({
+      id: IdGenerator.generateDocumentId(),
       ...createDocumentDto,
+      documentAccessLevel:
+        typeof createDocumentDto.documentAccessLevel === 'string'
+          ? parseInt(createDocumentDto.documentAccessLevel, 10)
+          : (createDocumentDto.documentAccessLevel ?? 1),
       createdBy: user.username,
       createdAtUser: formatDateUTC8(new Date()),
-      documentKind, // Set the relationship
     });
 
     try {
-      // Handle office file upload
-      if (officeFile) {
-        const officeFilePath = await this.minioService.uploadDocumentFile(
-          null, // document ID will be set after save
-          createDocumentDto.documentKindCode,
-          'office',
-          officeFile.buffer,
-          officeFile.originalname,
-          officeFile.mimetype,
-        );
-        document.officeFilePath = officeFilePath;
-      }
-
-      // Handle PDF file upload
-      if (pdfFile) {
-        const pdfFilePath = await this.minioService.uploadDocumentFile(
-          null, // document ID will be set after save
-          createDocumentDto.documentKindCode,
-          'pdf',
-          pdfFile.buffer,
-          pdfFile.originalname,
-          pdfFile.mimetype,
-        );
-        document.pdfFilePath = pdfFilePath;
-      }
-
       const savedDocument = await this.documentsRepository.save(document);
       this.logger.log(
         `Document created successfully with ID: ${savedDocument.id}`,
       );
 
-      return this.mapToResponse(savedDocument);
+      // Create directory for document files
+      const documentDir = join(
+        UPLOAD_DEST_DIR,
+        createDocumentDto.documentKind.toLowerCase(),
+        savedDocument.id.toString(),
+      );
+      if (!existsSync(documentDir)) {
+        mkdirSync(documentDir, { recursive: true });
+      }
+
+      // Handle office file upload
+      if (officeFile) {
+        this.logger.log(
+          `Processing office file: ${JSON.stringify({
+            filename: officeFile.filename,
+            path: officeFile.path,
+            originalname: officeFile.originalname,
+            mimetype: officeFile.mimetype,
+          })}`,
+        );
+
+        const officeFileDir = join(documentDir, 'office');
+        if (!existsSync(officeFileDir)) {
+          mkdirSync(officeFileDir, { recursive: true });
+        }
+        const destPath = join(officeFileDir, officeFile.filename);
+        this.moveFile(officeFile.path, destPath);
+        document.officeFilePath = getDocumentFilePath(
+          savedDocument.id,
+          createDocumentDto.documentKind,
+          'office',
+          officeFile.filename,
+        );
+      }
+
+      // Handle PDF file upload
+      if (pdfFile) {
+        this.logger.log(
+          `Processing PDF file: ${JSON.stringify({
+            filename: pdfFile.filename,
+            path: pdfFile.path,
+            originalname: pdfFile.originalname,
+            mimetype: pdfFile.mimetype,
+          })}`,
+        );
+
+        const pdfFileDir = join(documentDir, 'pdf');
+        if (!existsSync(pdfFileDir)) {
+          mkdirSync(pdfFileDir, { recursive: true });
+        }
+        const destPath = join(pdfFileDir, pdfFile.filename);
+        this.moveFile(pdfFile.path, destPath);
+        document.pdfFilePath = getDocumentFilePath(
+          savedDocument.id,
+          createDocumentDto.documentKind,
+          'pdf',
+          pdfFile.filename,
+        );
+      }
+
+      const finalDocument = await this.documentsRepository.save(document);
+      return this.mapToResponse(finalDocument);
     } catch (error) {
       this.logger.error('Failed to create document', error);
       throw new InternalServerErrorException('Failed to create document');
@@ -156,7 +197,7 @@ export class DocumentsService {
    * Update existing document
    */
   async updateWithFiles(
-    id: number,
+    id: string,
     updateDocumentDto: UpdateDocumentDto,
     user: User,
     officeFile?: MulterFile,
@@ -164,56 +205,68 @@ export class DocumentsService {
   ): Promise<DocumentResponseDto> {
     this.logger.log(`Updating document with ID: ${id}`);
 
-    const document = await this.findOne(id);
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
+    }
+
+    const kind = updateDocumentDto.documentKind || document.documentKind;
 
     // Get existing file paths to delete later if new files are uploaded
     const filesToDelete: string[] = [];
     if (officeFile && document.officeFilePath) {
-      filesToDelete.push(document.officeFilePath);
+      filesToDelete.push(join(UPLOAD_DEST_DIR, document.officeFilePath));
     }
     if (pdfFile && document.pdfFilePath) {
-      filesToDelete.push(document.pdfFilePath);
+      filesToDelete.push(join(UPLOAD_DEST_DIR, document.pdfFilePath));
     }
 
     try {
-      // Validate that document kind exists if provided
-      let docKindEntity: DocumentKindEntity | undefined;
-      if (updateDocumentDto.documentKindCode) {
-        docKindEntity = await this.documentKindsRepository.findOne({
-          where: { code: updateDocumentDto.documentKindCode },
-        });
-
-        if (!docKindEntity || !docKindEntity.isActive) {
-          throw new NotFoundException(
-            `Document kind '${updateDocumentDto.documentKindCode}' not found or is not active`,
-          );
-        }
+      // Create directory for document files if it doesn't exist
+      const documentDir = join(UPLOAD_DEST_DIR, kind.toLowerCase(), id);
+      if (!existsSync(documentDir)) {
+        mkdirSync(documentDir, { recursive: true });
       }
 
       // Handle new office file upload
       if (officeFile) {
-        const officeFilePath = await this.minioService.uploadDocumentFile(
+        const officeFileDir = join(documentDir, 'office');
+        if (!existsSync(officeFileDir)) {
+          mkdirSync(officeFileDir, { recursive: true });
+        }
+        const destPath = join(officeFileDir, officeFile.filename);
+        this.moveFile(officeFile.path, destPath);
+        document.officeFilePath = getDocumentFilePath(
           id,
-          updateDocumentDto.documentKindCode || document.documentKindCode,
+          kind,
           'office',
-          officeFile.buffer,
-          officeFile.originalname,
-          officeFile.mimetype,
+          officeFile.filename,
         );
-        document.officeFilePath = officeFilePath;
       }
 
       // Handle new PDF file upload
       if (pdfFile) {
-        const pdfFilePath = await this.minioService.uploadDocumentFile(
+        const pdfFileDir = join(documentDir, 'pdf');
+        if (!existsSync(pdfFileDir)) {
+          mkdirSync(pdfFileDir, { recursive: true });
+        }
+        const destPath = join(pdfFileDir, pdfFile.filename);
+        this.moveFile(pdfFile.path, destPath);
+        document.pdfFilePath = getDocumentFilePath(
           id,
-          updateDocumentDto.documentKindCode || document.documentKindCode,
+          kind,
           'pdf',
-          pdfFile.buffer,
-          pdfFile.originalname,
-          pdfFile.mimetype,
+          pdfFile.filename,
         );
-        document.pdfFilePath = pdfFilePath;
       }
 
       // Update document metadata
@@ -221,7 +274,6 @@ export class DocumentsService {
         ...updateDocumentDto,
         modifiedBy: user.username,
         modifiedAtUser: formatDateUTC8(new Date()),
-        documentKind: docKindEntity ? docKindEntity : undefined,
       });
 
       const finalDocument =
@@ -231,9 +283,15 @@ export class DocumentsService {
       );
 
       // Clean up old files after successful update
-      if (filesToDelete.length > 0) {
-        await this.minioService.deleteDocumentFiles(filesToDelete);
-      }
+      filesToDelete.forEach((filePath) => {
+        if (existsSync(filePath)) {
+          try {
+            unlinkSync(filePath);
+          } catch (error) {
+            this.logger.error(`Failed to delete file: ${filePath}`, error);
+          }
+        }
+      });
 
       return this.mapToResponse(finalDocument);
     } catch (error) {
@@ -245,25 +303,43 @@ export class DocumentsService {
   /**
    * Delete document
    */
-  async remove(id: number): Promise<void> {
+  async remove(id: string, user: User): Promise<void> {
     this.logger.log(`Deleting document with ID: ${id}`);
-    const document = await this.findOne(id);
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
+    }
 
     try {
-      // Delete associated files from MinIO
+      // Delete associated files from local storage
       const filesToDelete: string[] = [];
       if (document.officeFilePath) {
-        filesToDelete.push(document.officeFilePath);
+        filesToDelete.push(join(UPLOAD_DEST_DIR, document.officeFilePath));
       }
       if (document.pdfFilePath) {
-        filesToDelete.push(document.pdfFilePath);
+        filesToDelete.push(join(UPLOAD_DEST_DIR, document.pdfFilePath));
       }
 
-      if (filesToDelete.length > 0) {
-        await this.minioService.deleteDocumentFiles(filesToDelete);
-      }
+      filesToDelete.forEach((filePath) => {
+        if (existsSync(filePath)) {
+          try {
+            unlinkSync(filePath);
+          } catch (error) {
+            this.logger.error(`Failed to delete file: ${filePath}`, error);
+          }
+        }
+      });
 
-      // Delete the document record
+      // Delete document record
       await this.documentsRepository.remove(document);
       this.logger.log(`Document deleted successfully with ID: ${id}`);
     } catch (error) {
@@ -276,15 +352,28 @@ export class DocumentsService {
    * Download document file
    */
   async getFileStream(
-    id: number,
+    id: string,
     type: 'office' | 'pdf',
+    user: User,
   ): Promise<{
     stream: any;
     contentType: string;
     fileName: string;
   }> {
     this.logger.log(`Getting ${type} file stream for document ID: ${id}`);
-    const document = await this.findOne(id);
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
+    }
 
     const filePath =
       type === 'office' ? document.officeFilePath : document.pdfFilePath;
@@ -293,19 +382,53 @@ export class DocumentsService {
       throw new NotFoundException(`${type} file not found for document ${id}`);
     }
 
+    // Check additional role-based access for Office files
+    if (type === 'office' && !this.canDownloadOfficeFile(user)) {
+      throw new ForbiddenException(
+        'You are not authorized to download Office files',
+      );
+    }
+
+    const fullPath = join(UPLOAD_DEST_DIR, filePath);
+
+    if (!existsSync(fullPath)) {
+      throw new NotFoundException(`File not found on server`);
+    }
+
     try {
-      const result = await this.minioService.downloadDocumentFile(filePath);
-      const stream = result.stream;
+      const stream = createReadStream(fullPath);
       const fileName =
         filePath.split('/').pop() ||
         `document-${id}.${type === 'office' ? 'docx' : 'pdf'}`;
-      const contentType = result.contentType;
+      const contentType = this.getContentType(filePath);
 
       return { stream, contentType, fileName };
     } catch (error) {
       this.logger.error(`Failed to get file stream for document ${id}`, error);
       throw new InternalServerErrorException('Failed to download file');
     }
+  }
+
+  private moveFile(srcPath: string, destPath: string): void {
+    try {
+      renameSync(srcPath, destPath);
+    } catch (error) {
+      this.logger.error(
+        `Failed to move file from ${srcPath} to ${destPath}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  private getContentType(filePath: string): string {
+    const ext = filePath.split('.').pop()?.toLowerCase();
+    const contentTypeMap: Record<string, string> = {
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      pdf: 'application/pdf',
+    };
+    return contentTypeMap[ext || ''] || 'application/octet-stream';
   }
 
   /**
@@ -323,14 +446,49 @@ export class DocumentsService {
   }
 
   /**
+   * Check if user can access document based on access level
+   */
+  private canAccessDocument(document: DocumentsEntity, user: User): boolean {
+    const userAccessLevel = this.getUserAccessLevel(user);
+    return userAccessLevel >= document.documentAccessLevel;
+  }
+
+  /**
+   * Get user's access level based on role
+   */
+  private getUserAccessLevel(user: User): number {
+    switch (user.role) {
+      case 'admin':
+        return 2; // CONFIDENTIAL
+      case 'manager':
+        return 1; // RESTRICTED
+      case 'user':
+      default:
+        return 0; // PUBLIC
+    }
+  }
+
+  /**
    * Record document download
    */
-  async recordDownload(id: number, user: User): Promise<void> {
+  async recordDownload(id: string, user: User): Promise<void> {
     this.logger.log(
       `Recording download for document ID: ${id} by user: ${user.username}`,
     );
 
-    const document = await this.findOne(id);
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
+    }
 
     const updatedDocument = this.documentsRepository.merge(document, {
       downloadedBy: user.username,
@@ -346,11 +504,11 @@ export class DocumentsService {
   private mapToResponse(document: DocumentsEntity): DocumentResponseDto {
     return {
       id: document.id,
-      documentKindCode:
-        document.documentKind?.code || document.documentKindCode,
+      documentKind: document.documentKind,
       documentNumber: document.documentNumber,
       documentName: document.documentName,
       version: document.version,
+      documentAccessLevel: document.documentAccessLevel,
       officeFilePath: document.officeFilePath,
       pdfFilePath: document.pdfFilePath,
       createdBy: document.createdBy,
@@ -364,6 +522,3 @@ export class DocumentsService {
     };
   }
 }
-
-// Export DocumentKindsService
-export { DocumentKindsService } from './document-kinds.service';

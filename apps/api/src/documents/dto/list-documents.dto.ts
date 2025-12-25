@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export enum DocumentKind {
   PROCEDURE = 'PROCEDURE',
@@ -11,7 +11,7 @@ export enum DocumentKind {
 export class ListDocumentsDto {
   @IsOptional()
   @IsString()
-  documentKindCode?: string;
+  documentKind?: string;
 
   @IsOptional()
   @IsString()

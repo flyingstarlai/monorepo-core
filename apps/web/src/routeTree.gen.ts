@@ -38,6 +38,7 @@ import { Route as AuthenticatedAppBuilderCreateRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppsIdIndexRouteImport } from './routes/_authenticated/apps.$id.index'
 import { Route as AuthenticatedUsersIdViewRouteImport } from './routes/_authenticated/users.$id.view'
 import { Route as AuthenticatedUsersIdEditRouteImport } from './routes/_authenticated/users.$id.edit'
+import { Route as AuthenticatedDocumentsIdEditRouteImport } from './routes/_authenticated/documents.$id.edit'
 import { Route as AuthenticatedAppsIdLoginsRouteImport } from './routes/_authenticated/apps.$id.logins'
 import { Route as AuthenticatedAppBuilderIdHistoryRouteImport } from './routes/_authenticated/app-builder.$id.history'
 import { Route as AuthenticatedAppBuilderIdBuildRouteImport } from './routes/_authenticated/app-builder.$id.build'
@@ -203,6 +204,12 @@ const AuthenticatedUsersIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedUsersIdRoute,
   } as any)
+const AuthenticatedDocumentsIdEditRoute =
+  AuthenticatedDocumentsIdEditRouteImport.update({
+    id: '/documents/$id/edit',
+    path: '/documents/$id/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppsIdLoginsRoute =
   AuthenticatedAppsIdLoginsRouteImport.update({
     id: '/logins',
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
   '/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   '/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
+  '/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
   '/apps/$id/': typeof AuthenticatedAppsIdIndexRoute
@@ -288,6 +296,7 @@ export interface FileRoutesByTo {
   '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
   '/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   '/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
+  '/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
   '/apps/$id': typeof AuthenticatedAppsIdIndexRoute
@@ -324,6 +333,7 @@ export interface FileRoutesById {
   '/_authenticated/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
   '/_authenticated/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   '/_authenticated/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
+  '/_authenticated/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
   '/_authenticated/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/_authenticated/users/$id/view': typeof AuthenticatedUsersIdViewRoute
   '/_authenticated/apps/$id/': typeof AuthenticatedAppsIdIndexRoute
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/app-builder/$id/build'
     | '/app-builder/$id/history'
     | '/apps/$id/logins'
+    | '/documents/$id/edit'
     | '/users/$id/edit'
     | '/users/$id/view'
     | '/apps/$id/'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/app-builder/$id/build'
     | '/app-builder/$id/history'
     | '/apps/$id/logins'
+    | '/documents/$id/edit'
     | '/users/$id/edit'
     | '/users/$id/view'
     | '/apps/$id'
@@ -426,6 +438,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app-builder/$id/build'
     | '/_authenticated/app-builder/$id/history'
     | '/_authenticated/apps/$id/logins'
+    | '/_authenticated/documents/$id/edit'
     | '/_authenticated/users/$id/edit'
     | '/_authenticated/users/$id/view'
     | '/_authenticated/apps/$id/'
@@ -644,6 +657,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersIdEditRouteImport
       parentRoute: typeof AuthenticatedUsersIdRoute
     }
+    '/_authenticated/documents/$id/edit': {
+      id: '/_authenticated/documents/$id/edit'
+      path: '/documents/$id/edit'
+      fullPath: '/documents/$id/edit'
+      preLoaderRoute: typeof AuthenticatedDocumentsIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/apps/$id/logins': {
       id: '/_authenticated/apps/$id/logins'
       path: '/logins'
@@ -778,6 +798,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
   AuthenticatedAppBuilderIdBuildRoute: typeof AuthenticatedAppBuilderIdBuildRoute
   AuthenticatedAppBuilderIdHistoryRoute: typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
+  AuthenticatedDocumentsIdEditRoute: typeof AuthenticatedDocumentsIdEditRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -800,6 +821,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppBuilderIdBuildRoute: AuthenticatedAppBuilderIdBuildRoute,
   AuthenticatedAppBuilderIdHistoryRoute:
     AuthenticatedAppBuilderIdHistoryRouteWithChildren,
+  AuthenticatedDocumentsIdEditRoute: AuthenticatedDocumentsIdEditRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

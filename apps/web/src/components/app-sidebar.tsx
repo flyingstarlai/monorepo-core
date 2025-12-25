@@ -95,7 +95,7 @@ export function AppSidebar() {
           import.meta.env.VITE_FEATURE_DOC_UPLOAD === 'true'
             ? [
                 {
-                  title: 'Documents',
+                  title: '文檔',
                   icon: FileText,
                   url: '/documents',
                   isActive: location.pathname.startsWith('/documents'),

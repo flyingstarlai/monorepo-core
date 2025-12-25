@@ -1,87 +1,42 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useNavigate, Link } from '@tanstack/react-router';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus, AlertCircle, CheckCircle } from 'lucide-react';
+import { Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-// Import document types and services
-import {
-  documentsApi,
-  ALLOWED_OFFICE_FILE_TYPES,
-  ALLOWED_PDF_FILE_TYPES,
-} from '../services/documents-api.service';
-import {
-  validateDocumentFormData,
-  formatDocumentValidationErrors,
-} from '../utils/document-validation';
-import { DocumentKind } from '../types/documents.types';
-
-// File validation constants - will be moved to validation utility
-// const ALLOWED_OFFICE_FILE_TYPES = ['.docx', '.xlsx'];
-// const ALLOWED_PDF_FILE_TYPES = ['.pdf'];
+import { useCreateDocument } from '../hooks/use-documents';
+import { toast } from 'sonner';
 
 export function DocumentUploadPage() {
   const { user } = useAuthContext();
   const navigate = useNavigate();
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
-
-  // Form data state
-  const [formData, setFormData] = useState({
-    documentKindCode: '' as DocumentKind | '',
-    documentNumber: '',
-    documentName: '',
-    version: '1.0',
-    officeFile: null as File | null,
-    pdfFile: null as File | null,
-  });
 
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
   const canUpload = isAdmin || isManager;
 
-  const uploadMutation = useMutation({
-    mutationFn: documentsApi.createDocument,
-    onSuccess: (data) => {
-      setIsUploading(false);
-      setUploadProgress(100);
-      setUploadSuccess(
-        `Document "${data.documentName}" uploaded successfully!`,
-      );
-      setTimeout(() => {
-        setUploadSuccess(null);
-        navigate({ to: '/documents' });
-      }, 2000);
+  const { mutate: createDocument, isPending } = useCreateDocument({
+    onSuccess: () => {
+      toast.success('文檔上傳成功');
+      navigate({ to: '/documents' });
     },
-    onError: (error: any) => {
-      setIsUploading(false);
-      setUploadError(
-        error.response?.data?.message ||
-          error.message ||
-          'Upload failed. Please try again.',
-      );
-      setTimeout(() => setUploadError(null), 5000);
+    onError: () => {
+      setUploadError('上傳失敗，請重試。');
     },
+  });
+
+  const [formData, setFormData] = useState({
+    documentKind: '',
+    documentNumber: '',
+    documentName: '',
+    version: '1.0',
+    documentAccessLevel: 1,
+    officeFile: null as File | null,
+    pdfFile: null as File | null,
   });
 
   const handleFileChange = (
@@ -91,27 +46,26 @@ export function DocumentUploadPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const fileType = type === 'office' ? 'office' : 'pdf';
-    const validation = documentsApi.validateFile(
-      file,
-      fileType === 'office'
-        ? ALLOWED_OFFICE_FILE_TYPES
-        : ALLOWED_PDF_FILE_TYPES,
-    );
+    setUploadError(null);
 
-    if (!validation.isValid) {
-      setUploadError(validation.error || 'Validation failed');
+    const fileType = type === 'office' ? 'office' : 'pdf';
+    const allowedExtensions = type === 'office' ? ['.docx', '.xlsx'] : ['.pdf'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      setUploadError(`不允許的檔案格式：${file.name}`);
       return;
     }
 
-    setUploadError(null);
-
-    // Update form data with the selected file
-    if (type === 'office') {
-      setFormData((prev) => ({ ...prev, officeFile: file }));
-    } else {
-      setFormData((prev) => ({ ...prev, pdfFile: file }));
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError(`檔案大小超過限制：${file.name}（最大 10MB）`);
+      return;
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      [fileType === 'office' ? 'officeFile' : 'pdfFile']: file,
+    }));
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -121,56 +75,35 @@ export function DocumentUploadPage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Validate document kind exists
-    if (formData.documentKindCode) {
-      try {
-        // This will be handled by the API service validation
-        // For now, just ensure it's not empty
-      } catch (error) {
-        setUploadError('Failed to validate document kind');
-      }
+    if (!formData.documentKind) {
+      setUploadError('文檔類型為必填');
+      return;
     }
 
-    const validationErrors = validateDocumentFormData({
-      documentKindCode: formData.documentKindCode,
-      documentNumber: formData.documentNumber,
-      documentName: formData.documentName,
-      version: formData.version,
-    });
+    if (!formData.documentNumber) {
+      setUploadError('文檔編號為必填');
+      return;
+    }
 
-    if (validationErrors.length > 0) {
-      setUploadError(
-        formatDocumentValidationErrors(validationErrors).join(', '),
-      );
+    if (!formData.documentName) {
+      setUploadError('文檔名稱為必填');
       return;
     }
 
     if (!formData.officeFile && !formData.pdfFile) {
-      setUploadError('Please select at least one file (Office or PDF).');
+      setUploadError('請至少選擇一個檔案（Office 或 PDF）');
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    const formDataToSend = documentsApi.prepareDocumentFormData(
-      {
-        documentKindCode: formData.documentKindCode,
-        documentNumber: formData.documentNumber,
-        documentName: formData.documentName,
-        version: formData.version,
-      },
-      formData.officeFile || undefined,
-      formData.pdfFile || undefined,
-      user?.id,
-    );
-
-    try {
-      await uploadMutation.mutateAsync(formDataToSend);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setIsUploading(false);
-    }
+    createDocument({
+      documentKind: formData.documentKind,
+      documentNumber: formData.documentNumber,
+      documentName: formData.documentName,
+      version: formData.version,
+      documentAccessLevel: formData.documentAccessLevel,
+      officeFile: formData.officeFile,
+      pdfFile: formData.pdfFile,
+    });
   };
 
   const goToDocuments = () => {
@@ -183,8 +116,7 @@ export function DocumentUploadPage() {
         <Alert>
           <AlertCircle className="h-4 w-4 text-red-500" />
           <AlertDescription>
-            You don't have permission to upload documents. Only admins and
-            managers can upload documents.
+            您沒有權限上傳文檔。只有管理員和經理可以上傳文檔。
           </AlertDescription>
         </Alert>
       </div>
@@ -192,27 +124,30 @@ export function DocumentUploadPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
-        <Link
-          to="/documents"
-          className="hover:text-foreground transition-colors hover:underline"
+    <div className="max-w-4xl space-y-4">
+      {/* Back Button */}
+      <Link to="/documents">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center space-x-2"
         >
-          Documents
-        </Link>
-        <span className="text-muted">/</span>
-        <span className="text-foreground">Upload New Document</span>
-      </nav>
+          <ArrowLeft className="h-4 w-4" />
+          <span>返回文檔列表</span>
+        </Button>
+      </Link>
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">上傳新文檔</h1>
+          <p className="text-slate-600 mt-2">
+            上傳 Office（.docx, .xlsx）或 PDF 檔案，最大 10MB。
+          </p>
+        </div>
+      </div>
 
       {/* Success/Error Messages */}
-      {uploadSuccess && (
-        <Alert>
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <AlertDescription>{uploadSuccess}</AlertDescription>
-        </Alert>
-      )}
-
       {uploadError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4 text-red-500" />
@@ -222,75 +157,71 @@ export function DocumentUploadPage() {
 
       {/* Upload Form */}
       <Card>
-        <CardHeader>
-          <CardTitle>Create New Document</CardTitle>
-          <CardDescription>
-            Fill in the document details below to create a new document.
-            Separate file uploads are supported for Office (.docx, .xlsx) and
-            PDF (.pdf) files.
-          </CardDescription>
-        </CardHeader>
-
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Document Details Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="kind">Document Kind</Label>
-                <Select
-                  value={formData.documentKindCode}
-                  onValueChange={(value) =>
-                    handleInputChange('documentKindCode', value)
+                <Label htmlFor="documentKind">文檔類型</Label>
+                <Input
+                  id="documentKind"
+                  value={formData.documentKind}
+                  onChange={(e) =>
+                    handleInputChange('documentKind', e.target.value)
                   }
+                  placeholder="輸入文檔類型（例如：PROCEDURE、FORM）"
                   required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select document kind" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PROCEDURE">Procedure</SelectItem>
-                    <SelectItem value="FORM">Form</SelectItem>
-                    <SelectItem value="POLICY">Policy</SelectItem>
-                    <SelectItem value="MANUAL">Manual</SelectItem>
-                    <SelectItem value="OTHER">Other</SelectItem>
-                  </SelectContent>
-                </Select>
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="documentNumber">Document Code</Label>
+                <Label htmlFor="documentNumber">文檔編號</Label>
                 <Input
                   id="documentNumber"
                   value={formData.documentNumber}
                   onChange={(e) =>
                     handleInputChange('documentNumber', e.target.value)
                   }
-                  placeholder="Enter document code"
+                  placeholder="輸入文檔編號"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="documentName">Document Name</Label>
+                <Label htmlFor="documentName">文檔名稱</Label>
                 <Input
                   id="documentName"
                   value={formData.documentName}
                   onChange={(e) =>
                     handleInputChange('documentName', e.target.value)
                   }
-                  placeholder="Enter document name"
+                  placeholder="輸入文檔名稱"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="version">Version</Label>
+                <Label htmlFor="version">版本</Label>
                 <Input
                   id="version"
                   value={formData.version}
                   onChange={(e) => handleInputChange('version', e.target.value)}
-                  placeholder="Enter version (e.g., 1.0)"
+                  placeholder="輸入版本（例如：1.0）"
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="documentAccessLevel">文檔存取等級</Label>
+                <Input
+                  id="documentAccessLevel"
+                  type="number"
+                  min="0"
+                  max="2"
+                  value={formData.documentAccessLevel}
+                  onChange={(e) =>
+                    handleInputChange('documentAccessLevel', e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -298,7 +229,7 @@ export function DocumentUploadPage() {
             {/* File Upload Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="office-file">Office File</Label>
+                <Label htmlFor="office-file">Office 檔案（可選）</Label>
                 <Input
                   id="office-file"
                   type="file"
@@ -307,16 +238,16 @@ export function DocumentUploadPage() {
                 />
                 {formData.officeFile && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Selected: {formData.officeFile.name}
+                    已選擇：{formData.officeFile.name}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  Allowed: .docx, .xlsx (max 10MB)
+                  允許格式：.docx, .xlsx（最大 10MB）
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pdf-file">PDF File</Label>
+                <Label htmlFor="pdf-file">PDF 檔案（可選）</Label>
                 <Input
                   id="pdf-file"
                   type="file"
@@ -325,29 +256,14 @@ export function DocumentUploadPage() {
                 />
                 {formData.pdfFile && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Selected: {formData.pdfFile.name}
+                    已選擇：{formData.pdfFile.name}
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  Allowed: .pdf (max 10MB)
+                  允許格式：.pdf（最大 10MB）
                 </p>
               </div>
             </div>
-
-            {/* Progress Indicator */}
-            {isUploading && (
-              <div className="mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="h-2 bg-blue-500 rounded-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                <div className="text-center text-sm font-medium mt-2">
-                  Uploading... {uploadProgress}%
-                </div>
-              </div>
-            )}
 
             {/* Form Actions */}
             <div className="flex justify-end space-x-2 pt-4">
@@ -355,20 +271,20 @@ export function DocumentUploadPage() {
                 type="button"
                 variant="outline"
                 onClick={goToDocuments}
-                disabled={isUploading}
+                disabled={isPending}
               >
-                Cancel
+                取消
               </Button>
-              <Button type="submit" disabled={isUploading || !canUpload}>
-                {isUploading ? (
+              <Button type="submit" disabled={isPending || !canUpload}>
+                {isPending ? (
                   <>
                     <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-t-transparent" />
-                    Uploading...
+                    上傳中...
                   </>
                 ) : (
                   <>
                     <Plus className="mr-2 h-4 w-4" />
-                    Upload Document
+                    上傳文檔
                   </>
                 )}
               </Button>
@@ -380,21 +296,14 @@ export function DocumentUploadPage() {
       {/* File Guidelines */}
       <Card>
         <CardHeader>
-          <CardTitle>File Guidelines</CardTitle>
-          <CardDescription>
-            Please follow these file requirements for successful uploads
-          </CardDescription>
+          <CardTitle>檔案要求</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <ul className="list-disc list-inside space-y-2">
-            <li>Maximum file size: 10MB per file</li>
-            <li>Allowed Office files: .docx, .xlsx</li>
-            <li>Allowed PDF files: .pdf only</li>
-            <li>
-              Recommended file naming: Use descriptive names (e.g.,
-              "Employee-Onboarding-Manual-v1.0.docx")
-            </li>
-            <li>Large files may take longer to upload</li>
+          <ul className="list-disc list-inside space-y-1">
+            <li>最大大小：每個檔案 10MB</li>
+            <li>允許格式：.docx, .xlsx, .pdf</li>
+            <li>如需替換檔案，請選擇新檔案上傳</li>
+            <li>否則僅更新文檔資訊即可</li>
           </ul>
         </CardContent>
       </Card>

@@ -2,10 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class DocumentResponseDto {
   @ApiProperty({ description: 'Document ID' })
-  id: number;
+  id: string;
 
-  @ApiProperty({ description: 'Document kind code' })
-  documentKindCode: string;
+  @ApiProperty({ description: 'Document kind' })
+  documentKind: string;
 
   @ApiProperty({ description: 'Document code/number' })
   documentNumber: string;
@@ -15,6 +15,12 @@ export class DocumentResponseDto {
 
   @ApiProperty({ description: 'Document version' })
   version: string;
+
+  @ApiProperty({
+    description:
+      'Document access level (0=PUBLIC, 1=RESTRICTED, 2=CONFIDENTIAL)',
+  })
+  documentAccessLevel: number;
 
   @ApiProperty({ description: 'Office file reference (Word/Excel)' })
   officeFilePath: string;

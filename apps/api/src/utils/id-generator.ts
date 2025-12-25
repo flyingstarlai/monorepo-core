@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid';
+  import { nanoid } from 'nanoid';
 
 export class IdGenerator {
   private static readonly DEFAULT_LENGTH = 12;
@@ -25,6 +25,10 @@ export class IdGenerator {
 
   static generateIdentifierId(): string {
     return `id_${nanoid(this.DEFAULT_LENGTH)}`;
+  }
+
+  static generateDocumentId(): string {
+    return `doc_${nanoid(this.DEFAULT_LENGTH)}`;
   }
 
   static generateCustomId(

@@ -1,14 +1,21 @@
-import { IsString, IsOptional, IsEnum, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  MaxLength,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateDocumentDto {
   @ApiProperty({
-    description: 'Document kind code',
+    description: 'Document kind',
   })
   @IsOptional()
   @IsString()
   @MaxLength(20)
-  documentKindCode?: string;
+  documentKind?: string;
 
   @ApiProperty({ description: 'Document code/number' })
   @IsOptional()
@@ -27,4 +34,14 @@ export class UpdateDocumentDto {
   @IsString()
   @MaxLength(10)
   version?: string;
+
+  @ApiProperty({
+    description:
+      'Document access level (0=PUBLIC, 1=RESTRICTED, 2=CONFIDENTIAL)',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(2)
+  documentAccessLevel?: number;
 }

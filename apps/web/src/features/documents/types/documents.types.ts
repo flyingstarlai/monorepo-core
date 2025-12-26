@@ -31,3 +31,8 @@ export interface ListDocumentsDto {
   documentKind?: string;
   search?: string;
 }
+
+export interface OnlyofficeConfigDto {
+  documentServerUrl: string;
+  token: string;
+}

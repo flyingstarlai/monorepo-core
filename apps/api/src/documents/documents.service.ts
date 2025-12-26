@@ -20,9 +20,11 @@ import {
   mkdirSync,
   renameSync,
   createReadStream,
+  createWriteStream,
 } from 'fs';
 import { join } from 'path';
 import { UPLOAD_DEST_DIR, getDocumentFilePath } from '../config/multer.config';
+import axios from 'axios';
 
 // Multer file type
 interface MulterFile {
@@ -520,5 +522,169 @@ export class DocumentsService {
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     };
+  }
+
+  /**
+   * Get OnlyOffice configuration for a document
+   */
+  async getOnlyOfficeConfig(
+    id: string,
+    user: User,
+  ): Promise<{
+    token: string;
+    config: any;
+  }> {
+    this.logger.log(`Getting OnlyOffice config for document ID: ${id}`);
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
+    }
+
+    if (!document.officeFilePath) {
+      throw new NotFoundException('Office file not found for this document');
+    }
+
+    const canEdit = this.canDownloadOfficeFile(user);
+
+    const protocol = process.env.API_PROTOCOL || 'http';
+    const host = process.env.API_HOST || 'localhost:3000';
+    const documentUrl = `${protocol}://${host}/documents/${id}/download?type=office`;
+
+    const config = {
+      document: {
+        fileType:
+          document.officeFilePath.split('.').pop()?.toLowerCase() || 'docx',
+        key: `${document.id}_${document.updatedAt.getTime()}`,
+        title: document.documentName || document.documentNumber,
+        url: documentUrl,
+        permissions: {
+          edit: canEdit,
+          comment: canEdit,
+          download: canEdit,
+          print: true,
+          fillForms: canEdit,
+          modifyFilter: canEdit,
+          modifyContentControl: canEdit,
+          review: canEdit,
+        },
+      },
+      editorConfig: {
+        mode: canEdit ? 'edit' : 'view',
+        lang: 'zh-TW',
+        user: {
+          id: user.id,
+          name: user.fullName,
+        },
+        customization: {
+          autosave: true,
+          forcesave: true,
+          forcesavetype: 'update',
+        },
+      },
+    };
+
+    const token = await this.signOnlyOfficeConfig(config);
+
+    return { token, config };
+  }
+
+  /**
+   * Sign OnlyOffice configuration with JWT
+   */
+  private async signOnlyOfficeConfig(config: any): Promise<string> {
+    try {
+      const jwt = require('jsonwebtoken');
+      const secret = process.env.ONLYOFFICE_JWT_SECRET;
+      if (!secret) {
+        throw new InternalServerErrorException(
+          'OnlyOffice JWT secret not configured',
+        );
+      }
+      return jwt.sign(config, secret, {
+        algorithm: 'HS256',
+        expiresIn: '30m',
+      });
+    } catch (error) {
+      this.logger.error('Failed to sign OnlyOffice config', error);
+      throw new InternalServerErrorException(
+        'Failed to sign OnlyOffice config',
+      );
+    }
+  }
+
+  /**
+   * Handle OnlyOffice callback
+   */
+  async handleOnlyOfficeCallback(id: string, callbackData: any): Promise<void> {
+    this.logger.log(
+      `Handling OnlyOffice callback for document ID: ${id}, action: ${callbackData.actions}`,
+    );
+
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if (callbackData.actions === 0 || callbackData.status === 2) {
+      const updatedFileUrl = callbackData.url;
+      if (!updatedFileUrl) {
+        this.logger.warn('No URL in callback payload');
+        return;
+      }
+
+      try {
+        const response = await axios.get(updatedFileUrl, {
+          responseType: 'arraybuffer',
+        });
+
+        const filePath = join(UPLOAD_DEST_DIR, document.officeFilePath);
+        const writeStream = createWriteStream(filePath);
+        writeStream.write(Buffer.from(response.data));
+        writeStream.end();
+
+        const documentDir = join(
+          UPLOAD_DEST_DIR,
+          document.documentKind.toLowerCase(),
+          document.id,
+        );
+        const officeFileDir = join(documentDir, 'office');
+        if (!existsSync(officeFileDir)) {
+          mkdirSync(officeFileDir, { recursive: true });
+        }
+        const destPath = join(
+          officeFileDir,
+          document.officeFilePath.split('/').pop(),
+        );
+
+        const finalWriteStream = createWriteStream(destPath);
+        finalWriteStream.write(Buffer.from(response.data));
+        finalWriteStream.end();
+
+        const currentUser = callbackData.users?.[0];
+        const username = currentUser?.name || currentUser?.id || 'unknown';
+
+        await this.documentsRepository.update(id, {
+          modifiedBy: username,
+          modifiedAtUser: formatDateUTC8(new Date()),
+        });
+
+        this.logger.log(`Document ${id} saved successfully by ${username}`);
+      } catch (error) {
+        this.logger.error(`Failed to save document ${id} from callback`, error);
+        throw new InternalServerErrorException('Failed to save document');
+      }
+    }
   }
 }

@@ -32,6 +32,8 @@ import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { ListDocumentsDto } from './dto/list-documents.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
+import { OnlyofficeConfigDto } from './dto/onlyoffice-config.dto';
+import { OnlyofficeCallbackDto } from './dto/onlyoffice-callback.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -272,5 +274,52 @@ export class DocumentsController {
       }
       throw new InternalServerErrorException('Failed to download file');
     }
+  }
+
+  @Get(':id/office')
+  @Roles('admin', 'manager', 'user')
+  @ApiOperation({ summary: 'Get OnlyOffice configuration' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'OnlyOffice configuration',
+    type: OnlyofficeConfigDto,
+  })
+  async getOnlyOfficeConfig(
+    @Param('id') id: string,
+    @Req() req: any,
+  ): Promise<OnlyofficeConfigDto> {
+    this.checkFeatureFlag();
+
+    const user = req.user as User;
+    const documentServerUrl = process.env.ONLYOFFICE_DOCUMENT_SERVER_URL;
+
+    if (!documentServerUrl) {
+      throw new InternalServerErrorException(
+        'OnlyOffice Document Server is not configured',
+      );
+    }
+
+    const { token } = await this.documentsService.getOnlyOfficeConfig(id, user);
+
+    return {
+      documentServerUrl,
+      token,
+    };
+  }
+
+  @Post(':id/office/callback')
+  @ApiOperation({ summary: 'OnlyOffice callback' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({ status: 200, description: 'Callback handled' })
+  async handleOnlyOfficeCallback(
+    @Param('id') id: string,
+    @Body() callbackDto: OnlyofficeCallbackDto,
+  ): Promise<{ error: number }> {
+    this.checkFeatureFlag();
+
+    await this.documentsService.handleOnlyOfficeCallback(id, callbackDto);
+
+    return { error: 0 };
   }
 }

@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
-import { Plus, Search, FileDown } from 'lucide-react';
+import { Plus, Search, FileDown, FileEdit } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useDocuments, useDownloadDocument } from '../hooks/use-documents';
@@ -177,6 +177,23 @@ export function DocumentsPage() {
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         <div className="flex items-center space-x-2">
+                          {doc.officeFilePath && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                navigate({ to: `/documents/${doc.id}/office` })
+                              }
+                              title={
+                                isAdmin || isManager ? '在線編輯' : '在線查看'
+                              }
+                              className="h-8"
+                            >
+                              <FileEdit className="mr-1 h-4 w-4" />
+                              {isAdmin || isManager ? '在線編輯' : '在線查看'}
+                            </Button>
+                          )}
+
                           {canUpload && doc.officeFilePath && (
                             <Button
                               size="sm"

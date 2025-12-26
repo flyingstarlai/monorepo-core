@@ -174,3 +174,23 @@ export const useDownloadDocument = (options?: {
     onError: options?.onError,
   });
 };
+
+export const useDocumentOfficeConfig = (
+  id: string,
+  options?: {
+    onError?: (error: any) => void;
+  },
+) => {
+  return useQuery({
+    queryKey: ['document-office-config', id],
+    queryFn: async (): Promise<OnlyofficeConfigDto> => {
+      const response = await api.get<OnlyofficeConfigDto>(
+        `/documents/${id}/office`,
+      );
+      return response.data;
+    },
+    enabled: !!id,
+    staleTime: 1000 * 60 * 5,
+    onError: options?.onError,
+  });
+};

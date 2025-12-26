@@ -78,6 +78,20 @@ export function createUserTableColumns({
       },
     },
     {
+      accessorKey: 'email',
+      header: '電子郵件',
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div>
+            <div className="text-sm text-slate-900">
+              {user.email || '未指定'}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'deptName',
       header: '部門',
       cell: ({ row }) => {
@@ -126,6 +140,18 @@ export function createUserTableColumns({
             <Badge variant={getStatusVariant(user.isActive ?? false)}>
               {user.isActive ? '啟用' : '停用'}
             </Badge>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'signLevel',
+      header: '簽署等級',
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <div className="text-sm text-slate-600">
+            {user.signLevel ?? '未指定'}
           </div>
         );
       },

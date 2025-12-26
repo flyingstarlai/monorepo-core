@@ -48,6 +48,8 @@ const userFormSchema = z.object({
   // Optional here; we enforce required on create via UI
   password: z.string().optional(),
   fullName: z.string().min(2, '全名長度至少需要2個字元'),
+  email: z.string().email('請提供有效的電子郵件地址').optional(),
+  signLevel: z.number().min(1, '簽署等級至少為1').optional(),
   deptNo: z.string().min(1, '部門代碼為必填項目'),
   deptName: z.string().min(2, '部門名稱長度至少需要2個字元'),
   role: z.enum(['admin', 'manager', 'user']),
@@ -86,6 +88,8 @@ export function UserForm({
       username: user?.username || '',
       password: '',
       fullName: user?.fullName || '',
+      email: user?.email || '',
+      signLevel: user?.signLevel ?? 1,
       deptNo: user?.deptNo || '',
       deptName: user?.deptName || '',
       role:
@@ -266,6 +270,31 @@ export function UserForm({
                   }}
                 />
 
+                {/* Email */}
+                <form.Field
+                  name="email"
+                  children={(field) => {
+                    const isInvalid =
+                      field.state.meta.isTouched && !field.state.meta.isValid;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>電子郵件</FieldLabel>
+                        <Input
+                          id={field.name}
+                          type="email"
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="請輸入電子郵件"
+                        />
+                        {isInvalid && (
+                          <FieldError errors={field.state.meta.errors} />
+                        )}
+                      </Field>
+                    );
+                  }}
+                />
+
                 {/* Dept Code */}
                 {/* Dept Code */}
                 <form.Field
@@ -431,6 +460,42 @@ export function UserForm({
                     );
                   }}
                 />
+
+                {/* Sign Level - Admin Only */}
+                {currentUserRole === 'admin' && (
+                  <form.Field
+                    name="signLevel"
+                    children={(field) => {
+                      const isInvalid =
+                        field.state.meta.isTouched && !field.state.meta.isValid;
+                      return (
+                        <Field
+                          data-invalid={isInvalid}
+                          className="md:col-span-2"
+                        >
+                          <FieldLabel htmlFor={field.name}>簽署等級</FieldLabel>
+                          <Input
+                            id={field.name}
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={field.state.value}
+                            onChange={(e) =>
+                              field.handleChange(
+                                e.target.value ? parseInt(e.target.value) : 1,
+                              )
+                            }
+                            aria-invalid={isInvalid}
+                            placeholder="例如：1"
+                          />
+                          {isInvalid && (
+                            <FieldError errors={field.state.meta.errors} />
+                          )}
+                        </Field>
+                      );
+                    }}
+                  />
+                )}
               </div>
             </FieldGroup>
 

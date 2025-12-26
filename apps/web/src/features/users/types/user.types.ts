@@ -2,6 +2,8 @@ export interface User {
   id: string;
   username: string;
   fullName: string;
+  email?: string;
+  signLevel?: number;
   deptNo: string;
   deptName: string;
   role: 'admin' | 'manager' | 'user';
@@ -20,6 +22,8 @@ export interface CreateUserData {
   username: string;
   password: string;
   fullName: string;
+  email?: string;
+  signLevel?: number;
   deptNo: string;
   deptName: string;
   role?: User['role'];
@@ -28,6 +32,8 @@ export interface CreateUserData {
 
 export interface UpdateUserData {
   fullName?: string;
+  email?: string;
+  signLevel?: number;
   deptNo?: string;
   deptName?: string;
   role?: User['role'];

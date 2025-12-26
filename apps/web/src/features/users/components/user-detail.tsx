@@ -225,6 +225,14 @@ export function UserDetail({
                 </div>
                 <div>
                   <label className="text-sm font-medium text-slate-700 mb-2 block">
+                    電子郵件
+                  </label>
+                  <p className="text-base font-medium text-slate-900">
+                    {user.email || '未指定'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">
                     狀態
                   </label>
                   <div className="mt-2">
@@ -235,6 +243,14 @@ export function UserDetail({
                       {user.isActive ? '啟用' : '停用'}
                     </Badge>
                   </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 mb-2 block">
+                    簽署等級
+                  </label>
+                  <p className="text-base font-medium text-slate-900">
+                    {user.signLevel ?? '未指定'}
+                  </p>
                 </div>
               </CardContent>
             </Card>

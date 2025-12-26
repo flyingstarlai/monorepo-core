@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useParams, useNavigate, Link } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useDocumentOfficeConfig } from '../hooks/use-documents';
 import { toast } from 'sonner';
+import { DocumentEditor } from '@onlyoffice/document-editor-react';
 
 export function DocumentOfficePage() {
   const { user } = useAuthContext();
@@ -23,18 +24,20 @@ export function DocumentOfficePage() {
     },
   });
 
-  const [onlyOfficeUrl, setOnlyOfficeUrl] = useState<string>('');
+  const [documentReady, setDocumentReady] = useState(false);
 
-  useEffect(() => {
-    if (officeConfig && officeConfig.documentServerUrl && officeConfig.token) {
-      const encodedConfig = encodeURIComponent(
-        JSON.stringify(officeConfig.token),
-      );
-      setOnlyOfficeUrl(
-        `${officeConfig.documentServerUrl}/?config=${encodedConfig}`,
-      );
-    }
-  }, [officeConfig]);
+  const handleDocumentReady = () => {
+    console.log('Document is loaded');
+    setDocumentReady(true);
+  };
+
+  const handleLoadComponentError = (
+    errorCode: number,
+    errorDescription: string,
+  ) => {
+    console.error('OnlyOffice component error:', errorCode, errorDescription);
+    toast.error(`載入編輯器失敗: ${errorDescription}`);
+  };
 
   if (isLoading) {
     return <div className="p-4">載入文檔編輯器中...</div>;
@@ -46,6 +49,16 @@ export function DocumentOfficePage() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4 text-red-500" />
           <AlertDescription>載入文檔失敗或文檔不存在</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!officeConfig.documentServerUrl || !officeConfig.config) {
+    return (
+      <div className="space-y-6 p-6">
+        <Alert>
+          <AlertDescription>載入文檔配置中...</AlertDescription>
         </Alert>
       </div>
     );
@@ -66,15 +79,15 @@ export function DocumentOfficePage() {
 
       <Card>
         <CardContent className="p-0">
-          {onlyOfficeUrl ? (
-            <iframe
-              src={onlyOfficeUrl}
-              className="w-full h-[calc(100vh-200px)] border-0"
-              title="OnlyOffice Editor"
-              allowFullScreen
+          {officeConfig.config && (
+            <DocumentEditor
+              id="docxEditor"
+              documentServerUrl={officeConfig.documentServerUrl}
+              config={officeConfig.config}
+              events_onDocumentReady={handleDocumentReady}
+              onLoadComponentError={handleLoadComponentError}
+              height="calc(100vh - 200px)"
             />
-          ) : (
-            <div className="p-4">載入編輯器中...</div>
           )}
         </CardContent>
       </Card>

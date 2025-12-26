@@ -10,11 +10,12 @@
 
 ## 2. Frontend OnlyOffice Integration
 
-- [ ] 2.1 Add a frontend API helper/hook (e.g. `useDocumentOfficeConfig`) that calls `/documents/:id/office` and returns the OnlyOffice config.
-- [ ] 2.2 Create a new route file `apps/web/src/routes/_authenticated/documents.$id.office.tsx` that renders a `DocumentOfficePage`.
-- [ ] 2.3 Implement `DocumentOfficePage` to load the config, handle loading/error states, and render an iframe pointing to the OnlyOffice Document Server editor URL with the signed config.
-- [ ] 2.4 Wire role-based behavior in the UI (e.g. hide edit affordances for users if backend returns view-only mode).
-- [ ] 2.5 Add a button in the documents list/table (`DocumentsPage`) to navigate to `/documents/$id/office` for the selected document.
+- [x] 2.1 Add a frontend API helper/hook (e.g. `useDocumentOfficeConfig`) that calls `/documents/:id/office` and returns a OnlyOffice config and/or token.
+- [x] 2.2 Add `@onlyoffice/document-editor-react` as a dependency in the web app.
+- [x] 2.3 Create a new route file `apps/web/src/routes/_authenticated/documents.$id.office.tsx` that renders a `DocumentOfficePage`.
+- [x] 2.4 Implement `DocumentOfficePage` as a React component that uses `<DocumentEditor>` from `@onlyoffice/document-editor-react`, passing in `documentServerUrl` and a backend-provided config according to the OnlyOffice React integration guide.
+- [x] 2.5 Wire role-based behavior in the UI (e.g. React component reflects edit vs view-only mode from the backend config rather than duplicating role logic on the client).
+- [x] 2.6 Add a button in the documents list/table (`DocumentsPage`) to navigate to `/documents/$id/office` for the selected document.
 
 ## 3. Validation & Documentation
 

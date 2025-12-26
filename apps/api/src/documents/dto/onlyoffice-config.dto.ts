@@ -4,6 +4,6 @@ export class OnlyofficeConfigDto {
   @ApiProperty({ description: 'OnlyOffice Document Server URL' })
   documentServerUrl: string;
 
-  @ApiProperty({ description: 'OnlyOffice configuration token' })
-  token: string;
+  @ApiProperty({ description: 'OnlyOffice configuration' })
+  config: any;
 }

@@ -300,11 +300,11 @@ export class DocumentsController {
       );
     }
 
-    const { token } = await this.documentsService.getOnlyOfficeConfig(id, user);
+    const config = await this.documentsService.getOnlyOfficeConfig(id, user);
 
     return {
       documentServerUrl,
-      token,
+      config,
     };
   }
 

@@ -42,8 +42,9 @@ We want to integrate OnlyOffice Document Server to enable online viewing and edi
   - Optionally update metadata such as `modifiedBy` and `modifiedAtUser` on successful save.
 
 - **Frontend Integration**
-  - The React web app will call `/documents/:id/office` to get the signed config.
-  - The frontend will render an iframe pointing to `${ONLYOFFICE_DOCUMENT_SERVER_URL}/?config=<encoded>` or the appropriate OnlyOffice editor URL, passing the config/token as required.
+  - The React web app will call `/documents/:id/office` to get the signed config and/or token.
+  - The frontend will use the official OnlyOffice React component (`@onlyoffice/document-editor-react`) and its `<DocumentEditor>` component instead of manually embedding an iframe.
+  - `DocumentEditor` will receive `documentServerUrl` and a `config` object (including the JWT token, if required by the OnlyOffice Docs configuration) that is built on the backend, following the [OnlyOffice React integration guide](https://api.onlyoffice.com/docs/docs-api/get-started/frontend-frameworks/react/).
   - The route `/documents/$id/office` will be protected on the frontend by the existing auth flow but trust the backend for final permission decisions.
 
 ## Risks / Trade-offs

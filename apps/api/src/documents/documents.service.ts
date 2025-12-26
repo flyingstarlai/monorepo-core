@@ -622,13 +622,10 @@ export class DocumentsService {
   }
 
   /**
-   * Handle OnlyOffice callback
-   */
-  async handleOnlyOfficeCallback(id: string, callbackData: any): Promise<void> {
-    this.logger.log(
-      `Handling OnlyOffice callback for document ID: ${id}, action: ${callbackData.actions}`,
-    );
-
+    * Get OnlyOffice configuration for a document
+    */
+  async getOnlyOfficeConfig(id: string, user: User): Promise<any> {
+    this.logger.log(`Getting OnlyOffice config for document ID: ${id}`);
     const document = await this.documentsRepository.findOne({
       where: { id },
     });
@@ -636,6 +633,57 @@ export class DocumentsService {
     if (!document) {
       throw new NotFoundException('Document not found');
     }
+
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException(
+        'You do not have permission to access this document',
+      );
+    }
+
+    if (!document.officeFilePath) {
+      throw new NotFoundException('Office file not found for this document');
+    }
+
+    const canEdit = this.canDownloadOfficeFile(user);
+
+    const protocol = process.env.API_PROTOCOL || 'http';
+    const host = process.env.API_HOST || 'localhost:3000';
+    const documentUrl = `${protocol}://${host}/documents/${id}/download?type=office`;
+
+    const config = {
+      document: {
+        fileType: document.officeFilePath.split('.').pop()?.toLowerCase() || 'docx',
+        key: `${document.id}_${document.updatedAt.getTime()}`,
+        title: document.documentName || document.documentNumber,
+        url: documentUrl,
+        permissions: {
+          edit: canEdit,
+          comment: canEdit,
+          download: canEdit,
+          print: true,
+          fillForms: canEdit,
+          modifyFilter: canEdit,
+          modifyContentControl: canEdit,
+          review: canEdit,
+        },
+      },
+      editorConfig: {
+        mode: canEdit ? 'edit' : 'view',
+        lang: 'zh-TW',
+        user: {
+          id: user.id,
+          name: user.fullName,
+        },
+        customization: {
+          autosave: true,
+          forcesave: true,
+          forcesavetype: 'update',
+        },
+      },
+    };
+
+    return config;
+  }
 
     if (callbackData.actions === 0 || callbackData.status === 2) {
       const updatedFileUrl = callbackData.url;

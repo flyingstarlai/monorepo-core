@@ -2,7 +2,7 @@
 
 ### Requirement: Document Center OnlyOffice Integration
 
-The system SHALL integrate OnlyOffice Document Server to allow online viewing and editing of Office documents stored in the Document Center, with behavior controlled by user roles and document access levels.
+The system SHALL integrate OnlyOffice Document Server to allow online viewing and editing of Office documents stored in the Document Center, with behavior controlled by user roles and document access levels, and SHALL use the official OnlyOffice Docs React component for embedding the editor in the web UI.
 
 #### Scenario: Admin edits document online
 
@@ -55,5 +55,5 @@ The system SHALL integrate OnlyOffice Document Server to allow online viewing an
 
 - **WHEN** a user navigates to the frontend route `/documents/{id}/office`
 - **AND** the backend successfully returns a valid OnlyOffice configuration
-- **THEN** the frontend SHALL render an embedded OnlyOffice editor/viewer (e.g. via iframe)
+- **THEN** the frontend SHALL render an embedded OnlyOffice editor/viewer using the official React component (`@onlyoffice/document-editor-react`)
 - **AND** SHALL reflect the user’s permissions (edit vs view-only) as provided by the backend configuration.

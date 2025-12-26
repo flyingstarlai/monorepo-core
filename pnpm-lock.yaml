@@ -304,6 +304,9 @@ importers:
         specifier: ^5.0.8
         version: 5.0.8(@types/react@19.2.3)(react@19.2.0)
     devDependencies:
+      '@onlyoffice/document-editor-react':
+        specifier: ^2.1.1
+        version: 2.1.1(react-dom@19.2.0)(react@19.2.0)
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -2868,6 +2871,17 @@ packages:
     engines: {node: ^14.18.0 || >=16.10.0, npm: '>=5.10.0'}
     dependencies:
       consola: 3.4.2
+
+  /@onlyoffice/document-editor-react@2.1.1(react-dom@19.2.0)(react@19.2.0):
+    resolution: {integrity: sha512-b0SnFPmT+OEyJons18PPHpwtFABVCI4nr3gPtAAImar1PhN9tNc9703Yo5KPYsHhIgVq+FqHSWgunI9GJnKa5w==}
+    peerDependencies:
+      react: ^16.9.0 || ^17 || ^18 || ^19
+      react-dom: ^16.9.0 || ^17 || ^18 || ^19
+    dependencies:
+      lodash: 4.17.21
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+    dev: true
 
   /@paralleldrive/cuid2@2.3.1:
     resolution: {integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==}

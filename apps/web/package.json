@@ -52,6 +52,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@onlyoffice/document-editor-react": "^2.1.1",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@tailwindcss/typography": "^0.5.19",

@@ -34,5 +34,5 @@ export interface ListDocumentsDto {
 
 export interface OnlyofficeConfigDto {
   documentServerUrl: string;
-  token: string;
+  config: any;
 }

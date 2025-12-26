@@ -55,6 +55,10 @@ COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/packages/api ./packages/api
 
+# Create upload directories with proper permissions
+RUN mkdir -p /app/uploads/documents && \
+    chown -R nestjs:nodejs /app/uploads
+
 # Switch to non-root user
 USER nestjs
 

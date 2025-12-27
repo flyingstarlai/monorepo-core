@@ -14,6 +14,7 @@ import {
   NotFoundException,
   ForbiddenException,
   InternalServerErrorException,
+  BadRequestException,
   Req,
   UseInterceptors,
   UploadedFiles,
@@ -37,8 +38,10 @@ import { OnlyofficeCallbackDto } from './dto/onlyoffice-callback.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { OnlyofficeAuthorized } from '../auth/decorators/onlyoffice-authorized.decorator';
 import { User } from '../users/entities/user.entity';
-import { Response } from 'express';
+
+import type { Response } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Documents')
@@ -123,17 +126,51 @@ export class DocumentsController {
       documentAccessLevel: req.body.documentAccessLevel,
     } as CreateDocumentDto;
 
-    // Separate office and pdf files
     let officeFile: any | undefined;
     let pdfFile: any | undefined;
 
-    if (files) {
+    if (files && files.length > 0) {
+      this.logger.log(`Received ${files.length} file(s) for document creation`);
+
       officeFile = files.find(
         (file) =>
           file.mimetype.includes('wordprocessingml.document') ||
           file.mimetype.includes('spreadsheetml.sheet'),
       );
       pdfFile = files.find((file) => file.mimetype === 'application/pdf');
+
+      const validationErrors: string[] = [];
+
+      if (officeFile) {
+        const ext = officeFile.originalname.split('.').pop()?.toLowerCase();
+        const allowed = ['doc', 'docx', 'xls', 'xlsx'];
+        if (!ext || !allowed.includes(ext)) {
+          validationErrors.push(`Office file: invalid type "${ext}"`);
+          this.logger.warn(
+            `Invalid office file type: ${ext} (allowed: ${allowed.join(', ')})`,
+          );
+        }
+      }
+
+      if (pdfFile) {
+        if (pdfFile.mimetype !== 'application/pdf') {
+          validationErrors.push(
+            `PDF file: invalid mimetype "${pdfFile.mimetype}"`,
+          );
+          this.logger.warn(`Invalid PDF file mimetype: ${pdfFile.mimetype}`);
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        throw new BadRequestException(
+          `Invalid file types: ${validationErrors.join('; ')}`,
+        );
+      }
+
+      if (!officeFile && !pdfFile) {
+        this.logger.warn('No files received for document creation');
+        throw new BadRequestException('At least one file is required');
+      }
     }
 
     return this.documentsService.createWithFiles(
@@ -176,17 +213,51 @@ export class DocumentsController {
       documentAccessLevel: req.body.documentAccessLevel,
     } as UpdateDocumentDto;
 
-    // Separate office and pdf files
     let officeFile: any | undefined;
     let pdfFile: any | undefined;
 
-    if (files) {
+    if (files && files.length > 0) {
+      this.logger.log(`Received ${files.length} file(s) for document update`);
+
       officeFile = files.find(
         (file) =>
           file.mimetype.includes('wordprocessingml.document') ||
           file.mimetype.includes('spreadsheetml.sheet'),
       );
       pdfFile = files.find((file) => file.mimetype === 'application/pdf');
+
+      const validationErrors: string[] = [];
+
+      if (officeFile) {
+        const ext = officeFile.originalname.split('.').pop()?.toLowerCase();
+        const allowed = ['doc', 'docx', 'xls', 'xlsx'];
+        if (!ext || !allowed.includes(ext)) {
+          validationErrors.push(`Office file: invalid type "${ext}"`);
+          this.logger.warn(
+            `Invalid office file type: ${ext} (allowed: ${allowed.join(', ')})`,
+          );
+        }
+      }
+
+      if (pdfFile) {
+        if (pdfFile.mimetype !== 'application/pdf') {
+          validationErrors.push(
+            `PDF file: invalid mimetype "${pdfFile.mimetype}"`,
+          );
+          this.logger.warn(`Invalid PDF file mimetype: ${pdfFile.mimetype}`);
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        throw new BadRequestException(
+          `Invalid file types: ${validationErrors.join('; ')}`,
+        );
+      }
+
+      if (!officeFile && !pdfFile) {
+        this.logger.warn('No files received for document update');
+        throw new BadRequestException('At least one file is required');
+      }
     }
 
     return this.documentsService.updateWithFiles(
@@ -211,7 +282,7 @@ export class DocumentsController {
   }
 
   @Get(':id/download')
-  @Roles('admin', 'manager', 'user')
+  @OnlyofficeAuthorized()
   @ApiOperation({ summary: 'Download document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiQuery({
@@ -228,36 +299,64 @@ export class DocumentsController {
   ): Promise<void> {
     this.checkFeatureFlag();
 
-    const user = req.user as User;
-    if (!user) {
+    this.logger.log('=== DOCUMENT DOWNLOAD REQUEST START ===');
+    this.logger.log(`Document ID: ${id}`);
+    this.logger.log(`Download type: ${type}`);
+
+    const authHeader = req.headers['authorization'];
+    const onlyofficeSecretHeader = req.headers['x-onlyoffice-secret'];
+    const isOnlyofficeRequest = req.onlyofficeAuthorized === true;
+    this.logger.log(
+      `Authorization header: ${authHeader ? authHeader.substring(0, 50) : 'NONE'}`,
+    );
+    this.logger.log(
+      `X-OnlyOffice-Secret header: ${
+        onlyofficeSecretHeader
+          ? onlyofficeSecretHeader.substring(0, 50)
+          : 'NONE'
+      }`,
+    );
+    this.logger.log(`OnlyOffice authorized: ${isOnlyofficeRequest}`);
+
+    const user = req.user as User | undefined;
+    if (user) {
+      this.logger.log(
+        `Request user ID: ${user.id}, Username: ${user.username}, Role: ${user.role}`,
+      );
+    }
+
+    if (!user && !isOnlyofficeRequest) {
+      this.logger.warn('No authenticated user present for download request');
       throw new ForbiddenException('User not authenticated');
     }
 
-    // Check download permissions
-    if (
-      type === 'office' &&
-      !this.documentsService.canDownloadOfficeFile(user)
-    ) {
-      throw new ForbiddenException(
-        'You are not authorized to download Office files',
-      );
-    }
+    if (!isOnlyofficeRequest && user) {
+      if (
+        type === 'office' &&
+        !this.documentsService.canDownloadOfficeFile(user)
+      ) {
+        throw new ForbiddenException(
+          'You are not authorized to download Office files',
+        );
+      }
 
-    if (type === 'pdf' && !this.documentsService.canDownloadPdfFile(user)) {
-      throw new ForbiddenException(
-        'You are not authorized to download PDF files',
-      );
+      if (type === 'pdf' && !this.documentsService.canDownloadPdfFile(user)) {
+        throw new ForbiddenException(
+          'You are not authorized to download PDF files',
+        );
+      }
     }
 
     try {
-      // Get file stream
       const { stream, contentType, fileName } =
-        await this.documentsService.getFileStream(id, type, user);
+        await this.documentsService.getFileStream(id, type, user ?? null, {
+          bypassAccessCheck: isOnlyofficeRequest,
+        });
 
-      // Record download
-      await this.documentsService.recordDownload(id, user);
+      if (!isOnlyofficeRequest && user) {
+        await this.documentsService.recordDownload(id, user);
+      }
 
-      // Set headers
       res.setHeader('Content-Type', contentType);
       res.setHeader(
         'Content-Disposition',
@@ -265,10 +364,13 @@ export class DocumentsController {
       );
       res.setHeader('Cache-Control', 'no-cache');
 
-      // Pipe file stream to response
       stream.pipe(res);
+
+      this.logger.log('=== DOCUMENT DOWNLOAD SUCCESS ===');
+      this.logger.log(`Document ${id} streamed successfully to client`);
     } catch (error) {
       this.logger.error(`Failed to download document ${id}`, error);
+      this.logger.error(`Error details: ${error.message}`);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -309,6 +411,8 @@ export class DocumentsController {
   }
 
   @Post(':id/office/callback')
+  @OnlyofficeAuthorized()
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'OnlyOffice callback' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 200, description: 'Callback handled' })
@@ -318,7 +422,13 @@ export class DocumentsController {
   ): Promise<{ error: number }> {
     this.checkFeatureFlag();
 
+    this.logger.log('=== ONLYOFFICE CALLBACK REQUEST START ===');
+    this.logger.log(`Document ID: ${id}`);
+    this.logger.log(`Callback payload: ${JSON.stringify(callbackDto)}`);
+
     await this.documentsService.handleOnlyOfficeCallback(id, callbackDto);
+
+    this.logger.log('=== ONLYOFFICE CALLBACK REQUEST END ===');
 
     return { error: 0 };
   }

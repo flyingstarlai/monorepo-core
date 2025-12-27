@@ -91,48 +91,48 @@ export function AppSidebar() {
             icon: Smartphone,
             isActive: location.pathname.startsWith('/apps'),
           },
-          ...(import.meta.env.DEV ||
-          import.meta.env.VITE_FEATURE_DOC_UPLOAD === 'true'
-            ? [
-                {
-                  title: '文檔',
-                  icon: FileText,
-                  url: '/documents',
-                  isActive: location.pathname.startsWith('/documents'),
-                },
-              ]
-            : []),
-          ...(import.meta.env.VITE_FEATURE_APP_BUILDER === 'true'
-            ? [
-                {
-                  title: 'App Builder',
-                  icon: Layers,
-                  isActive: location.pathname.startsWith('/app-builder'),
-                  hasSubmenu: true,
-                  items: [
-                    {
-                      title: 'Definitions',
-                      url: '/app-builder',
-                      icon: Smartphone,
-                      isActive: location.pathname === '/app-builder',
-                    },
+        ]
+      : []),
+    ...(import.meta.env.DEV ||
+    import.meta.env.VITE_FEATURE_DOC_UPLOAD === 'true'
+      ? [
+          {
+            title: '文檔',
+            icon: FileText,
+            url: '/documents',
+            isActive: location.pathname.startsWith('/documents'),
+          },
+        ]
+      : []),
+    ...(adminOrManager && import.meta.env.VITE_FEATURE_APP_BUILDER === 'true'
+      ? [
+          {
+            title: 'App Builder',
+            icon: Layers,
+            isActive: location.pathname.startsWith('/app-builder'),
+            hasSubmenu: true,
+            items: [
+              {
+                title: 'Definitions',
+                url: '/app-builder',
+                icon: Smartphone,
+                isActive: location.pathname === '/app-builder',
+              },
 
-                    {
-                      title: 'Identifiers',
-                      url: '/app-builder/identifier',
-                      icon: Fingerprint,
-                      isActive: location.pathname.includes('/identifier'),
-                    },
-                    {
-                      title: 'Settings',
-                      url: '/app-builder/settings',
-                      icon: Settings,
-                      isActive: location.pathname === '/app-builder/settings',
-                    },
-                  ],
-                },
-              ]
-            : []),
+              {
+                title: 'Identifiers',
+                url: '/app-builder/identifier',
+                icon: Fingerprint,
+                isActive: location.pathname.includes('/identifier'),
+              },
+              {
+                title: 'Settings',
+                url: '/app-builder/settings',
+                icon: Settings,
+                isActive: location.pathname === '/app-builder/settings',
+              },
+            ],
+          },
         ]
       : []),
     {

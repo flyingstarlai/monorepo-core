@@ -17,8 +17,7 @@ export class DocumentResponseDto {
   version: string;
 
   @ApiProperty({
-    description:
-      'Document access level (0=PUBLIC, 1=RESTRICTED, 2=CONFIDENTIAL)',
+    description: 'Document access level (0=public, 1=user, 2=manager, 3=admin)',
   })
   documentAccessLevel: number;
 

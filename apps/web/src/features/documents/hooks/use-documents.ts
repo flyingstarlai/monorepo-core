@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import type { DocumentResponseDto } from '../types/documents.types';
+import type {
+  DocumentResponseDto,
+  OnlyofficeConfigDto,
+} from '../types/documents.types';
 
 export const useDocuments = (query?: any) => {
   return useQuery({
@@ -175,12 +178,7 @@ export const useDownloadDocument = (options?: {
   });
 };
 
-export const useDocumentOfficeConfig = (
-  id: string,
-  options?: {
-    onError?: (error: any) => void;
-  },
-) => {
+export const useDocumentOfficeConfig = (id: string) => {
   return useQuery({
     queryKey: ['document-office-config', id],
     queryFn: async (): Promise<OnlyofficeConfigDto> => {
@@ -191,6 +189,5 @@ export const useDocumentOfficeConfig = (
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
-    onError: options?.onError,
   });
 };

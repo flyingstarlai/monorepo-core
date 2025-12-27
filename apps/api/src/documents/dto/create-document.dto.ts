@@ -8,6 +8,7 @@ import {
   Max,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { FileType } from './file-type.enum';
 
 export class CreateDocumentDto {
   @ApiProperty({
@@ -37,13 +38,12 @@ export class CreateDocumentDto {
   version: string;
 
   @ApiProperty({
-    description:
-      'Document access level (0=PUBLIC, 1=RESTRICTED, 2=CONFIDENTIAL)',
+    description: 'Document access level (0=public, 1=user, 2=manager, 3=admin)',
     default: 1,
   })
   @IsOptional()
   @IsInt()
   @Min(0)
-  @Max(2)
+  @Max(3)
   documentAccessLevel?: number;
 }

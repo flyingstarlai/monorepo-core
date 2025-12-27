@@ -29,7 +29,7 @@ function AuthenticatedLayout() {
       <SidebarInset>
         <DashboardHeader />
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto flex h-full w-full max-w-7xl">
             <Outlet />
           </div>
         </div>

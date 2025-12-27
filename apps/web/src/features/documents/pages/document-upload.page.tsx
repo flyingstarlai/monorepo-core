@@ -5,6 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCreateDocument } from '../hooks/use-documents';
@@ -68,7 +75,7 @@ export function DocumentUploadPage() {
     }));
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -213,16 +220,25 @@ export function DocumentUploadPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="documentAccessLevel">文檔存取等級</Label>
-                <Input
-                  id="documentAccessLevel"
-                  type="number"
-                  min="0"
-                  max="2"
-                  value={formData.documentAccessLevel}
-                  onChange={(e) =>
-                    handleInputChange('documentAccessLevel', e.target.value)
+                <Select
+                  value={formData.documentAccessLevel.toString()}
+                  onValueChange={(value) =>
+                    handleInputChange(
+                      'documentAccessLevel',
+                      parseInt(value, 10),
+                    )
                   }
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇存取等級" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Public</SelectItem>
+                    <SelectItem value="1">User</SelectItem>
+                    <SelectItem value="2">Manager</SelectItem>
+                    <SelectItem value="3">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

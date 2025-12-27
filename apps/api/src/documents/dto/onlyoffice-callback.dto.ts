@@ -1,5 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export interface OnlyofficeCallbackUser {
+  id: string;
+  name: string;
+}
+
 export class OnlyofficeCallbackDto {
   @ApiProperty({
     description: 'Callback action type (0=forceSave, 1=correction, 2=meta)',
@@ -16,7 +21,7 @@ export class OnlyofficeCallbackDto {
   url: string;
 
   @ApiProperty({ description: 'User info' })
-  users: any[];
+  users?: OnlyofficeCallbackUser[];
 
   @ApiProperty({ description: 'Document info' })
   data?: any;

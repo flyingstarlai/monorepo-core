@@ -1,0 +1,69 @@
+
+  async handleOnlyOfficeCallback(id: string, callbackData: OnlyofficeCallbackDto): Promise<void> {
+    this.logger.log(
+      `Handling OnlyOffice callback for document ID: ${id}, action: ${callbackData.actions}`,
+    );
+
+    if (!callbackData || (callbackData.actions !== 0 && callbackData.status !== 2)) {
+      this.logger.warn('Ignoring non-save callback');
+      return;
+    }
+
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+    });
+
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+
+    const updatedFileUrl = callbackData.url;
+    if (!updatedFileUrl) {
+      this.logger.warn('No URL in callback payload');
+      return;
+    }
+
+    try {
+      const response = await axios.get(updatedFileUrl, {
+        responseType: 'arraybuffer',
+      });
+
+      const filePath = join(UPLOAD_DEST_DIR, document.officeFilePath);
+      const writeStream = createWriteStream(filePath);
+      writeStream.write(Buffer.from(response.data));
+      writeStream.end();
+
+      const documentDir = join(
+        UPLOAD_DEST_DIR,
+        document.documentKind.toLowerCase(),
+        document.id,
+      );
+      const officeFileDir = join(documentDir, 'office');
+      if (!existsSync(officeFileDir)) {
+        mkdirSync(officeFileDir, { recursive: true });
+      }
+      const destPath = join(
+        officeFileDir,
+        document.officeFilePath.split('/').pop(),
+      );
+
+      const finalWriteStream = createWriteStream(destPath);
+      finalWriteStream.write(Buffer.from(response.data));
+      finalWriteStream.end();
+
+      const currentUser = callbackData.users?.[0];
+      const username = currentUser?.name || currentUser?.id || 'unknown';
+
+      await this.documentsRepository.update(id, {
+        modifiedBy: username,
+        modifiedAtUser: formatDateUTC8(new Date()),
+      });
+
+      this.logger.log(
+        `Document ${id} saved successfully by ${username}`,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to save document ${id} from callback`, error);
+      throw new InternalServerErrorException('Failed to save document');
+    }
+  }

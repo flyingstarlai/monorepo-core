@@ -38,6 +38,7 @@ import { Route as AuthenticatedAppBuilderCreateRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppsIdIndexRouteImport } from './routes/_authenticated/apps.$id.index'
 import { Route as AuthenticatedUsersIdViewRouteImport } from './routes/_authenticated/users.$id.view'
 import { Route as AuthenticatedUsersIdEditRouteImport } from './routes/_authenticated/users.$id.edit'
+import { Route as AuthenticatedDocumentsIdOfficeRouteImport } from './routes/_authenticated/documents.$id.office'
 import { Route as AuthenticatedDocumentsIdEditRouteImport } from './routes/_authenticated/documents.$id.edit'
 import { Route as AuthenticatedAppsIdLoginsRouteImport } from './routes/_authenticated/apps.$id.logins'
 import { Route as AuthenticatedAppBuilderIdHistoryRouteImport } from './routes/_authenticated/app-builder.$id.history'
@@ -204,6 +205,12 @@ const AuthenticatedUsersIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedUsersIdRoute,
   } as any)
+const AuthenticatedDocumentsIdOfficeRoute =
+  AuthenticatedDocumentsIdOfficeRouteImport.update({
+    id: '/documents/$id/office',
+    path: '/documents/$id/office',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDocumentsIdEditRoute =
   AuthenticatedDocumentsIdEditRouteImport.update({
     id: '/documents/$id/edit',
@@ -265,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   '/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
   '/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
+  '/documents/$id/office': typeof AuthenticatedDocumentsIdOfficeRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
   '/apps/$id/': typeof AuthenticatedAppsIdIndexRoute
@@ -297,6 +305,7 @@ export interface FileRoutesByTo {
   '/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   '/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
   '/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
+  '/documents/$id/office': typeof AuthenticatedDocumentsIdOfficeRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
   '/apps/$id': typeof AuthenticatedAppsIdIndexRoute
@@ -334,6 +343,7 @@ export interface FileRoutesById {
   '/_authenticated/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   '/_authenticated/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
   '/_authenticated/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
+  '/_authenticated/documents/$id/office': typeof AuthenticatedDocumentsIdOfficeRoute
   '/_authenticated/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/_authenticated/users/$id/view': typeof AuthenticatedUsersIdViewRoute
   '/_authenticated/apps/$id/': typeof AuthenticatedAppsIdIndexRoute
@@ -371,6 +381,7 @@ export interface FileRouteTypes {
     | '/app-builder/$id/history'
     | '/apps/$id/logins'
     | '/documents/$id/edit'
+    | '/documents/$id/office'
     | '/users/$id/edit'
     | '/users/$id/view'
     | '/apps/$id/'
@@ -403,6 +414,7 @@ export interface FileRouteTypes {
     | '/app-builder/$id/history'
     | '/apps/$id/logins'
     | '/documents/$id/edit'
+    | '/documents/$id/office'
     | '/users/$id/edit'
     | '/users/$id/view'
     | '/apps/$id'
@@ -439,6 +451,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app-builder/$id/history'
     | '/_authenticated/apps/$id/logins'
     | '/_authenticated/documents/$id/edit'
+    | '/_authenticated/documents/$id/office'
     | '/_authenticated/users/$id/edit'
     | '/_authenticated/users/$id/view'
     | '/_authenticated/apps/$id/'
@@ -657,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersIdEditRouteImport
       parentRoute: typeof AuthenticatedUsersIdRoute
     }
+    '/_authenticated/documents/$id/office': {
+      id: '/_authenticated/documents/$id/office'
+      path: '/documents/$id/office'
+      fullPath: '/documents/$id/office'
+      preLoaderRoute: typeof AuthenticatedDocumentsIdOfficeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/documents/$id/edit': {
       id: '/_authenticated/documents/$id/edit'
       path: '/documents/$id/edit'
@@ -799,6 +819,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppBuilderIdBuildRoute: typeof AuthenticatedAppBuilderIdBuildRoute
   AuthenticatedAppBuilderIdHistoryRoute: typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
   AuthenticatedDocumentsIdEditRoute: typeof AuthenticatedDocumentsIdEditRoute
+  AuthenticatedDocumentsIdOfficeRoute: typeof AuthenticatedDocumentsIdOfficeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -822,6 +843,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppBuilderIdHistoryRoute:
     AuthenticatedAppBuilderIdHistoryRouteWithChildren,
   AuthenticatedDocumentsIdEditRoute: AuthenticatedDocumentsIdEditRoute,
+  AuthenticatedDocumentsIdOfficeRoute: AuthenticatedDocumentsIdOfficeRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

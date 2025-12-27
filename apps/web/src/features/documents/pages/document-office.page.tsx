@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useParams, Link } from '@tanstack/react-router';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -74,16 +73,8 @@ export function DocumentOfficePage() {
   const isViewOnly = !serverCanEdit;
 
   return (
-    <div className="flex flex-1 flex-col px-4 py-4 min-h-0 w-full">
-      <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">文檔編輯器</h1>
-          <p className="text-slate-600 mt-1">
-            {serverCanEdit
-              ? '您可以在此編輯文檔，變更將自動儲存'
-              : '您正在以唯讀模式查看文檔'}
-          </p>
-        </div>
+    <div className="flex flex-1 flex-col min-h-0 w-full">
+      <header className="flex items-center justify-between px-4 py-2">
         <Link to="/documents">
           <Button variant="outline" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -93,31 +84,27 @@ export function DocumentOfficePage() {
       </header>
 
       {isViewOnly && (
-        <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-900">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <AlertDescription>
-            您目前以唯讀模式檢視文件。如需編輯權限，請聯絡管理員。
-          </AlertDescription>
-        </Alert>
+        <div className="px-4 pb-2">
+          <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertDescription>
+              您目前以唯讀模式檢視文件。如需編輯權限，請聯絡管理員。
+            </AlertDescription>
+          </Alert>
+        </div>
       )}
 
-      <div className="flex-1 flex flex-col min-h-0">
-        <Card className="flex-1 flex flex-col min-h-0">
-          <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-            {officeConfig.config && (
-              <div className="flex-1 min-h-0">
-                <DocumentEditor
-                  id="docxEditor"
-                  documentServerUrl={officeConfig.documentServerUrl}
-                  config={officeConfig.config}
-                  events_onDocumentReady={handleDocumentReady}
-                  onLoadComponentError={handleLoadComponentError}
-                  height="100%"
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="flex-1 min-h-0">
+        {officeConfig.config && (
+          <DocumentEditor
+            id="docxEditor"
+            documentServerUrl={officeConfig.documentServerUrl}
+            config={officeConfig.config}
+            events_onDocumentReady={handleDocumentReady}
+            onLoadComponentError={handleLoadComponentError}
+            height="100%"
+          />
+        )}
       </div>
     </div>
   );

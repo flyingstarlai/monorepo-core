@@ -236,10 +236,10 @@ export function DocumentEditPage() {
                       <SelectValue placeholder="選擇存取等級" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">Public</SelectItem>
-                      <SelectItem value="1">User</SelectItem>
-                      <SelectItem value="2">Manager</SelectItem>
-                      <SelectItem value="3">Admin</SelectItem>
+                      <SelectItem value="0">0</SelectItem>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
+                      <SelectItem value="3">3</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

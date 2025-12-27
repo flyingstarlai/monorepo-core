@@ -8,14 +8,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useDocumentOfficeConfig } from '../hooks/use-documents';
 import { toast } from 'sonner';
 import { DocumentEditor } from '@onlyoffice/document-editor-react';
+import { useSidebar } from '@/components/ui/sidebar';
 
 export function DocumentOfficePage() {
   const { user } = useAuthContext();
   const { id } = useParams({ from: '/_authenticated/documents/$id/office' });
+  const { setOpen } = useSidebar();
 
   const { data: officeConfig, isLoading, error } = useDocumentOfficeConfig(id);
 
   const [, setDocumentReady] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, []);
 
   useEffect(() => {
     if (error) {

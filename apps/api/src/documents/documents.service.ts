@@ -1008,10 +1008,21 @@ export class DocumentsService {
     return user?.role === 'admin' || user?.role === 'manager';
   }
 
+  /**
+   * Check if user can download Office files (docx, xlsx, etc.)
+   * Only admins and managers can download Office files
+   * Regular users (role='user') are restricted to PDF downloads only
+   */
   public canDownloadOfficeFile(user: User): boolean {
     return this.canEditDocument(user);
   }
 
+  /**
+   * Check if user can download PDF files
+   * All authenticated users (admin, manager, regular user) can download PDFs
+   * @param user - The user to check
+   * @returns true if user is authenticated, false otherwise
+   */
   public canDownloadPdfFile(user: User): boolean {
     return !!user;
   }

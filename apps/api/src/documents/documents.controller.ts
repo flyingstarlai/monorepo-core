@@ -354,6 +354,10 @@ export class DocumentsController {
       }
     }
 
+    this.logger.log(
+      `Download authorization check passed - User: ${user?.role || 'system'}, Type: ${type}`,
+    );
+
     try {
       const { stream, contentType, fileName, fileSize } =
         await this.documentsService.getFileStream(id, type, user ?? null, {

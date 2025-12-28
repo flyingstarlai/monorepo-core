@@ -3,6 +3,7 @@ import { DocumentOfficePage } from '@/features/documents/pages/document-office.p
 import { useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useSidebar } from '@/components/ui/sidebar.tsx';
 
 export const Route = createFileRoute('/_authenticated/documents/$id/office')({
   component: OfficeRoute,
@@ -10,6 +11,11 @@ export const Route = createFileRoute('/_authenticated/documents/$id/office')({
 
 function OfficeRoute() {
   const navigate = useNavigate();
+  const { setOpen } = useSidebar()
+
+  useEffect(() => {
+    setOpen(false)
+  }, []);
 
   useEffect(() => {
     if (import.meta.env.VITE_FEATURE_DOC_SERVER !== 'true') {

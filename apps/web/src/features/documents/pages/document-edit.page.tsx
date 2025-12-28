@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useNavigate, Link, useParams } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,7 +50,6 @@ export function DocumentEditPage() {
     version: '1.0',
     documentAccessLevel: 1,
     officeFile: null as File | null,
-    pdfFile: null as File | null,
   });
 
   useEffect(() => {
@@ -56,19 +61,15 @@ export function DocumentEditPage() {
         version: document.version,
         documentAccessLevel: document.documentAccessLevel ?? 1,
         officeFile: null,
-        pdfFile: null,
       });
     }
   }, [document]);
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: 'office' | 'pdf',
-  ) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const allowedExtensions = type === 'office' ? ['.docx', '.xlsx'] : ['.pdf'];
+    const allowedExtensions = ['.docx', '.xlsx'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -81,11 +82,7 @@ export function DocumentEditPage() {
       return;
     }
 
-    if (type === 'office') {
-      setFormData((prev) => ({ ...prev, officeFile: file }));
-    } else {
-      setFormData((prev) => ({ ...prev, pdfFile: file }));
-    }
+    setFormData((prev) => ({ ...prev, officeFile: file }));
   };
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -118,12 +115,7 @@ export function DocumentEditPage() {
       version: formData.version,
       documentAccessLevel: formData.documentAccessLevel,
       officeFile: formData.officeFile || undefined,
-      pdfFile: formData.pdfFile || undefined,
     });
-  };
-
-  const goToDocuments = () => {
-    navigate({ to: '/documents' });
   };
 
   if (isLoading) {
@@ -155,186 +147,155 @@ export function DocumentEditPage() {
 
   return (
     <div className="max-w-4xl space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">編輯文檔</h1>
-          <p className="text-slate-600 mt-2">
+      <Link to="/documents" replace preload="intent">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center space-x-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>返回文檔列表</span>
+        </Button>
+      </Link>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-slate-900">
+            編輯文檔
+          </CardTitle>
+          <CardDescription className="text-slate-600">
             更新文檔資訊或替換檔案。如需替換檔案，請選擇新檔案上傳。
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-4xl space-y-4">
-        <Card>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="documentKind">文檔類型</Label>
-                  <Input
-                    id="documentKind"
-                    value={formData.documentKind}
-                    onChange={(e) =>
-                      handleInputChange('documentKind', e.target.value)
-                    }
-                    placeholder="輸入文檔類型（例如：PROCEDURE、FORM）"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="documentNumber">文檔編號</Label>
-                  <Input
-                    id="documentNumber"
-                    value={formData.documentNumber}
-                    onChange={(e) =>
-                      handleInputChange('documentNumber', e.target.value)
-                    }
-                    placeholder="輸入文檔編號"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="documentName">文檔名稱</Label>
-                  <Input
-                    id="documentName"
-                    value={formData.documentName}
-                    onChange={(e) =>
-                      handleInputChange('documentName', e.target.value)
-                    }
-                    placeholder="輸入文檔名稱"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="version">版本</Label>
-                  <Input
-                    id="version"
-                    value={formData.version}
-                    onChange={(e) =>
-                      handleInputChange('version', e.target.value)
-                    }
-                    placeholder="輸入版本（例如：1.0）"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="documentAccessLevel">文檔存取等級</Label>
-                  <Select
-                    value={formData.documentAccessLevel.toString()}
-                    onValueChange={(value) =>
-                      handleInputChange(
-                        'documentAccessLevel',
-                        parseInt(value, 10),
-                      )
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="選擇存取等級" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">0</SelectItem>
-                      <SelectItem value="1">1</SelectItem>
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3">3</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="documentKind">文檔類型</Label>
+                <Input
+                  id="documentKind"
+                  value={formData.documentKind}
+                  onChange={(e) =>
+                    handleInputChange('documentKind', e.target.value)
+                  }
+                  placeholder="輸入文檔類型（例如：PROCEDURE、FORM）"
+                  required
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="office-file">Office 檔案（可選）</Label>
-                  <Input
-                    id="office-file"
-                    type="file"
-                    accept=".docx,.xlsx"
-                    onChange={(e) => handleFileChange(e, 'office')}
-                  />
-                  {formData.officeFile && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      已選擇：{formData.officeFile.name}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    允許格式：.docx, .xlsx（最大 10MB）
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pdf-file">PDF 檔案（可選）</Label>
-                  <Input
-                    id="pdf-file"
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => handleFileChange(e, 'pdf')}
-                  />
-                  {formData.pdfFile && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      已選擇：{formData.pdfFile.name}
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    允許格式：.pdf（最大 10MB）
-                  </p>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="documentNumber">文檔編號</Label>
+                <Input
+                  id="documentNumber"
+                  value={formData.documentNumber}
+                  onChange={(e) =>
+                    handleInputChange('documentNumber', e.target.value)
+                  }
+                  placeholder="輸入文檔編號"
+                  required
+                />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={goToDocuments}
-                  disabled={isPending}
+              <div className="space-y-2">
+                <Label htmlFor="documentName">文檔名稱</Label>
+                <Input
+                  id="documentName"
+                  value={formData.documentName}
+                  onChange={(e) =>
+                    handleInputChange('documentName', e.target.value)
+                  }
+                  placeholder="輸入文檔名稱"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="version">版本</Label>
+                <Input
+                  id="version"
+                  value={formData.version}
+                  onChange={(e) => handleInputChange('version', e.target.value)}
+                  placeholder="輸入版本（例如：1.0）"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="documentAccessLevel">文檔存取等級</Label>
+                <Select
+                  value={formData.documentAccessLevel.toString()}
+                  onValueChange={(value) =>
+                    handleInputChange(
+                      'documentAccessLevel',
+                      parseInt(value, 10),
+                    )
+                  }
                 >
-                  取消
-                </Button>
-                <Button type="submit" disabled={isPending || !canUpload}>
-                  {isPending ? (
-                    <>
-                      <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-t-transparent" />
-                      更新中...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="mr-2 h-4 w-4" />
-                      更新文檔
-                    </>
-                  )}
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇存取等級" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>檔案要求</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <ul className="list-disc list-inside space-y-1">
-              <li>最大大小：每個檔案 10MB</li>
-              <li>允許格式：.docx, .xlsx, .pdf</li>
-              <li>如需替換檔案，請選擇新檔案上傳</li>
-              <li>否則僅更新文檔資訊即可</li>
-            </ul>
-          </CardContent>
-        </Card>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="office-file">Office 檔案（可選）</Label>
+                <Input
+                  id="office-file"
+                  type="file"
+                  accept=".docx,.xlsx"
+                  onChange={(e) => handleFileChange(e)}
+                />
+                {formData.officeFile && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    已選擇：{formData.officeFile.name}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  允許格式：.docx, .xlsx（最大 10MB）
+                </p>
+              </div>
+            </div>
 
-        <Link to="/documents">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center space-x-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>返回文檔列表</span>
-          </Button>
-        </Link>
-      </div>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="submit" disabled={isPending || !canUpload}>
+                {isPending ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-t-transparent" />
+                    更新中...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    更新文檔
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>檔案要求</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <ul className="list-disc list-inside space-y-1">
+            <li>最大大小：每個檔案 10MB</li>
+            <li>允許格式：.docx, .xlsx</li>
+            <li>如需替換檔案，請選擇新檔案上傳</li>
+            <li>否則僅更新文檔資訊即可</li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }

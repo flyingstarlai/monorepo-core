@@ -178,7 +178,7 @@ export function DocumentEditPage() {
                   onChange={(e) =>
                     handleInputChange('documentKind', e.target.value)
                   }
-                  placeholder="輸入文檔類型（例如：PROCEDURE、FORM）"
+                  placeholder="輸入文檔類型"
                   required
                 />
               </div>

@@ -14,16 +14,8 @@ import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { Plus, Search, FileDown, FileEdit } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
-import { useDocuments, useDownloadDocument } from '../hooks/use-documents';
-import { toast } from 'sonner';
+import { useDocuments } from '../hooks/use-documents';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const getOfficeFileType = (filePath: string): 'Word' | 'Excel' | 'Office' => {
-  const extension = filePath.split('.').pop()?.toLowerCase();
-  if (extension === 'docx') return 'Word';
-  if (extension === 'xlsx') return 'Excel';
-  return 'Office';
-};
 
 const formatDate = (dateString: string | undefined): string => {
   if (!dateString) return '-';
@@ -52,12 +44,6 @@ export function DocumentsPage() {
   const { data: documents, isLoading } = useDocuments({
     documentKind: searchTerm,
     search: searchTerm,
-  });
-
-  const { mutate: downloadDocument } = useDownloadDocument({
-    onError: (error) => {
-      console.error('Download error:', error);
-    },
   });
 
   const safeDocuments = Array.isArray(documents) ? documents : [];
@@ -484,70 +470,6 @@ export function DocumentsPage() {
                                     </Button>
                                   )}
 
-                                {canUpload && doc.officeFilePath && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      downloadDocument(
-                                        { id: doc.id, type: 'office' },
-                                        {
-                                          onSuccess: (blob) => {
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement('a');
-                                            link.href = url;
-                                            link.download = `${doc.documentNumber || `document-${doc.id}`}-office`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('文檔下載成功');
-                                          },
-                                        },
-                                      );
-                                    }}
-                                    title={doc.officeFilePath}
-                                    className="h-8"
-                                  >
-                                    <FileDown className="mr-1 h-4 w-4" />
-                                    下載 {getOfficeFileType(doc.officeFilePath)}
-                                  </Button>
-                                )}
-
-                                {doc.pdfFilePath && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      downloadDocument(
-                                        { id: doc.id, type: 'pdf' },
-                                        {
-                                          onSuccess: (blob) => {
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement('a');
-                                            link.href = url;
-                                            link.download = `${doc.documentNumber || `document-${doc.id}`}-pdf.pdf`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('文檔下載成功');
-                                          },
-                                        },
-                                      );
-                                    }}
-                                    title={doc.pdfFilePath}
-                                    className="h-8"
-                                  >
-                                    <FileDown className="mr-1 h-4 w-4" />
-                                    下載 PDF
-                                  </Button>
-                                )}
-
                                 {canUpload && (
                                   <Button
                                     size="sm"
@@ -739,70 +661,6 @@ export function DocumentsPage() {
                                     </Button>
                                   )}
 
-                                {canUpload && doc.officeFilePath && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      downloadDocument(
-                                        { id: doc.id, type: 'office' },
-                                        {
-                                          onSuccess: (blob) => {
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement('a');
-                                            link.href = url;
-                                            link.download = `${doc.documentNumber || `document-${doc.id}`}-office`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('文檔下載成功');
-                                          },
-                                        },
-                                      );
-                                    }}
-                                    title={doc.officeFilePath}
-                                    className="h-8"
-                                  >
-                                    <FileDown className="mr-1 h-4 w-4" />
-                                    下載 {getOfficeFileType(doc.officeFilePath)}
-                                  </Button>
-                                )}
-
-                                {doc.pdfFilePath && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      downloadDocument(
-                                        { id: doc.id, type: 'pdf' },
-                                        {
-                                          onSuccess: (blob) => {
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement('a');
-                                            link.href = url;
-                                            link.download = `${doc.documentNumber || `document-${doc.id}`}-pdf.pdf`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('文檔下載成功');
-                                          },
-                                        },
-                                      );
-                                    }}
-                                    title={doc.pdfFilePath}
-                                    className="h-8"
-                                  >
-                                    <FileDown className="mr-1 h-4 w-4" />
-                                    下載 PDF
-                                  </Button>
-                                )}
-
                                 {canUpload && (
                                   <Button
                                     size="sm"
@@ -993,70 +851,6 @@ export function DocumentsPage() {
                                         : '在線查看'}
                                     </Button>
                                   )}
-
-                                {canUpload && doc.officeFilePath && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      downloadDocument(
-                                        { id: doc.id, type: 'office' },
-                                        {
-                                          onSuccess: (blob) => {
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement('a');
-                                            link.href = url;
-                                            link.download = `${doc.documentNumber || `document-${doc.id}`}-office`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('文檔下載成功');
-                                          },
-                                        },
-                                      );
-                                    }}
-                                    title={doc.officeFilePath}
-                                    className="h-8"
-                                  >
-                                    <FileDown className="mr-1 h-4 w-4" />
-                                    下載 {getOfficeFileType(doc.officeFilePath)}
-                                  </Button>
-                                )}
-
-                                {doc.pdfFilePath && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      downloadDocument(
-                                        { id: doc.id, type: 'pdf' },
-                                        {
-                                          onSuccess: (blob) => {
-                                            const url =
-                                              window.URL.createObjectURL(blob);
-                                            const link =
-                                              document.createElement('a');
-                                            link.href = url;
-                                            link.download = `${doc.documentNumber || `document-${doc.id}`}-pdf.pdf`;
-                                            document.body.appendChild(link);
-                                            link.click();
-                                            document.body.removeChild(link);
-                                            window.URL.revokeObjectURL(url);
-                                            toast.success('文檔下載成功');
-                                          },
-                                        },
-                                      );
-                                    }}
-                                    title={doc.pdfFilePath}
-                                    className="h-8"
-                                  >
-                                    <FileDown className="mr-1 h-4 w-4" />
-                                    下載 PDF
-                                  </Button>
-                                )}
 
                                 {canUpload && (
                                   <Button

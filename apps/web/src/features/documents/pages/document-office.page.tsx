@@ -204,7 +204,7 @@ export function DocumentOfficePage() {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 px-4">
         {officeConfig.config && (
           <DocumentEditor
             id="docxEditor"

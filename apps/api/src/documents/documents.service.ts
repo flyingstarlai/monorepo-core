@@ -26,7 +26,7 @@ import {
   statSync,
   readdirSync,
 } from 'fs';
-import { join } from 'path';
+import { join, extname } from 'path';
 import { UPLOAD_DEST_DIR, getDocumentFilePath } from '../config/multer.config';
 import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
@@ -414,9 +414,9 @@ export class DocumentsService {
   }
 
   private cleanupExpiredPdfs(): void {
-    this.logger.log('Starting cleanup of expired PDFs (30-day TTL)');
+    this.logger.log('Starting cleanup of expired PDFs (7-day TTL)');
 
-    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     let cleanedCount = 0;
 
     try {
@@ -442,7 +442,7 @@ export class DocumentsService {
               const pdfFilePath = join(pdfDir, pdfFile);
               const stats = statSync(pdfFilePath);
 
-              if (stats.mtimeMs < thirtyDaysAgo) {
+              if (stats.mtimeMs < sevenDaysAgo) {
                 unlinkSync(pdfFilePath);
                 cleanedCount++;
                 this.logger.log(`Deleted expired PDF: ${pdfFilePath}`);
@@ -931,19 +931,21 @@ export class DocumentsService {
     file: MulterFile,
   ): string {
     const kind = documentKind || 'general';
-    const relativePath = getDocumentFilePath(
-      documentId,
-      kind,
-      type,
-      file.filename,
-    );
+
+    // Determine file extension
+    const ext = this.getFileExtension(file);
+
+    // Generate filename using document ID
+    const filename = `${documentId}.${ext}`;
+
+    const relativePath = getDocumentFilePath(documentId, kind, type, filename);
     const destinationDir = join(
       UPLOAD_DEST_DIR,
       kind.toLowerCase(),
       documentId,
       type,
     );
-    const destinationPath = join(destinationDir, file.filename);
+    const destinationPath = join(destinationDir, filename);
 
     this.ensureDirectoryExists(destinationDir);
 
@@ -953,6 +955,33 @@ export class DocumentsService {
     this.moveFile(sourcePath, destinationPath);
 
     return relativePath;
+  }
+
+  private getFileExtension(file: MulterFile): string {
+    // Try to get extension from original filename first
+    if (file.originalname) {
+      const originalExt = extname(file.originalname).toLowerCase();
+      if (originalExt) {
+        return originalExt.replace('.', '');
+      }
+    }
+
+    // Fallback to MIME type mapping
+    const mimeTypeMap: Record<string, string> = {
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        'docx',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        'xlsx',
+      'application/pdf': 'pdf',
+    };
+
+    if (file.mimetype && mimeTypeMap[file.mimetype]) {
+      return mimeTypeMap[file.mimetype];
+    }
+
+    // Final fallback to the original filename from multer
+    const multerExt = extname(file.filename).toLowerCase();
+    return multerExt.replace('.', '') || 'bin';
   }
 
   private cleanupUploadedFiles(paths: Array<string | undefined | null>): void {

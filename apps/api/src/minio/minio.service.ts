@@ -224,7 +224,9 @@ export class MinioService {
   private getContentType(objectPath: string): string {
     const extension = objectPath.split('.').pop()?.toLowerCase();
     const contentTypeMap: Record<string, string> = {
+      doc: 'application/msword',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       pdf: 'application/pdf',
     };
@@ -303,7 +305,9 @@ export class MinioService {
 
   private getContentTypeFromExtension(extension?: string): string {
     const contentTypeMap: Record<string, string> = {
+      doc: 'application/msword',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       pdf: 'application/pdf',
     };

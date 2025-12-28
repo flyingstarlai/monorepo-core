@@ -69,7 +69,7 @@ export function DocumentEditPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const allowedExtensions = ['.docx', '.xlsx'];
+    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -250,7 +250,7 @@ export function DocumentEditPage() {
                 <Input
                   id="office-file"
                   type="file"
-                  accept=".docx,.xlsx"
+                  accept=".doc,.docx,.xls,.xlsx"
                   onChange={(e) => handleFileChange(e)}
                 />
                 {formData.officeFile && (
@@ -259,7 +259,7 @@ export function DocumentEditPage() {
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  允許格式：.docx, .xlsx（最大 10MB）
+                  允許格式：.doc, .docx, .xls, .xlsx（最大 10MB）
                 </p>
               </div>
             </div>
@@ -290,7 +290,7 @@ export function DocumentEditPage() {
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <ul className="list-disc list-inside space-y-1">
             <li>最大大小：每個檔案 10MB</li>
-            <li>允許格式：.docx, .xlsx</li>
+            <li>允許格式：.doc, .docx, .xls, .xlsx</li>
             <li>如需替換檔案，請選擇新檔案上傳</li>
             <li>否則僅更新文檔資訊即可</li>
           </ul>

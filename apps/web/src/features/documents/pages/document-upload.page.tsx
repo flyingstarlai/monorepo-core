@@ -43,20 +43,15 @@ export function DocumentUploadPage() {
     version: '1.0',
     documentAccessLevel: 1,
     officeFile: null as File | null,
-    pdfFile: null as File | null,
   });
 
-  const handleFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    type: 'office' | 'pdf',
-  ) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setUploadError(null);
 
-    const fileType = type === 'office' ? 'office' : 'pdf';
-    const allowedExtensions = type === 'office' ? ['.docx', '.xlsx'] : ['.pdf'];
+    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -69,10 +64,7 @@ export function DocumentUploadPage() {
       return;
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      [fileType === 'office' ? 'officeFile' : 'pdfFile']: file,
-    }));
+    setFormData((prev) => ({ ...prev, officeFile: file }));
   };
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -97,8 +89,8 @@ export function DocumentUploadPage() {
       return;
     }
 
-    if (!formData.officeFile && !formData.pdfFile) {
-      setUploadError('請至少選擇一個檔案（Office 或 PDF）');
+    if (!formData.officeFile) {
+      setUploadError('請選擇 Office 檔案');
       return;
     }
 
@@ -109,7 +101,6 @@ export function DocumentUploadPage() {
       version: formData.version,
       documentAccessLevel: formData.documentAccessLevel,
       officeFile: formData.officeFile,
-      pdfFile: formData.pdfFile,
     });
   };
 
@@ -149,7 +140,7 @@ export function DocumentUploadPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">上傳新文檔</h1>
           <p className="text-slate-600 mt-2">
-            上傳 Office（.docx, .xlsx）或 PDF 檔案，最大 10MB。
+            上傳 Office（.doc, .docx, .xls, .xlsx）檔案，最大 10MB。
           </p>
         </div>
       </div>
@@ -243,14 +234,15 @@ export function DocumentUploadPage() {
             </div>
 
             {/* File Upload Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="office-file">Office 檔案（可選）</Label>
+                <Label htmlFor="office-file">Office 檔案</Label>
                 <Input
                   id="office-file"
                   type="file"
-                  accept=".docx,.xlsx"
-                  onChange={(e) => handleFileChange(e, 'office')}
+                  accept=".doc,.docx,.xls,.xlsx"
+                  onChange={(e) => handleFileChange(e)}
+                  required
                 />
                 {formData.officeFile && (
                   <p className="text-sm text-muted-foreground mt-1">
@@ -258,25 +250,7 @@ export function DocumentUploadPage() {
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  允許格式：.docx, .xlsx（最大 10MB）
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="pdf-file">PDF 檔案（可選）</Label>
-                <Input
-                  id="pdf-file"
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => handleFileChange(e, 'pdf')}
-                />
-                {formData.pdfFile && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    已選擇：{formData.pdfFile.name}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  允許格式：.pdf（最大 10MB）
+                  允許格式：.doc, .docx, .xls, .xlsx（最大 10MB）
                 </p>
               </div>
             </div>
@@ -317,7 +291,7 @@ export function DocumentUploadPage() {
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <ul className="list-disc list-inside space-y-1">
             <li>最大大小：每個檔案 10MB</li>
-            <li>允許格式：.docx, .xlsx, .pdf</li>
+            <li>允許格式：.doc, .docx, .xls, .xlsx</li>
             <li>如需替換檔案，請選擇新檔案上傳</li>
             <li>否則僅更新文檔資訊即可</li>
           </ul>

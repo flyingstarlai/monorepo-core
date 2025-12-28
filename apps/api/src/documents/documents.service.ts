@@ -972,6 +972,8 @@ export class DocumentsService {
         'docx',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
         'xlsx',
+      'application/msword': 'doc',
+      'application/vnd.ms-excel': 'xls',
       'application/pdf': 'pdf',
     };
 
@@ -1026,7 +1028,9 @@ export class DocumentsService {
   private getContentType(filePath: string): string {
     const ext = filePath.split('.').pop()?.toLowerCase();
     const contentTypeMap: Record<string, string> = {
+      doc: 'application/msword',
       docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       pdf: 'application/pdf',
     };

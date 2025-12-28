@@ -1,7 +1,13 @@
-import { Outlet, createFileRoute, redirect } from '@tanstack/react-router';
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useLocation,
+} from '@tanstack/react-router';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { DashboardHeader } from '@/components/dashboard-header';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context }) => {
@@ -23,13 +29,21 @@ export const Route = createFileRoute('/_authenticated')({
 });
 
 function AuthenticatedLayout() {
+  const location = useLocation();
+  const isOfficeRoute = /\/documents\/[^/]+\/office/.test(location.pathname);
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <DashboardHeader />
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="mx-auto w-full max-w-7xl">
+          <div
+            className={cn(
+              'mx-auto w-full max-w-7xl flex-1',
+              isOfficeRoute && 'h-full',
+            )}
+          >
             <Outlet />
           </div>
         </div>

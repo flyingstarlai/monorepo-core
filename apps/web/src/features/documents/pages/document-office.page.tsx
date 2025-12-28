@@ -73,7 +73,7 @@ export function DocumentOfficePage() {
   const isViewOnly = !serverCanEdit;
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 w-full">
+    <div className="flex h-full w-full flex-col">
       <header className="flex items-center justify-between px-4 py-2">
         <Link to="/documents">
           <Button variant="outline" size="sm">
@@ -94,7 +94,7 @@ export function DocumentOfficePage() {
         </div>
       )}
 
-      <div className="flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1">
         {officeConfig.config && (
           <DocumentEditor
             id="docxEditor"

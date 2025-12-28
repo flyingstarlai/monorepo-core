@@ -23,6 +23,8 @@ import {
   renameSync,
   createReadStream,
   createWriteStream,
+  statSync,
+  readdirSync,
 } from 'fs';
 import { join } from 'path';
 import { UPLOAD_DEST_DIR, getDocumentFilePath } from '../config/multer.config';
@@ -30,14 +32,257 @@ import axios from 'axios';
 
 type MulterFile = Express.Multer.File;
 
+interface ConversionJob {
+  documentId: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  pdfUrl?: string;
+  error?: string;
+  createdAt: Date;
+}
+
 @Injectable()
 export class DocumentsService {
   private readonly logger = new Logger(DocumentsService.name);
+  private conversionJobs = new Map<string, ConversionJob>();
 
   constructor(
     @InjectRepository(DocumentsEntity)
     private readonly documentsRepository: Repository<DocumentsEntity>,
-  ) {}
+  ) {
+    this.cleanupExpiredPdfs();
+  }
+
+  async initiatePdfConversion(documentId: string, user: User): Promise<string> {
+    this.logger.log(`Initiating PDF conversion for document ${documentId}`);
+    
+    const document = await this.documentsRepository.findOne({ where: { id: documentId } });
+    
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+    
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException('You do not have access to this document');
+    }
+    
+    if (!document.officeFilePath) {
+      throw new NotFoundException('Office file not found for this document');
+    }
+    
+    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+    
+    for (const [jobId, job] of this.conversionJobs.entries()) {
+      if (job.documentId === documentId && job.createdAt.getTime() > oneHourAgo) {
+        if (job.status === 'completed') {
+          this.logger.log(`Returning existing completed conversion job ${jobId}`);
+          return jobId;
+        }
+      }
+    }
+    
+    const jobId = `${documentId}_${Date.now()}`;
+    const newJob: ConversionJob = {
+      documentId,
+      status: 'pending',
+      createdAt: new Date(),
+    };
+    
+    this.conversionJobs.set(jobId, newJob);
+    this.logger.log(`Created conversion job ${jobId} for document ${documentId}`);
+    
+    setImmediate(() => this.processConversionJob(jobId));
+    
+    return jobId;
+  }
+
+  private async processConversionJob(jobId: string): Promise<void> {
+    this.logger.log(`Processing conversion job ${jobId}`);
+    
+    const job = this.conversionJobs.get(jobId);
+    if (!job) {
+      this.logger.warn(`Job ${jobId} not found`);
+      return;
+    }
+    
+    job.status = 'processing';
+    
+    try {
+      const document = await this.documentsRepository.findOne({ where: { id: job.documentId } });
+      
+      if (!document || !document.officeFilePath) {
+        throw new Error('Document or office file not found');
+      }
+      
+      const fileExt = document.officeFilePath.split('.').pop()?.toLowerCase() || '';
+      const documentUrl = `${process.env.API_PROTOCOL || 'http'}://${process.env.API_HOST || 'localhost:3000'}/documents/${document.id}/download?type=office`;
+      
+      const conversionPayload: any = {
+        async: true,
+        filetype: fileExt,
+        key: `${document.id}_${Date.now()}`,
+        outputtype: 'pdf',
+        url: documentUrl,
+        title: `${document.documentNumber || document.id}.pdf`,
+      };
+      
+      const secret = process.env.ONLYOFFICE_JWT_SECRET;
+      if (secret) {
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign(conversionPayload, secret, { algorithm: 'HS256', expiresIn: '30m' });
+        conversionPayload.token = token;
+      }
+      
+      const onlyofficeUrl = process.env.ONLYOFFICE_DOCUMENT_SERVER_URL;
+      if (!onlyofficeUrl) {
+        throw new Error('OnlyOffice Document Server is not configured');
+      }
+      
+      this.logger.log(`Sending conversion request to OnlyOffice: ${onlyofficeUrl}/converter`);
+      
+      const response = await axios.post(`${onlyofficeUrl}/converter`, conversionPayload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 300000,
+      });
+      
+      if (response.data.error || response.data.endConvert !== true) {
+        throw new Error(response.data.error || 'Conversion failed');
+      }
+      
+      const pdfUrl = response.data.fileUrl;
+      this.logger.log(`OnlyOffice returned PDF URL: ${pdfUrl}`);
+      
+      const pdfResponse = await axios.get(pdfUrl, {
+        responseType: 'arraybuffer',
+        timeout: 300000,
+      });
+      
+      const pdfDir = join(UPLOAD_DEST_DIR, document.documentKind.toLowerCase(), document.id, 'pdf');
+      this.ensureDirectoryExists(pdfDir);
+      
+      const pdfFilePath = join(pdfDir, `${document.id}.pdf`);
+      const writeStream = createWriteStream(pdfFilePath);
+      writeStream.write(Buffer.from(pdfResponse.data));
+      writeStream.end();
+      
+      this.logger.log(`PDF saved to: ${pdfFilePath}`);
+      
+      const relativePdfPath = join(document.documentKind.toLowerCase(), document.id, 'pdf', `${document.id}.pdf`);
+      
+      job.status = 'completed';
+      job.pdfUrl = relativePdfPath;
+      
+      const username = this.getUserDisplayName(user);
+      await this.documentsRepository.update(document.id, {
+        modifiedBy: username,
+        modifiedAtUser: formatDateUTC8(new Date()),
+      });
+      
+      this.logger.log(`Conversion job ${jobId} completed successfully`);
+    } catch (error) {
+      this.logger.error(`Conversion job ${jobId} failed`, error);
+      job.status = 'failed';
+      job.error = error.message || 'Unknown error';
+    }
+  }
+
+  getConversionStatus(jobId: string): ConversionJob | null {
+    return this.conversionJobs.get(jobId) || null;
+  }
+
+  async downloadConvertedPdf(documentId: string, user: User): Promise<{ stream: NodeJS.ReadableStream; contentType: string; fileName: string }> {
+    this.logger.log(`Download converted PDF request for document ${documentId}`);
+    
+    const document = await this.documentsRepository.findOne({ where: { id: documentId } });
+    
+    if (!document) {
+      throw new NotFoundException('Document not found');
+    }
+    
+    if (!this.canAccessDocument(document, user)) {
+      throw new ForbiddenException('You do not have access to this document');
+    }
+    
+    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+    
+    for (const [jobId, job] of this.conversionJobs.entries()) {
+      if (job.documentId === documentId && job.createdAt.getTime() > oneHourAgo) {
+        if (job.status === 'completed' && job.pdfUrl) {
+          const absolutePath = join(UPLOAD_DEST_DIR, job.pdfUrl);
+          
+          if (existsSync(absolutePath)) {
+            await this.recordDownload(documentId, user);
+            
+            return {
+              stream: createReadStream(absolutePath),
+              contentType: 'application/pdf',
+              fileName: `${document.documentNumber || document.id}.pdf`,
+            };
+          }
+        }
+      }
+    }
+    
+    const newJobId = await this.initiatePdfConversion(documentId, user);
+    
+    const error = new Error('Conversion in progress');
+    (error as any).jobId = newJobId;
+    throw error;
+  }
+
+  private cleanupExpiredPdfs(): void {
+    this.logger.log('Starting cleanup of expired PDFs (30-day TTL)');
+    
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    let cleanedCount = 0;
+    
+    try {
+      const uploadsDir = join(UPLOAD_DEST_DIR);
+      const kinds = ['general', 'policy', 'manual', 'other'];
+      
+      for (const kind of kinds) {
+        const kindDir = join(uploadsDir, kind);
+        
+        if (!existsSync(kindDir)) continue;
+      
+      for (const kind of kinds) {
+        const kindDir = join(uploadsDir, kind);
+        
+        if (!existsSync(kindDir)) continue;
+        
+        const docIds = readdirSync(kindDir);
+        
+        for (const docId of docIds) {
+          const pdfDir = join(kindDir, docId, 'pdf');
+          
+          if (!existsSync(pdfDir)) continue;
+          
+          try {
+            const pdfFiles = readdirSync(pdfDir);
+            
+            for (const pdfFile of pdfFiles) {
+              const pdfFilePath = join(pdfDir, pdfFile);
+              const stats = statSync(pdfFilePath);
+              
+              if (stats.mtimeMs < thirtyDaysAgo) {
+                unlinkSync(pdfFilePath);
+                cleanedCount++;
+                this.logger.log(`Deleted expired PDF: ${pdfFilePath}`);
+              }
+            }
+          }
+        } catch (error) {
+          this.logger.warn(`Error processing directory ${pdfDir}:`, error);
+        }
+      }
+    }
+    
+    this.logger.log(`PDF cleanup completed: ${cleanedCount} files deleted`);
+  } catch (error) {
+    this.logger.error('Error during PDF cleanup', error);
+  }
+  }
 
   async findAll(
     query: ListDocumentsDto,

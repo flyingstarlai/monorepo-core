@@ -3,6 +3,7 @@ import { api } from '@/lib/api-client';
 import type {
   DocumentResponseDto,
   OnlyofficeConfigDto,
+  ConversionStatus,
 } from '../types/documents.types';
 
 export const useDocuments = (query?: any) => {
@@ -189,5 +190,66 @@ export const useDocumentOfficeConfig = (id: string) => {
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useInitiatePdfConversion = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      const response = await api.post<{ jobId: string }>(
+        `/documents/${documentId}/convert-pdf`,
+      );
+      return response.data.jobId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    },
+  });
+};
+
+export const useConversionStatus = (jobId: string) => {
+  return useQuery({
+    queryKey: ['pdf-conversion-status', jobId],
+    queryFn: async (): Promise<ConversionStatus> => {
+      const response = await api.get<ConversionStatus>(
+        `/documents/convert-status/${jobId}`,
+      );
+      return response.data;
+    },
+    enabled: !!jobId,
+    refetchInterval: (data) => {
+      const shouldPoll =
+        data?.status === 'pending' || data?.status === 'processing';
+      return shouldPoll ? 2000 : false;
+    },
+    staleTime: 0,
+  });
+};
+
+export const useDownloadConvertedPdf = (options?: {
+  onSuccess?: () => void;
+  onError?: (error: any) => void;
+}) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (documentId: string): Promise<Blob> => {
+      const response = await api.get<Blob>(
+        `/documents/${documentId}/download-pdf`,
+        {
+          responseType: 'blob',
+        },
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      if (options?.onSuccess) {
+        options.onSuccess();
+      }
+    },
+    onError: options?.onError,
   });
 };

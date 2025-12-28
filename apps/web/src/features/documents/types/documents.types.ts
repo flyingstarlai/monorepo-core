@@ -36,3 +36,10 @@ export interface OnlyofficeConfigDto {
   documentServerUrl: string;
   config: any;
 }
+
+export interface ConversionStatus {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  pdfUrl?: string;
+  error?: string;
+  createdAt: string;
+}

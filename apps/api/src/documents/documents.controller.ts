@@ -36,6 +36,13 @@ import { DocumentResponseDto } from './dto/document-response.dto';
 import { OnlyofficeConfigDto } from './dto/onlyoffice-config.dto';
 import { OnlyofficeCallbackDto } from './dto/onlyoffice-callback.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+interface ConversionStatusResponse {
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  pdfUrl?: string;
+  error?: string;
+  createdAt: string;
+}
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { OnlyofficeAuthorized } from '../auth/decorators/onlyoffice-authorized.decorator';
@@ -431,5 +438,133 @@ export class DocumentsController {
     this.logger.log('=== ONLYOFFICE CALLBACK REQUEST END ===');
 
     return { error: 0 };
+  }
+
+  @Post(':id/convert-pdf')
+  @Roles('admin', 'manager', 'user')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({ summary: 'Initiate PDF conversion' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({
+    status: 202,
+    description: 'Conversion initiated',
+    schema: {
+      type: 'object',
+      properties: {
+        jobId: { type: 'string', description: 'Conversion job ID' },
+      },
+    },
+  })
+  async initiatePdfConversion(
+    @Param('id') id: string,
+    @Req() req: any,
+  ): Promise<{ jobId: string }> {
+    this.checkFeatureFlag();
+
+    const user = req.user as User;
+    this.logger.log(
+      `User ${user.id} initiating PDF conversion for document ${id}`,
+    );
+
+    try {
+      const jobId = await this.documentsService.initiatePdfConversion(id, user);
+      return { jobId };
+    } catch (error) {
+      this.logger.error(
+        `Failed to initiate PDF conversion for document ${id}`,
+        error,
+      );
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Failed to initiate PDF conversion',
+      );
+    }
+  }
+
+  @Get(':id/convert-status/:jobId')
+  @Roles('admin', 'manager', 'user')
+  @ApiOperation({ summary: 'Get conversion status' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiParam({ name: 'jobId', description: 'Conversion job ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversion status',
+    type: ConversionStatusResponse,
+  })
+  async getConversionStatus(
+    @Param('id') id: string,
+    @Param('jobId') jobId: string,
+  ): Promise<ConversionStatusResponse> {
+    const job = this.documentsService.getConversionStatus(jobId);
+
+    if (!job) {
+      throw new NotFoundException('Conversion job not found');
+    }
+
+    return {
+      status: job.status,
+      pdfUrl: job.pdfUrl,
+      error: job.error,
+      createdAt: job.createdAt.toISOString(),
+    };
+  }
+
+  @Get(':id/download-pdf')
+  @Roles('admin', 'manager', 'user')
+  @ApiOperation({ summary: 'Download converted PDF' })
+  @ApiParam({ name: 'id', description: 'Document ID' })
+  @ApiResponse({ status: 200, description: 'PDF file download' })
+  async downloadConvertedPdf(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Res() res: Response,
+  ): Promise<void> {
+    this.checkFeatureFlag();
+
+    const user = req.user as User;
+    this.logger.log(
+      `User ${user.id} downloading converted PDF for document ${id}`,
+    );
+
+    try {
+      const { stream, contentType, fileName } =
+        await this.documentsService.downloadConvertedPdf(id, user);
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${fileName}"`,
+      );
+      res.setHeader('Cache-Control', 'no-cache');
+
+      stream.pipe(res);
+
+      this.logger.log(`PDF download successful for document ${id}`);
+    } catch (error: any) {
+      this.logger.error(
+        `Failed to download converted PDF for document ${id}`,
+        error,
+      );
+
+      if (error.jobId) {
+        return res.status(HttpStatus.ACCEPTED).json({ jobId: error.jobId });
+      }
+
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      throw new InternalServerErrorException(
+        'Failed to download converted PDF',
+      );
+    }
   }
 }

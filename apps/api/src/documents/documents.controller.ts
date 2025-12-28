@@ -355,7 +355,7 @@ export class DocumentsController {
     }
 
     try {
-      const { stream, contentType, fileName } =
+      const { stream, contentType, fileName, fileSize } =
         await this.documentsService.getFileStream(id, type, user ?? null, {
           bypassAccessCheck: isOnlyofficeRequest,
         });
@@ -370,6 +370,9 @@ export class DocumentsController {
         `attachment; filename="${fileName}"`,
       );
       res.setHeader('Cache-Control', 'no-cache');
+      if (fileSize) {
+        res.setHeader('Content-Length', fileSize);
+      }
 
       stream.pipe(res);
 
@@ -494,7 +497,18 @@ export class DocumentsController {
   @ApiResponse({
     status: 200,
     description: 'Conversion status',
-    type: ConversionStatusResponse,
+    schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          enum: ['pending', 'processing', 'completed', 'failed'],
+        },
+        pdfUrl: { type: 'string' },
+        error: { type: 'string' },
+        createdAt: { type: 'string' },
+      },
+    },
   })
   async getConversionStatus(
     @Param('id') id: string,
@@ -532,7 +546,7 @@ export class DocumentsController {
     );
 
     try {
-      const { stream, contentType, fileName } =
+      const { stream, contentType, fileName, fileSize } =
         await this.documentsService.downloadConvertedPdf(id, user);
 
       res.setHeader('Content-Type', contentType);
@@ -541,6 +555,9 @@ export class DocumentsController {
         `attachment; filename="${fileName}"`,
       );
       res.setHeader('Cache-Control', 'no-cache');
+      if (fileSize) {
+        res.setHeader('Content-Length', fileSize);
+      }
 
       stream.pipe(res);
 
@@ -552,7 +569,8 @@ export class DocumentsController {
       );
 
       if (error.jobId) {
-        return res.status(HttpStatus.ACCEPTED).json({ jobId: error.jobId });
+        res.status(HttpStatus.ACCEPTED).json({ jobId: error.jobId });
+        return;
       }
 
       if (

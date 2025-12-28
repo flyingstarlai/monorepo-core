@@ -29,8 +29,49 @@ import {
 import { join } from 'path';
 import { UPLOAD_DEST_DIR, getDocumentFilePath } from '../config/multer.config';
 import axios from 'axios';
+import * as jwt from 'jsonwebtoken';
 
 type MulterFile = Express.Multer.File;
+
+interface OnlyOfficeEditorConfig {
+  mode: 'edit' | 'view';
+  lang: string;
+  callbackUrl: string;
+  user: {
+    id: string;
+    name: string;
+    role: string;
+    canEdit: boolean;
+  };
+  customization: {
+    autosave: boolean;
+    forcesave: boolean;
+    forcesavetype: string;
+  };
+}
+
+interface OnlyOfficeDocumentConfig {
+  fileType: string;
+  key: string;
+  title: string;
+  url: string;
+  permissions: {
+    edit: boolean;
+    comment: boolean;
+    download: boolean;
+    print: boolean;
+    fillForms: boolean;
+    modifyFilter: boolean;
+    modifyContentControl: boolean;
+    review: boolean;
+  };
+}
+
+interface OnlyOfficeConfig {
+  documentType: 'word' | 'cell' | 'slide' | 'pdf';
+  document: OnlyOfficeDocumentConfig;
+  editorConfig: OnlyOfficeEditorConfig;
+}
 
 interface ConversionJob {
   documentId: string;
@@ -38,6 +79,7 @@ interface ConversionJob {
   pdfUrl?: string;
   error?: string;
   createdAt: Date;
+  user?: User;
 }
 
 @Injectable()
@@ -54,131 +96,191 @@ export class DocumentsService {
 
   async initiatePdfConversion(documentId: string, user: User): Promise<string> {
     this.logger.log(`Initiating PDF conversion for document ${documentId}`);
-    
-    const document = await this.documentsRepository.findOne({ where: { id: documentId } });
-    
+
+    const document = await this.documentsRepository.findOne({
+      where: { id: documentId },
+    });
+
     if (!document) {
       throw new NotFoundException('Document not found');
     }
-    
+
     if (!this.canAccessDocument(document, user)) {
       throw new ForbiddenException('You do not have access to this document');
     }
-    
+
     if (!document.officeFilePath) {
       throw new NotFoundException('Office file not found for this document');
     }
-    
-    const oneHourAgo = Date.now() - (60 * 60 * 1000);
-    
+
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
     for (const [jobId, job] of this.conversionJobs.entries()) {
-      if (job.documentId === documentId && job.createdAt.getTime() > oneHourAgo) {
+      if (
+        job.documentId === documentId &&
+        job.createdAt.getTime() > oneHourAgo
+      ) {
         if (job.status === 'completed') {
-          this.logger.log(`Returning existing completed conversion job ${jobId}`);
+          this.logger.log(
+            `Returning existing completed conversion job ${jobId}`,
+          );
           return jobId;
         }
       }
     }
-    
+
     const jobId = `${documentId}_${Date.now()}`;
     const newJob: ConversionJob = {
       documentId,
       status: 'pending',
       createdAt: new Date(),
+      user,
     };
-    
+
     this.conversionJobs.set(jobId, newJob);
-    this.logger.log(`Created conversion job ${jobId} for document ${documentId}`);
-    
+    this.logger.log(
+      `Created conversion job ${jobId} for document ${documentId}`,
+    );
+
     setImmediate(() => this.processConversionJob(jobId));
-    
+
     return jobId;
   }
 
   private async processConversionJob(jobId: string): Promise<void> {
     this.logger.log(`Processing conversion job ${jobId}`);
-    
+
     const job = this.conversionJobs.get(jobId);
     if (!job) {
       this.logger.warn(`Job ${jobId} not found`);
       return;
     }
-    
+
     job.status = 'processing';
-    
+
     try {
-      const document = await this.documentsRepository.findOne({ where: { id: job.documentId } });
-      
+      const document = await this.documentsRepository.findOne({
+        where: { id: job.documentId },
+      });
+
       if (!document || !document.officeFilePath) {
         throw new Error('Document or office file not found');
       }
-      
-      const fileExt = document.officeFilePath.split('.').pop()?.toLowerCase() || '';
+
+      const fileExt =
+        document.officeFilePath.split('.').pop()?.toLowerCase() || '';
       const documentUrl = `${process.env.API_PROTOCOL || 'http'}://${process.env.API_HOST || 'localhost:3000'}/documents/${document.id}/download?type=office`;
-      
-      const conversionPayload: any = {
-        async: true,
+
+      const conversionPayload: Record<string, unknown> = {
+        async: false,
         filetype: fileExt,
         key: `${document.id}_${Date.now()}`,
         outputtype: 'pdf',
         url: documentUrl,
         title: `${document.documentNumber || document.id}.pdf`,
       };
-      
+
       const secret = process.env.ONLYOFFICE_JWT_SECRET;
       if (secret) {
-        const jwt = require('jsonwebtoken');
-        const token = jwt.sign(conversionPayload, secret, { algorithm: 'HS256', expiresIn: '30m' });
+        const token = jwt.sign(conversionPayload, secret, {
+          algorithm: 'HS256',
+          expiresIn: '30m',
+        });
         conversionPayload.token = token;
       }
-      
+
       const onlyofficeUrl = process.env.ONLYOFFICE_DOCUMENT_SERVER_URL;
       if (!onlyofficeUrl) {
         throw new Error('OnlyOffice Document Server is not configured');
       }
-      
-      this.logger.log(`Sending conversion request to OnlyOffice: ${onlyofficeUrl}/converter`);
-      
-      const response = await axios.post(`${onlyofficeUrl}/converter`, conversionPayload, {
-        headers: {
-          'Content-Type': 'application/json',
+
+      this.logger.log(
+        `Sending conversion request to OnlyOffice: ${onlyofficeUrl}/converter`,
+      );
+
+      const response = await axios.post(
+        `${onlyofficeUrl}/converter`,
+        conversionPayload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 300000,
         },
-        timeout: 300000,
-      });
-      
-      if (response.data.error || response.data.endConvert !== true) {
-        throw new Error(response.data.error || 'Conversion failed');
+      );
+
+      const {
+        error: conversionError,
+        endConvert,
+        fileUrl,
+      } = response.data || {};
+
+      if (typeof conversionError === 'number') {
+        if (conversionError !== 0) {
+          throw new Error(
+            `OnlyOffice conversion failed with code ${conversionError}`,
+          );
+        }
+      } else if (conversionError) {
+        throw new Error(`OnlyOffice conversion failed: ${conversionError}`);
       }
-      
-      const pdfUrl = response.data.fileUrl;
+
+      if (!fileUrl) {
+        throw new Error(
+          `OnlyOffice conversion did not return a fileUrl (endConvert=${endConvert})`,
+        );
+      }
+
+      const pdfUrl = String(fileUrl);
       this.logger.log(`OnlyOffice returned PDF URL: ${pdfUrl}`);
-      
-      const pdfResponse = await axios.get(pdfUrl, {
+
+      const pdfResponse = await axios.get(pdfUrl as string, {
         responseType: 'arraybuffer',
         timeout: 300000,
       });
-      
-      const pdfDir = join(UPLOAD_DEST_DIR, document.documentKind.toLowerCase(), document.id, 'pdf');
+
+      const pdfDir = join(
+        UPLOAD_DEST_DIR,
+        document.documentKind.toLowerCase(),
+        document.id,
+        'pdf',
+      );
       this.ensureDirectoryExists(pdfDir);
-      
+
       const pdfFilePath = join(pdfDir, `${document.id}.pdf`);
       const writeStream = createWriteStream(pdfFilePath);
-      writeStream.write(Buffer.from(pdfResponse.data));
-      writeStream.end();
-      
-      this.logger.log(`PDF saved to: ${pdfFilePath}`);
-      
-      const relativePdfPath = join(document.documentKind.toLowerCase(), document.id, 'pdf', `${document.id}.pdf`);
-      
+
+      await new Promise<void>((resolve, reject) => {
+        writeStream.write(Buffer.from(pdfResponse.data), (err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          writeStream.end(() => {
+            this.logger.log(`PDF saved to: ${pdfFilePath}`);
+            resolve();
+          });
+        });
+      });
+
+      const relativePdfPath = join(
+        document.documentKind.toLowerCase(),
+        document.id,
+        'pdf',
+        `${document.id}.pdf`,
+      );
+
       job.status = 'completed';
       job.pdfUrl = relativePdfPath;
-      
-      const username = this.getUserDisplayName(user);
-      await this.documentsRepository.update(document.id, {
-        modifiedBy: username,
-        modifiedAtUser: formatDateUTC8(new Date()),
-      });
-      
+
+      if (job.user) {
+        const username = this.getUserDisplayName(job.user);
+        await this.documentsRepository.update(document.id, {
+          modifiedBy: username,
+          modifiedAtUser: formatDateUTC8(new Date()),
+        });
+      }
+
       this.logger.log(`Conversion job ${jobId} completed successfully`);
     } catch (error) {
       this.logger.error(`Conversion job ${jobId} failed`, error);
@@ -191,97 +293,171 @@ export class DocumentsService {
     return this.conversionJobs.get(jobId) || null;
   }
 
-  async downloadConvertedPdf(documentId: string, user: User): Promise<{ stream: NodeJS.ReadableStream; contentType: string; fileName: string }> {
-    this.logger.log(`Download converted PDF request for document ${documentId}`);
-    
-    const document = await this.documentsRepository.findOne({ where: { id: documentId } });
-    
+  async downloadConvertedPdf(
+    documentId: string,
+    user: User,
+  ): Promise<{
+    stream: NodeJS.ReadableStream;
+    contentType: string;
+    fileName: string;
+    fileSize?: number;
+  }> {
+    this.logger.log(
+      `Download converted PDF request for document ${documentId}`,
+    );
+
+    const document = await this.documentsRepository.findOne({
+      where: { id: documentId },
+    });
+
     if (!document) {
       throw new NotFoundException('Document not found');
     }
-    
+
     if (!this.canAccessDocument(document, user)) {
       throw new ForbiddenException('You do not have access to this document');
     }
-    
-    const oneHourAgo = Date.now() - (60 * 60 * 1000);
-    
-    for (const [jobId, job] of this.conversionJobs.entries()) {
-      if (job.documentId === documentId && job.createdAt.getTime() > oneHourAgo) {
-        if (job.status === 'completed' && job.pdfUrl) {
-          const absolutePath = join(UPLOAD_DEST_DIR, job.pdfUrl);
-          
-          if (existsSync(absolutePath)) {
-            await this.recordDownload(documentId, user);
-            
-            return {
-              stream: createReadStream(absolutePath),
-              contentType: 'application/pdf',
-              fileName: `${document.documentNumber || document.id}.pdf`,
-            };
-          }
+
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
+    // 1. If there is a recent completed job in memory, use its PDF
+    for (const [, job] of this.conversionJobs.entries()) {
+      if (
+        job.documentId === documentId &&
+        job.createdAt.getTime() > oneHourAgo &&
+        job.status === 'completed' &&
+        job.pdfUrl
+      ) {
+        const absolutePath = join(UPLOAD_DEST_DIR, job.pdfUrl);
+
+        if (existsSync(absolutePath)) {
+          await this.recordDownload(documentId, user);
+          const stats = statSync(absolutePath);
+
+          return {
+            stream: createReadStream(absolutePath),
+            contentType: 'application/pdf',
+            fileName: `${document.documentNumber || document.id}.pdf`,
+            fileSize: stats.size,
+          };
         }
       }
     }
-    
-    const newJobId = await this.initiatePdfConversion(documentId, user);
-    
-    const error = new Error('Conversion in progress');
-    (error as any).jobId = newJobId;
-    throw error;
+
+    // 2. If the document already has a stored PDF path, use it
+    if (document.pdfFilePath) {
+      const absolutePath = join(UPLOAD_DEST_DIR, document.pdfFilePath);
+      if (existsSync(absolutePath)) {
+        await this.recordDownload(documentId, user);
+        const stats = statSync(absolutePath);
+
+        return {
+          stream: createReadStream(absolutePath),
+          contentType: 'application/pdf',
+          fileName: `${document.documentNumber || document.id}.pdf`,
+          fileSize: stats.size,
+        };
+      }
+    }
+
+    // 3. Otherwise perform a synchronous conversion now
+    const jobId = `${documentId}_${Date.now()}`;
+    const job: ConversionJob = {
+      documentId,
+      status: 'pending',
+      createdAt: new Date(),
+      user,
+    };
+
+    this.conversionJobs.set(jobId, job);
+    this.logger.log(
+      `Created synchronous conversion job ${jobId} for document ${documentId}`,
+    );
+
+    await this.processConversionJob(jobId);
+
+    const finishedJob = this.conversionJobs.get(jobId);
+
+    if (
+      !finishedJob ||
+      finishedJob.status !== 'completed' ||
+      !finishedJob.pdfUrl
+    ) {
+      this.logger.error(
+        `Synchronous conversion job ${jobId} failed for document ${documentId}: ${
+          finishedJob?.error || 'Unknown error'
+        }`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to convert document to PDF',
+      );
+    }
+
+    const absolutePdfPath = join(UPLOAD_DEST_DIR, finishedJob.pdfUrl);
+
+    if (!existsSync(absolutePdfPath)) {
+      this.logger.error(
+        `Converted PDF not found on disk after job ${jobId}: ${absolutePdfPath}`,
+      );
+      throw new InternalServerErrorException('Converted PDF not found on disk');
+    }
+
+    await this.recordDownload(documentId, user);
+    const stats = statSync(absolutePdfPath);
+
+    return {
+      stream: createReadStream(absolutePdfPath),
+      contentType: 'application/pdf',
+      fileName: `${document.documentNumber || document.id}.pdf`,
+      fileSize: stats.size,
+    };
   }
 
   private cleanupExpiredPdfs(): void {
     this.logger.log('Starting cleanup of expired PDFs (30-day TTL)');
-    
-    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
     let cleanedCount = 0;
-    
+
     try {
       const uploadsDir = join(UPLOAD_DEST_DIR);
       const kinds = ['general', 'policy', 'manual', 'other'];
-      
+
       for (const kind of kinds) {
         const kindDir = join(uploadsDir, kind);
-        
+
         if (!existsSync(kindDir)) continue;
-      
-      for (const kind of kinds) {
-        const kindDir = join(uploadsDir, kind);
-        
-        if (!existsSync(kindDir)) continue;
-        
+
         const docIds = readdirSync(kindDir);
-        
+
         for (const docId of docIds) {
           const pdfDir = join(kindDir, docId, 'pdf');
-          
+
           if (!existsSync(pdfDir)) continue;
-          
+
           try {
             const pdfFiles = readdirSync(pdfDir);
-            
+
             for (const pdfFile of pdfFiles) {
               const pdfFilePath = join(pdfDir, pdfFile);
               const stats = statSync(pdfFilePath);
-              
+
               if (stats.mtimeMs < thirtyDaysAgo) {
                 unlinkSync(pdfFilePath);
                 cleanedCount++;
                 this.logger.log(`Deleted expired PDF: ${pdfFilePath}`);
               }
             }
+          } catch (error) {
+            this.logger.warn(`Error processing directory ${pdfDir}:`, error);
           }
-        } catch (error) {
-          this.logger.warn(`Error processing directory ${pdfDir}:`, error);
         }
       }
+
+      this.logger.log(`PDF cleanup completed: ${cleanedCount} files deleted`);
+    } catch (error) {
+      this.logger.error('Error during PDF cleanup', error);
     }
-    
-    this.logger.log(`PDF cleanup completed: ${cleanedCount} files deleted`);
-  } catch (error) {
-    this.logger.error('Error during PDF cleanup', error);
-  }
   }
 
   async findAll(
@@ -456,6 +632,7 @@ export class DocumentsService {
     stream: NodeJS.ReadableStream;
     contentType: string;
     fileName: string;
+    fileSize?: number;
   }> {
     const bypassAccessCheck = options?.bypassAccessCheck ?? false;
 
@@ -503,15 +680,16 @@ export class DocumentsService {
 
     this.logger.log('File exists on disk, creating stream...');
 
+    const stats = statSync(absolutePath);
     const stream = createReadStream(absolutePath);
     const contentType = this.getContentType(filePath);
     const fileName = filePath.split('/').pop() || `${document.id}.${type}`;
 
     this.logger.log(
-      `Stream created. Content-Type: ${contentType}, Filename: ${fileName}`,
+      `Stream created. Content-Type: ${contentType}, Filename: ${fileName}, Size: ${stats.size} bytes`,
     );
 
-    return { stream, contentType, fileName };
+    return { stream, contentType, fileName, fileSize: stats.size };
   }
 
   async recordDownload(id: string, user: User): Promise<void> {
@@ -560,8 +738,16 @@ export class DocumentsService {
 
       const filePath = join(UPLOAD_DEST_DIR, document.officeFilePath);
       const writeStream = createWriteStream(filePath);
-      writeStream.write(Buffer.from(response.data));
-      writeStream.end();
+
+      await new Promise<void>((resolve, reject) => {
+        writeStream.write(Buffer.from(response.data), (err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          writeStream.end(() => resolve());
+        });
+      });
 
       const documentDir = join(
         UPLOAD_DEST_DIR,
@@ -578,8 +764,16 @@ export class DocumentsService {
       );
 
       const finalWriteStream = createWriteStream(destPath);
-      finalWriteStream.write(Buffer.from(response.data));
-      finalWriteStream.end();
+
+      await new Promise<void>((resolve, reject) => {
+        finalWriteStream.write(Buffer.from(response.data), (err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          finalWriteStream.end(() => resolve());
+        });
+      });
 
       const currentUser = callbackData.users?.[0];
       const username = currentUser?.name || currentUser?.id || 'unknown';
@@ -653,7 +847,7 @@ export class DocumentsService {
       documentType = 'pdf';
     }
 
-    const config: any = {
+    const config: OnlyOfficeConfig = {
       documentType,
       document: {
         fileType:
@@ -691,7 +885,7 @@ export class DocumentsService {
     };
 
     const token = await this.signOnlyOfficeConfig(config);
-    config.token = token;
+    (config as any).token = token;
 
     this.logger.log(
       `Generated OnlyOffice token (first 50 chars): ${token.substring(0, 50)}...`,
@@ -704,9 +898,10 @@ export class DocumentsService {
     return config;
   }
 
-  private async signOnlyOfficeConfig(config: any): Promise<string> {
+  private async signOnlyOfficeConfig(
+    config: OnlyOfficeConfig | Record<string, unknown>,
+  ): Promise<string> {
     try {
-      const jwt = require('jsonwebtoken');
       const secret = process.env.ONLYOFFICE_JWT_SECRET;
       if (!secret) {
         throw new InternalServerErrorException(

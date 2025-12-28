@@ -13,39 +13,42 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   useDocumentOfficeConfig,
   useDownloadDocument,
-  useInitiatePdfConversion,
   useConversionStatus,
   useDownloadConvertedPdf,
 } from '../hooks/use-documents';
 import { toast } from 'sonner';
 import { DocumentEditor } from '@onlyoffice/document-editor-react';
-import { useSidebar } from '@/components/ui/sidebar';
-import type { ConversionStatus } from '../types/documents.types';
 
 export function DocumentOfficePage() {
   const { user } = useAuthContext();
   const { id } = useParams({ from: '/_authenticated/documents/$id/office' });
-  const { setOpen } = useSidebar();
 
   const [jobId, setJobId] = useState<string | null>(null);
-  const { data: conversionStatus } = useConversionStatus(jobId || '');
-  const { mutate: downloadPdf, isPending: isDownloadingPdf } =
-    useDownloadConvertedPdf({
-      onSuccess: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${officeConfig?.config?.document?.title || 'document'}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        toast.success('PDF 下載成功');
-      },
-      onError: (error: any) => {
-        toast.error('PDF 下載失敗');
-      },
-    });
+  const { data: conversionStatus } = useConversionStatus(id, jobId || '');
+  const {
+    mutate: downloadPdf,
+    mutateAsync: downloadPdfAsync,
+    isPending: isDownloadingPdf,
+  } = useDownloadConvertedPdf({
+    onSuccess: (blob) => {
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${officeConfig?.config?.document?.title || 'document'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF 下載成功');
+    },
+    onError: (error: any) => {
+      // If conversion is still in progress, we'll handle jobId in caller
+      if (error?.jobId) {
+        return;
+      }
+      toast.error('PDF 下載失敗');
+    },
+  });
   const { mutate: downloadOffice, isPending: isDownloadingOffice } =
     useDownloadDocument({
       onSuccess: (blob) => {
@@ -60,25 +63,22 @@ export function DocumentOfficePage() {
         window.URL.revokeObjectURL(url);
         toast.success('Office 文檔下載成功');
       },
-      onError: (error: any) => {
+      onError: () => {
         toast.error('下載 Office 文檔失敗');
       },
     });
-  const { mutate: initiateConversion } = useInitiatePdfConversion();
 
   const { data: officeConfig, isLoading, error } = useDocumentOfficeConfig(id);
 
-  const handleDocumentReady = () => {
-    console.log('Document is loaded');
-  };
-
-  const handleLoadComponentError = (
-    errorCode: number,
-    errorDescription: string,
-  ) => {
-    console.error('OnlyOffice component error:', errorCode, errorDescription);
-    toast.error(`載入編輯器失敗: ${errorDescription}`);
-  };
+  useEffect(() => {
+    if (conversionStatus?.status === 'completed' && jobId) {
+      // Auto-download once conversion completes
+      downloadPdfAsync(id).catch((error: any) => {
+        console.error('Auto PDF download failed', error);
+      });
+      setJobId(null);
+    }
+  }, [conversionStatus, jobId, id, downloadPdfAsync]);
 
   if (isLoading) {
     return <div className="p-4">載入文檔編輯器中...</div>;
@@ -105,25 +105,37 @@ export function DocumentOfficePage() {
     );
   }
 
+  const handleDocumentReady = () => {
+    console.log('Document is loaded');
+  };
+
+  const handleLoadComponentError = (
+    errorCode: number,
+    errorDescription: string,
+  ) => {
+    console.error('OnlyOffice component error:', errorCode, errorDescription);
+    toast.error(`載入編輯器失敗: ${errorDescription}`);
+  };
+
   const serverCanEdit = Boolean(
-    officeConfig.config?.editorConfig?.user?.canEdit ?
-      (user?.role === 'admin' || user?.role === 'manager'),
+    officeConfig.config?.editorConfig?.user?.canEdit
+      ? user?.role === 'admin' || user?.role === 'manager'
+      : false,
   );
   const isViewOnly = !serverCanEdit;
-
-  const canEditOffice = user?.role === 'admin' || user?.role === 'manager';
 
   const handleDownloadPdf = async () => {
     if (!id) return;
     try {
       await downloadPdf(id);
     } catch (error: any) {
-      if (error.response?.status === 202 && error.response.data?.jobId) {
-        setJobId(error.response.data.jobId);
+      // If backend indicates conversion is still in progress,
+      // capture the jobId so we can poll status and auto-download later.
+      if (error?.jobId) {
+        setJobId(error.jobId);
       }
     }
   };
-};
 
   const handleDownloadOffice = () => {
     if (!id) return;
@@ -134,13 +146,6 @@ export function DocumentOfficePage() {
     const ext = officeConfig?.config?.document?.fileType;
     return ext === 'docx' ? 'Word' : ext === 'xlsx' ? 'Excel' : 'Office';
   };
-
-  useEffect(() => {
-    if (conversionStatus?.status === 'completed' && jobId) {
-      downloadPdf(id);
-      setJobId(null);
-    }
-  }, [conversionStatus, jobId]);
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -173,14 +178,15 @@ export function DocumentOfficePage() {
             variant="outline"
             size="sm"
             onClick={handleDownloadPdf}
-            disabled={isConvertingPdf}
+            disabled={isDownloadingPdf}
           >
-            {isConvertingPdf ? (
+            {isDownloadingPdf ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <FileText className="mr-2 h-4 w-4" />
             )}
-            {conversionStatus === 'processing' || conversionStatus === 'pending'
+            {conversionStatus?.status === 'processing' ||
+            conversionStatus?.status === 'pending'
               ? '轉換中...'
               : '下載 PDF'}
           </Button>
@@ -213,5 +219,3 @@ export function DocumentOfficePage() {
     </div>
   );
 }
-
-export default DocumentOfficePage;

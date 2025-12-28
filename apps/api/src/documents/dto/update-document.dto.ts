@@ -7,11 +7,6 @@ import {
   Max,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  FileType,
-  ALLOWED_FILE_TYPES,
-  ALLOWED_MIME_TYPES,
-} from './file-type.enum';
 
 export class UpdateDocumentDto {
   @ApiProperty({

@@ -8,7 +8,6 @@ import {
   Max,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { FileType } from './file-type.enum';
 
 export class CreateDocumentDto {
   @ApiProperty({

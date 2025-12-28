@@ -150,7 +150,7 @@ export const useDeleteDocument = (options?: {
 };
 
 export const useDownloadDocument = (options?: {
-  onSuccess?: () => void;
+  onSuccess?: (blob: Blob) => void;
   onError?: (error: any) => void;
 }) => {
   const queryClient = useQueryClient();
@@ -169,10 +169,10 @@ export const useDownloadDocument = (options?: {
       });
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (blob) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       if (options?.onSuccess) {
-        options.onSuccess();
+        options.onSuccess(blob);
       }
     },
     onError: options?.onError,
@@ -209,17 +209,17 @@ export const useInitiatePdfConversion = () => {
   });
 };
 
-export const useConversionStatus = (jobId: string) => {
-  return useQuery({
-    queryKey: ['pdf-conversion-status', jobId],
+export const useConversionStatus = (documentId: string, jobId: string) => {
+  return useQuery<ConversionStatus>({
+    queryKey: ['pdf-conversion-status', documentId, jobId],
     queryFn: async (): Promise<ConversionStatus> => {
       const response = await api.get<ConversionStatus>(
-        `/documents/convert-status/${jobId}`,
+        `/documents/${documentId}/convert-status/${jobId}`,
       );
       return response.data;
     },
     enabled: !!jobId,
-    refetchInterval: (data) => {
+    refetchInterval: (data: any) => {
       const shouldPoll =
         data?.status === 'pending' || data?.status === 'processing';
       return shouldPoll ? 2000 : false;
@@ -229,7 +229,7 @@ export const useConversionStatus = (jobId: string) => {
 };
 
 export const useDownloadConvertedPdf = (options?: {
-  onSuccess?: () => void;
+  onSuccess?: (blob: Blob) => void;
   onError?: (error: any) => void;
 }) => {
   const queryClient = useQueryClient();
@@ -240,14 +240,37 @@ export const useDownloadConvertedPdf = (options?: {
         `/documents/${documentId}/download-pdf`,
         {
           responseType: 'blob',
+          // accept both 200 (PDF ready) and 202 (conversion in progress)
+          validateStatus: (status) => status === 200 || status === 202,
         },
       );
+
+      const contentType = response.headers['content-type'] || '';
+
+      // If conversion is still in progress, backend returns 202 + JSON { jobId }
+      if (response.status === 202 || !contentType.includes('application/pdf')) {
+        let jobId: string | undefined;
+        try {
+          const text = await (response.data as Blob).text();
+          const json = JSON.parse(text);
+          jobId = json?.jobId;
+        } catch {
+          // ignore parse errors, we'll still throw a generic error
+        }
+
+        const error: any = new Error('Conversion in progress');
+        if (jobId) {
+          error.jobId = jobId;
+        }
+        throw error;
+      }
+
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (blob) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       if (options?.onSuccess) {
-        options.onSuccess();
+        options.onSuccess(blob);
       }
     },
     onError: options?.onError,

@@ -1,5 +1,5 @@
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 
 const UPLOAD_DEST = process.env.UPLOAD_DEST_DIR || './uploads/documents';

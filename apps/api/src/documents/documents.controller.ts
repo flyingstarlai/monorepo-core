@@ -142,7 +142,9 @@ export class DocumentsController {
       officeFile = files.find(
         (file) =>
           file.mimetype.includes('wordprocessingml.document') ||
-          file.mimetype.includes('spreadsheetml.sheet'),
+          file.mimetype.includes('spreadsheetml.sheet') ||
+          file.mimetype.includes('msword') ||
+          file.mimetype.includes('vnd.ms-excel'),
       );
       pdfFile = files.find((file) => file.mimetype === 'application/pdf');
 
@@ -229,7 +231,9 @@ export class DocumentsController {
       officeFile = files.find(
         (file) =>
           file.mimetype.includes('wordprocessingml.document') ||
-          file.mimetype.includes('spreadsheetml.sheet'),
+          file.mimetype.includes('spreadsheetml.sheet') ||
+          file.mimetype.includes('msword') ||
+          file.mimetype.includes('vnd.ms-excel'),
       );
       pdfFile = files.find((file) => file.mimetype === 'application/pdf');
 

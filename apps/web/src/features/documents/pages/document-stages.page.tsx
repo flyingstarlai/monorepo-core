@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -136,7 +137,46 @@ export function DocumentStagesPage() {
   }
 
   if (isLoading) {
-    return <div className="p-4">載入中...</div>;
+    return (
+      <Card className="border-0 shadow-sm w-full">
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-5 w-8" />
+              </div>
+              <Skeleton className="h-9 w-24" />
+            </div>
+
+            <div className="rounded-lg border">
+              <div className="border-b bg-muted/30 p-4">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
+              </div>
+              <div className="divide-y">
+                {[...Array(6)].map((_, rowIndex) => (
+                  <div
+                    key={rowIndex}
+                    className="flex items-center space-x-4 p-4"
+                  >
+                    <Skeleton className="h-8 w-20" />
+                    <Skeleton className="h-8 flex-1" />
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-8 w-32" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (

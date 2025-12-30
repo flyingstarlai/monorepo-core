@@ -103,6 +103,8 @@ export function DocumentStagesPage() {
     }
   };
 
+  const isSaving = createStage.isPending || updateStage.isPending;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -283,12 +285,19 @@ export function DocumentStagesPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
+                    disabled={isSaving}
                   >
                     取消
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={isSaving}>
                     <Save className="mr-1 h-4 w-4" />
-                    {editingStage ? '更新' : '創建'}
+                    {isSaving
+                      ? editingStage
+                        ? '更新中...'
+                        : '創建中...'
+                      : editingStage
+                        ? '更新'
+                        : '創建'}
                   </Button>
                 </DialogFooter>
               </form>

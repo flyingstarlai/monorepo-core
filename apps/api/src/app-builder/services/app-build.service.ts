@@ -8,7 +8,6 @@ import {
   MoreThanOrEqual,
 } from 'typeorm';
 import { MobileAppBuild } from '../entities/app-build.entity';
-import { MobileAppDefinition } from '../entities/app-definition.entity';
 import { IdGenerator } from '../../utils/id-generator';
 
 export interface BuildFilters {
@@ -150,9 +149,11 @@ export class MobileAppBuildService {
     return this.findById(id);
   }
 
-  async findByStatus(status: string): Promise<MobileAppBuild[]> {
+  async findByStatus(
+    status: 'queued' | 'building' | 'completed' | 'failed' | 'cancelled',
+  ): Promise<MobileAppBuild[]> {
     return this.mobileAppBuildRepository.find({
-      where: { status: status as any },
+      where: { status },
       order: { createdAt: 'DESC' },
     });
   }
@@ -168,7 +169,7 @@ export class MobileAppBuildService {
     filters: BuildFilters,
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<MobileAppBuild>> {
-    const whereCondition: any = {};
+    const whereCondition: Partial<MobileAppBuild> & Record<string, any> = {};
 
     // Apply filters
     if (filters.definitionId) {
@@ -614,10 +615,11 @@ export class MobileAppBuildService {
     switch (groupBy) {
       case 'day':
         return d.toISOString().split('T')[0];
-      case 'week':
+      case 'week': {
         const weekStart = new Date(d);
         weekStart.setDate(d.getDate() - d.getDay());
         return weekStart.toISOString().split('T')[0];
+      }
       case 'month':
         return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
       default:

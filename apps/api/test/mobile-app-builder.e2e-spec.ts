@@ -5,8 +5,8 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { User } from '../src/users/entities/user.entity';
 import {
-  User,
   MobileAppDefinition,
   MobileAppBuild,
 } from '../src/app-builder/entities';

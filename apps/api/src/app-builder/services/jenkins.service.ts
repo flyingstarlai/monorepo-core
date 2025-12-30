@@ -98,6 +98,14 @@ export type PipelineStageStatus =
   | 'failed'
   | 'skipped';
 
+interface WfapiStage {
+  name: string;
+  status: string;
+  startTimeMillis?: number;
+  durationMillis?: number;
+  pauseDurationMillis?: number;
+}
+
 export interface PipelineStageDetail {
   name: string;
   status: PipelineStageStatus;
@@ -207,7 +215,9 @@ export class JenkinsService {
       // Extract queue ID from location header or response
       const queueUrl = response.headers?.location;
       const queueIdMatch = queueUrl?.match(/queue\/item\/(\d+)/);
-      const queueId = queueIdMatch ? parseInt(queueIdMatch[1], 10) : 0;
+      const queueId = queueIdMatch
+        ? parseInt(queueIdMatch[1] as string, 10)
+        : 0;
 
       return {
         queueId,
@@ -262,7 +272,9 @@ export class JenkinsService {
       // Extract queue ID from location header or response
       const queueUrl = response.headers?.location;
       const queueIdMatch = queueUrl?.match(/queue\/item\/(\d+)/);
-      const queueId = queueIdMatch ? parseInt(queueIdMatch[1], 10) : 0;
+      const queueId = queueIdMatch
+        ? parseInt(queueIdMatch[1] as string, 10)
+        : 0;
 
       return {
         queueId,
@@ -643,7 +655,7 @@ export class JenkinsService {
         why: item.why,
         stuck: Boolean(item.stuck),
         queuedAt: item.inQueueSince
-          ? new Date(item.inQueueSince).toISOString()
+          ? new Date(item.inQueueSince as number).toISOString()
           : undefined,
       }));
 
@@ -709,21 +721,24 @@ export class JenkinsService {
         `/job/${jobName}/${buildNumber}/wfapi/describe`,
       );
       const wfapiStages = response.data?.stages || [];
-      const mappedStages = wfapiStages.map((stage: any) => ({
-        name: stage.name,
-        status: this.mapWfapiStageStatus(stage.status),
-        startTimeMillis: stage.startTimeMillis,
-        durationMillis: stage.durationMillis,
-        pauseDurationMillis: stage.pauseDurationMillis,
-      }));
+      const mappedStages: PipelineStageDetail[] = wfapiStages.map(
+        (stage: WfapiStage) => ({
+          name: stage.name,
+          status: this.mapWfapiStageStatus(stage.status),
+          startTimeMillis: stage.startTimeMillis,
+          durationMillis: stage.durationMillis,
+          pauseDurationMillis: stage.pauseDurationMillis,
+        }),
+      );
 
       const orderedStages = PIPELINE_STAGE_NAMES.map((name) => {
         const stage = mappedStages.find((s) => s.name === name);
         return (
-          stage || {
+          stage ||
+          ({
             name,
             status: 'pending',
-          }
+          } as PipelineStageDetail)
         );
       });
 

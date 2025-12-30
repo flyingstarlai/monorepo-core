@@ -13,7 +13,6 @@ import {
   HttpCode,
   ForbiddenException,
   Logger,
-  Res,
 } from '@nestjs/common';
 import {
   OnGatewayInit,
@@ -32,7 +31,6 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiProduces,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { MobileAppDefinitionService } from '../services/app-definition.service';
@@ -43,7 +41,6 @@ import {
   UpdateDefinitionDto,
   TriggerBuildDto,
 } from '../dto/app-definition.dto';
-import { PresignedDownloadDto } from '../dto/app-build.dto';
 import { BuildWebhookDto } from '../dto/build-webhook.dto';
 import { IdGenerator } from '../../utils/id-generator';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -433,7 +430,8 @@ export class MobileAppBuilderController {
         );
       }
 
-      const updatePayload: any = {
+      // Update build status in database
+      const updatePayload: Partial<MobileAppBuild> = {
         status: mappedStatus,
         startedAt: jenkinsStatus.timestamp
           ? new Date(jenkinsStatus.timestamp)
@@ -451,218 +449,12 @@ export class MobileAppBuilderController {
         updatePayload.jenkinsBuildNumber = jenkinsStatus.executable.number;
       }
 
-      // Update build status in database
       await this.mobileAppBuildService.update(id, updatePayload);
 
       return { status: mappedStatus, jenkinsStatus };
     } catch {
       return { status: build.status, message: 'Failed to get Jenkins status' };
     }
-  }
-
-  @Get('builds/:id/stages')
-  @ApiOperation({ summary: 'Get Jenkins pipeline stage progress for a build' })
-  @ApiParam({ name: 'id', description: 'Build ID' })
-  @ApiResponse({ status: 200, description: 'Pipeline stage progress' })
-  async getBuildStages(@Param('id') id: string) {
-    this.checkFeatureFlag();
-    let build = await this.mobileAppBuildService.findById(id);
-    if (!build) {
-      throw new Error('Build not found');
-    }
-
-    if (!build.jenkinsBuildNumber && build.jenkinsQueueId) {
-      try {
-        const jenkinsStatus = await this.jenkinsService.getBuildStatus(
-          build.jenkinsQueueId,
-        );
-        const mappedStatus = this.jenkinsService.mapJenkinsStatusToBuildStatus(
-          jenkinsStatus.status,
-        );
-
-        build = await this.mobileAppBuildService.update(id, {
-          status: mappedStatus,
-          jenkinsBuildNumber: jenkinsStatus.executable?.number,
-          startedAt: jenkinsStatus.timestamp
-            ? new Date(jenkinsStatus.timestamp)
-            : undefined,
-          completedAt: ['completed', 'failed'].includes(mappedStatus)
-            ? new Date()
-            : undefined,
-          errorMessage:
-            mappedStatus === 'failed' ? jenkinsStatus.result : undefined,
-        });
-      } catch (error) {
-        this.logger.warn(
-          `Failed to refresh Jenkins information for build ${id}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
-
-    const stageProgress = await this.jenkinsService.getPipelineStageProgress(
-      build?.jenkinsBuildNumber,
-      build?.status,
-    );
-
-    const failedStage = stageProgress?.stages?.find(
-      (stage) => stage.status === 'failed',
-    );
-
-    // Check for build completion (all stages completed successfully)
-    const allStagesCompleted =
-      stageProgress?.stages?.every(
-        (stage) => stage.status === 'completed' || stage.status === 'skipped',
-      ) && stageProgress?.stages?.length > 0;
-
-    if (allStagesCompleted && build?.status !== 'completed') {
-      const completedAt = new Date();
-      const startedAt = build?.startedAt
-        ? new Date(build.startedAt)
-        : completedAt;
-      const durationMs = completedAt.getTime() - startedAt.getTime();
-
-      build = await this.mobileAppBuildService.update(id, {
-        status: 'completed',
-        completedAt,
-        durationMs,
-        errorMessage: null,
-      });
-
-      this.logger.log(
-        `Build ${id} completed successfully after ${durationMs}ms`,
-      );
-    } else if (failedStage && build?.status !== 'failed') {
-      if (build?.jenkinsBuildNumber) {
-        try {
-          await this.jenkinsService.stopBuild(build.jenkinsBuildNumber);
-        } catch (error) {
-          this.logger.warn(
-            `Failed to stop Jenkins build ${build?.jenkinsBuildNumber}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
-      }
-
-      let errorSnippet: string | undefined;
-      if (build?.jenkinsQueueId) {
-        errorSnippet = await this.jenkinsService.getBuildConsoleFull(
-          build.jenkinsQueueId,
-        );
-      }
-
-      build = await this.mobileAppBuildService.update(id, {
-        status: 'failed',
-        completedAt: new Date(),
-        errorMessage:
-          errorSnippet ||
-          `Stage "${failedStage.name}" failed in Jenkins pipeline.`,
-      });
-    }
-
-    return stageProgress;
-  }
-
-  @Get('builds/:id/console')
-  @ApiOperation({ summary: 'Get full Jenkins console output for a build' })
-  @ApiParam({ name: 'id', description: 'Build ID' })
-  @ApiProduces('text/plain')
-  @ApiResponse({ status: 200, description: 'Plain text console output' })
-  async getBuildConsole(@Param('id') id: string, @Res() res: Response) {
-    this.checkFeatureFlag();
-    let build = await this.mobileAppBuildService.findById(id);
-    if (!build) {
-      throw new Error('Build not found');
-    }
-
-    if (!build.jenkinsBuildNumber && build.jenkinsQueueId) {
-      try {
-        const jenkinsStatus = await this.jenkinsService.getBuildStatus(
-          build.jenkinsQueueId,
-        );
-        const mappedStatus = this.jenkinsService.mapJenkinsStatusToBuildStatus(
-          jenkinsStatus.status,
-        );
-        build = await this.mobileAppBuildService.update(id, {
-          status: mappedStatus,
-          jenkinsBuildNumber: jenkinsStatus.executable?.number,
-          startedAt: jenkinsStatus.timestamp
-            ? new Date(jenkinsStatus.timestamp)
-            : undefined,
-          completedAt: ['completed', 'failed'].includes(mappedStatus)
-            ? new Date()
-            : undefined,
-        });
-      } catch (error) {
-        this.logger.warn(
-          `Failed to refresh Jenkins information for build ${id}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
-
-    let consoleText: string | undefined;
-    if (build?.jenkinsBuildNumber) {
-      consoleText = await this.jenkinsService.getBuildConsoleFromUrl(
-        build.jenkinsBuildNumber,
-      );
-    }
-
-    if (!consoleText && build?.jenkinsQueueId) {
-      consoleText = await this.jenkinsService.getBuildConsoleFull(
-        build.jenkinsQueueId,
-      );
-    }
-
-    if (!consoleText) {
-      throw new Error('Console log is not available yet');
-    }
-
-    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-    res.send(consoleText);
-  }
-
-  @Get('builds/:id/download')
-  @Roles('admin', 'manager')
-  @ApiOperation({ summary: 'Get presigned download URL for build artifact' })
-  @ApiParam({ name: 'id', description: 'Build ID' })
-  @ApiResponse({ status: 200, description: 'Presigned download URL' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - insufficient permissions',
-  })
-  @ApiResponse({ status: 404, description: 'Build not found' })
-  async getDownloadUrl(@Param('id') id: string): Promise<PresignedDownloadDto> {
-    this.checkFeatureFlag();
-    const build = await this.mobileAppBuildService.findById(id);
-    if (!build) {
-      throw new Error('Build not found');
-    }
-
-    if (build.status !== 'completed') {
-      throw new Error('Build must be completed to download artifact');
-    }
-
-    if (!build.artifactPath) {
-      throw new Error(
-        'Artifact not yet available. The build may still be uploading, please try again later.',
-      );
-    }
-
-    // Generate real MinIO presigned URL for android artifact
-    const fileName = build.artifactPath.split('/').pop() || 'app.apk';
-    let downloadUrl: string;
-
-    try {
-      downloadUrl = await this.minioService.getAndroidArtifactDownloadUrl(
-        build.artifactPath,
-      );
-    } catch (error) {
-      throw new Error(`Failed to generate download URL: ${error.message}`);
-    }
-
-    return {
-      url: downloadUrl,
-      fileName,
-      expiresAt: new Date(Date.now() + 3600000).toISOString(), // 1 hour expiry
-    };
   }
 
   @Get('builds/analytics')
@@ -768,7 +560,10 @@ export class MobileAppBuilderController {
     return this.mobileAppBuildService.getSummary(summaryConfig);
   }
 
-  private calculateDurationDifference(build1: any, build2: any): number {
+  private calculateDurationDifference(
+    build1: MobileAppBuild,
+    build2: MobileAppBuild,
+  ): number {
     if (
       !build1.startedAt ||
       !build1.completedAt ||
@@ -804,8 +599,13 @@ export class MobileAppBuilderController {
     }
 
     // Update build based on webhook data
-    const updatePayload: any = {
-      status: webhookData.status,
+    const updatePayload: Partial<MobileAppBuild> = {
+      status: webhookData.status as
+        | 'queued'
+        | 'building'
+        | 'completed'
+        | 'failed'
+        | 'cancelled',
       buildStage: webhookData.stage,
       stageProgressPercent: webhookData.progress,
     };
@@ -867,7 +667,7 @@ export class BuildWebSocketGateway
 
   private logger: Logger = new Logger(BuildWebSocketGateway.name);
 
-  afterInit(server: Server) {
+  afterInit(): void {
     this.logger.log('WebSocket Gateway initialized');
   }
 

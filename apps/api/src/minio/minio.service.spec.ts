@@ -36,6 +36,7 @@ describe('MinioService', () => {
       ],
     }).compile();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     service = module.get<MinioService>(MinioService);
 
     // Mock environment variables

@@ -1,6 +1,18 @@
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import type { Request } from 'express';
+
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+}
 
 const UPLOAD_DEST = process.env.UPLOAD_DEST_DIR || './uploads/documents';
 const MAX_FILE_SIZE = parseInt(process.env.UPLOAD_MAX_FILE_SIZE || '10485760');
@@ -15,13 +27,21 @@ const allowedMimeTypes = [
 
 const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf'];
 
-const getFileName = (req: any, file: any, cb: any) => {
+const getFileName = (
+  req: Request,
+  file: MulterFile,
+  cb: (error: Error | null, filename: string) => void,
+) => {
   const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
   const ext = extname(file.originalname);
   cb(null, `${uniqueSuffix}${ext}`);
 };
 
-const fileFilter = (req: any, file: any, cb: any) => {
+const fileFilter = (
+  req: Request,
+  file: MulterFile,
+  cb: (error: Error | null, acceptFile: boolean) => void,
+) => {
   const ext = extname(file.originalname).toLowerCase();
 
   if (

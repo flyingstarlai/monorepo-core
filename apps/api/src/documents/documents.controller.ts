@@ -48,8 +48,21 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { OnlyofficeAuthorized } from '../auth/decorators/onlyoffice-authorized.decorator';
 import { User } from '../users/entities/user.entity';
 
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
+
+interface MulterFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  size: number;
+  destination: string;
+  filename: string;
+  path: string;
+  buffer?: Buffer;
+}
+import type { File } from '@nest-lab/multer';
 
 @ApiTags('Documents')
 @Controller('documents')
@@ -115,8 +128,8 @@ export class DocumentsController {
     type: DocumentResponseDto,
   })
   async create(
-    @Req() req: any,
-    @UploadedFiles() files: any[],
+    @Req() req: Request,
+    @UploadedFiles() files: MulterFile[],
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
 
@@ -134,8 +147,8 @@ export class DocumentsController {
       stageId: req.body.stageId || undefined,
     } as CreateDocumentDto;
 
-    let officeFile: any | undefined;
-    let pdfFile: any | undefined;
+    let officeFile: MulterFile | undefined;
+    let pdfFile: MulterFile | undefined;
 
     if (files && files.length > 0) {
       this.logger.log(`Received ${files.length} file(s) for document creation`);
@@ -205,8 +218,8 @@ export class DocumentsController {
   })
   async update(
     @Param('id') id: string,
-    @Req() req: any,
-    @UploadedFiles() files: any[],
+    @Req() req: Request,
+    @UploadedFiles() files: MulterFile[],
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
 
@@ -224,8 +237,8 @@ export class DocumentsController {
       stageId: req.body.stageId || undefined,
     } as UpdateDocumentDto;
 
-    let officeFile: any | undefined;
-    let pdfFile: any | undefined;
+    let officeFile: MulterFile | undefined;
+    let pdfFile: MulterFile | undefined;
 
     if (files && files.length > 0) {
       this.logger.log(`Received ${files.length} file(s) for document update`);

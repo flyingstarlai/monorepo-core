@@ -18,6 +18,15 @@ export class CreateDocumentDto {
   @MaxLength(20)
   documentKind: string;
 
+  @ApiProperty({
+    description: 'Document stage ID',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(20)
+  stageId?: string;
+
   @ApiProperty({ description: 'Document code/number' })
   @IsString()
   @IsNotEmpty()

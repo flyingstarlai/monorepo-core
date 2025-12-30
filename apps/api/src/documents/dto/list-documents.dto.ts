@@ -16,4 +16,8 @@ export class ListDocumentsDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsString()
+  stageId?: string;
 }

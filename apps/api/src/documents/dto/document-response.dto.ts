@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { DocumentStageResponseDto } from './document-stage-response.dto';
 
 export class DocumentResponseDto {
   @ApiProperty({ description: 'Document ID' })
@@ -44,6 +45,24 @@ export class DocumentResponseDto {
 
   @ApiProperty({ description: 'Last download date' })
   downloadedAtUser: string;
+
+  @ApiProperty({
+    description: 'Document stage ID',
+  })
+  stageId: string;
+
+  @ApiProperty({
+    description: 'Document stage info',
+    required: false,
+    type: () => DocumentStageResponseDto,
+  })
+  stage?: DocumentStageResponseDto;
+
+  @ApiProperty({
+    description: 'All available document stages',
+    type: () => [DocumentStageResponseDto],
+  })
+  stageOptions: DocumentStageResponseDto[];
 
   @ApiProperty({ description: 'Created at' })
   createdAt: Date;

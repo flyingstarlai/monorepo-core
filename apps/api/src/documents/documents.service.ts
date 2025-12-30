@@ -11,11 +11,13 @@ import { DocumentsEntity } from './entities';
 import { CreateDocumentDto } from './dto/create-document.dto';
 import { UpdateDocumentDto } from './dto/update-document.dto';
 import { DocumentResponseDto } from './dto/document-response.dto';
+import { DocumentStageResponseDto } from './dto/document-stage-response.dto';
 import { OnlyofficeCallbackDto } from './dto/onlyoffice-callback.dto';
 import { ListDocumentsDto } from './dto/list-documents.dto';
 import { formatDateUTC8 } from '../utils/date-formatter';
 import { User } from '../users/entities/user.entity';
 import { IdGenerator } from '../utils/id-generator';
+import { DocumentStageService } from './document-stage.service';
 import {
   existsSync,
   unlinkSync,
@@ -90,6 +92,7 @@ export class DocumentsService {
   constructor(
     @InjectRepository(DocumentsEntity)
     private readonly documentsRepository: Repository<DocumentsEntity>,
+    private readonly documentStageService: DocumentStageService,
   ) {
     this.cleanupExpiredPdfs();
   }
@@ -467,11 +470,18 @@ export class DocumentsService {
     const qb = this.documentsRepository.createQueryBuilder('document');
     const accessLevel = this.getUserAccessLevel(user);
 
+    qb.leftJoinAndSelect('document.stage', 'stage');
     qb.where('document.documentAccessLevel <= :accessLevel', { accessLevel });
 
     if (query?.documentKind) {
       qb.andWhere('LOWER(document.documentKind) = LOWER(:kind)', {
         kind: query.documentKind,
+      });
+    }
+
+    if (query?.stageId) {
+      qb.andWhere('document.stageId = :stageId', {
+        stageId: query.stageId,
       });
     }
 
@@ -490,7 +500,10 @@ export class DocumentsService {
   }
 
   async findOne(id: string, user: User): Promise<DocumentResponseDto> {
-    const document = await this.documentsRepository.findOne({ where: { id } });
+    const document = await this.documentsRepository.findOne({
+      where: { id },
+      relations: ['stage'],
+    });
 
     if (!document) {
       throw new NotFoundException('Document not found');
@@ -500,7 +513,15 @@ export class DocumentsService {
       throw new ForbiddenException('You do not have access to this document');
     }
 
-    return this.mapToResponse(document);
+    const stages = await this.documentStageService.findAll();
+    const stageOptions = stages.map<DocumentStageResponseDto>((stage) => ({
+      id: stage.id,
+      title: stage.title,
+      sortOrder: stage.sortOrder,
+      documentCount: (stage as any).documentCount,
+    }));
+
+    return this.mapToResponse(document, { stageOptions });
   }
 
   async createWithFiles(
@@ -1077,8 +1098,11 @@ export class DocumentsService {
     }
   }
 
-  private mapToResponse(document: DocumentsEntity): DocumentResponseDto {
-    return {
+  private mapToResponse(
+    document: DocumentsEntity,
+    extras?: { stageOptions?: DocumentStageResponseDto[] },
+  ): DocumentResponseDto {
+    const response: DocumentResponseDto = {
       id: document.id,
       documentKind: document.documentKind,
       documentNumber: document.documentNumber,
@@ -1093,8 +1117,19 @@ export class DocumentsService {
       modifiedAtUser: document.modifiedAtUser,
       downloadedBy: document.downloadedBy,
       downloadedAtUser: document.downloadedAtUser,
+      stageId: document.stageId ?? document.stage?.id ?? '',
+      stage: document.stage
+        ? {
+            id: document.stage.id,
+            title: document.stage.title,
+            sortOrder: document.stage.sortOrder,
+          }
+        : undefined,
+      stageOptions: extras?.stageOptions ?? [],
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     };
+
+    return response;
   }
 }

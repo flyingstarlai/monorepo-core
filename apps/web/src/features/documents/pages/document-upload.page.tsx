@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import {
 import { Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useCreateDocument } from '../hooks/use-documents';
+import { useDocumentStages } from '../hooks/use-document-stages';
 import { toast } from 'sonner';
 
 export function DocumentUploadPage() {
@@ -25,6 +26,8 @@ export function DocumentUploadPage() {
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
   const canUpload = isAdmin || isManager;
+
+  const { data: stages, isLoading: stagesLoading } = useDocumentStages();
 
   const { mutate: createDocument, isPending } = useCreateDocument({
     onSuccess: () => {
@@ -42,8 +45,18 @@ export function DocumentUploadPage() {
     documentName: '',
     version: '1.0',
     documentAccessLevel: 1,
+    stageId: '',
     officeFile: null as File | null,
   });
+
+  useEffect(() => {
+    if (stages && stages.length > 0 && !formData.stageId) {
+      const firstStage = stages[0];
+      if (firstStage) {
+        setFormData((prev) => ({ ...prev, stageId: firstStage.id }));
+      }
+    }
+  }, [stages]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -89,6 +102,11 @@ export function DocumentUploadPage() {
       return;
     }
 
+    if (!formData.stageId) {
+      setUploadError('請選擇文檔階段');
+      return;
+    }
+
     if (!formData.officeFile) {
       setUploadError('請選擇 Office 檔案');
       return;
@@ -100,6 +118,7 @@ export function DocumentUploadPage() {
       documentName: formData.documentName,
       version: formData.version,
       documentAccessLevel: formData.documentAccessLevel,
+      stageId: formData.stageId,
       officeFile: formData.officeFile,
     });
   };
@@ -207,6 +226,26 @@ export function DocumentUploadPage() {
                   placeholder="輸入版本（例如：1.0）"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stage">文檔階段</Label>
+                <Select
+                  value={formData.stageId}
+                  onValueChange={(value) => handleInputChange('stageId', value)}
+                  disabled={stagesLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="選擇階段" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stages?.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id}>
+                        {stage.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

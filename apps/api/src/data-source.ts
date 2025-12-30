@@ -8,6 +8,7 @@ import {
 import { Group } from './groups/entities/group.entity';
 import { UserGroupMembership } from './groups/entities/user-group-membership.entity';
 import { DocumentsEntity } from './documents/entities/documents.entity';
+import { DocumentStageEntity } from './documents/entities/document-stage.entity';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -26,6 +27,7 @@ export const AppDataSource = new DataSource({
     Group,
     UserGroupMembership,
     DocumentsEntity,
+    DocumentStageEntity,
   ],
   migrations: ['src/migrations/*.ts'],
   options: {

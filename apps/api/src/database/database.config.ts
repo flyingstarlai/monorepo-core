@@ -13,6 +13,7 @@ import { ModuleEntity } from '../app-builder/entities/dashboard-module.entity';
 import { Group } from '../groups/entities/group.entity';
 import { UserGroupMembership } from '../groups/entities/user-group-membership.entity';
 import { DocumentsEntity } from '../documents/entities/documents.entity';
+import { DocumentStageEntity } from '../documents/entities/document-stage.entity';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { DocumentsEntity } from '../documents/entities/documents.entity';
           Group,
           UserGroupMembership,
           DocumentsEntity,
+          DocumentStageEntity,
         ],
         synchronize: false, // Don't auto-sync since we have existing table
         logging: configService.get<string>('NODE_ENV') === 'development',

@@ -43,4 +43,13 @@ export class UpdateDocumentDto {
   @Min(0)
   @Max(3)
   documentAccessLevel?: number;
+
+  @ApiProperty({
+    description: 'Document stage ID',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  @MaxLength(20)
+  stageId?: string;
 }

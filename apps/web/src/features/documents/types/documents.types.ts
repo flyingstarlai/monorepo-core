@@ -13,6 +13,9 @@ export interface DocumentResponseDto {
   modifiedAtUser?: string;
   downloadedBy?: string;
   downloadedAtUser?: string;
+  stageId: string;
+  stage?: DocumentStage;
+  stageOptions: DocumentStage[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +26,7 @@ export interface CreateDocumentDto {
   documentName: string;
   version: string;
   documentAccessLevel?: number;
+  stageId?: string;
   officeFile?: File;
   pdfFile?: File;
 }
@@ -30,6 +34,7 @@ export interface CreateDocumentDto {
 export interface ListDocumentsDto {
   documentKind?: string;
   search?: string;
+  stageId?: string;
 }
 
 export interface OnlyofficeConfigDto {
@@ -42,4 +47,21 @@ export interface ConversionStatus {
   pdfUrl?: string;
   error?: string;
   createdAt: string;
+}
+
+export interface DocumentStage {
+  id: string;
+  title: string;
+  sortOrder: number;
+  documentCount?: number;
+}
+
+export interface CreateDocumentStage {
+  title: string;
+  sortOrder: number;
+}
+
+export interface UpdateDocumentStage {
+  title?: string;
+  sortOrder?: number;
 }

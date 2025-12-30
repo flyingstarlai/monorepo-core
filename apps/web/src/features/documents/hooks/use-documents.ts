@@ -14,6 +14,7 @@ export const useDocuments = (query?: any) => {
       if (query?.documentKind)
         params.append('documentKind', query.documentKind);
       if (query?.search) params.append('search', query.search);
+      if (query?.stageId) params.append('stageId', query.stageId);
 
       const response = await api.get<DocumentResponseDto[]>('/documents', {
         params,
@@ -49,6 +50,9 @@ export const useCreateDocument = (options?: {
       formData.append('documentNumber', data.documentNumber);
       formData.append('documentName', data.documentName);
       formData.append('version', data.version);
+      if (data.stageId) {
+        formData.append('stageId', data.stageId);
+      }
       if (data.documentAccessLevel !== undefined) {
         formData.append(
           'documentAccessLevel',
@@ -70,6 +74,7 @@ export const useCreateDocument = (options?: {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['document-stages'] });
       if (options?.onSuccess) {
         options.onSuccess(data, variables);
       }
@@ -99,6 +104,9 @@ export const useUpdateDocument = (options?: {
       if (data.version !== undefined) {
         formData.append('version', data.version);
       }
+      if (data.stageId !== undefined) {
+        formData.append('stageId', data.stageId);
+      }
       if (data.documentAccessLevel !== undefined) {
         formData.append(
           'documentAccessLevel',
@@ -121,6 +129,7 @@ export const useUpdateDocument = (options?: {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['documents'] });
       queryClient.invalidateQueries({ queryKey: ['document', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['document-stages'] });
       if (options?.onSuccess) {
         options.onSuccess(data, variables);
       }

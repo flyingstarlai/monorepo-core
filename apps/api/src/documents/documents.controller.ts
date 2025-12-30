@@ -131,6 +131,7 @@ export class DocumentsController {
       documentName: req.body.documentName,
       version: req.body.version,
       documentAccessLevel: req.body.documentAccessLevel,
+      stageId: req.body.stageId || undefined,
     } as CreateDocumentDto;
 
     let officeFile: any | undefined;
@@ -220,6 +221,7 @@ export class DocumentsController {
       documentName: req.body.documentName,
       version: req.body.version,
       documentAccessLevel: req.body.documentAccessLevel,
+      stageId: req.body.stageId || undefined,
     } as UpdateDocumentDto;
 
     let officeFile: any | undefined;

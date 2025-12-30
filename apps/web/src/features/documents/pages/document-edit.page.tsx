@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
+import { useForm } from '@tanstack/react-form';
+import * as z from 'zod';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useNavigate, Link, useParams } from '@tanstack/react-router';
 import {
@@ -22,6 +24,32 @@ import { Plus, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useDocument, useUpdateDocument } from '../hooks/use-documents';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const fileSchema =
+  typeof File === 'undefined'
+    ? z.any().nullable()
+    : z.instanceof(File).nullable();
+
+const documentFormSchema = z.object({
+  documentKind: z.string().min(1, '文檔類型為必填'),
+  documentNumber: z.string().min(1, '文檔編號為必填'),
+  documentName: z.string().min(1, '文檔名稱為必填'),
+  version: z.string().min(1, '版本為必填'),
+  documentAccessLevel: z.number().min(0).max(3),
+  stageId: z.string(),
+  officeFile: fileSchema,
+});
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (!error) return fallback;
+  if (typeof error === 'string') return error;
+  if (typeof error === 'object' && 'message' in error) {
+    const message = (error as { message?: string }).message;
+    if (message) return message;
+  }
+  return fallback;
+};
 
 export function DocumentEditPage() {
   const { user } = useAuthContext();
@@ -33,6 +61,7 @@ export function DocumentEditPage() {
   const canUpload = isAdmin || isManager;
 
   const { data: document, isLoading, error } = useDocument(id);
+  const stageOptions = document?.stageOptions ?? [];
   const { mutate: updateDocument, isPending } = useUpdateDocument({
     onSuccess: () => {
       toast.success('文檔更新成功');
@@ -43,83 +72,159 @@ export function DocumentEditPage() {
     },
   });
 
-  const [formData, setFormData] = useState({
-    documentKind: '',
-    documentNumber: '',
-    documentName: '',
-    version: '1.0',
-    documentAccessLevel: 1,
-    officeFile: null as File | null,
+  const form = useForm({
+    defaultValues: {
+      documentKind: '',
+      documentNumber: '',
+      documentName: '',
+      version: '1.0',
+      documentAccessLevel: 1,
+      stageId: '',
+      officeFile: null as File | null,
+    },
+    validators: {
+      onSubmit: documentFormSchema,
+    },
+    onSubmit: async ({ value }) => {
+      updateDocument({
+        id,
+        documentKind: value.documentKind,
+        documentNumber: value.documentNumber,
+        documentName: value.documentName,
+        version: value.version,
+        documentAccessLevel: value.documentAccessLevel,
+        stageId: value.stageId || undefined,
+        officeFile: value.officeFile || undefined,
+      });
+    },
   });
 
   useEffect(() => {
     if (document) {
-      setFormData({
-        documentKind: document.documentKind,
-        documentNumber: document.documentNumber,
-        documentName: document.documentName,
-        version: document.version,
+      form.reset({
+        documentKind: document.documentKind || '',
+        documentNumber: document.documentNumber || '',
+        documentName: document.documentName || '',
+        version: document.version || '1.0',
         documentAccessLevel: document.documentAccessLevel ?? 1,
+        stageId: document.stageId || document.stage?.id || '',
         officeFile: null,
       });
     }
-  }, [document]);
+  }, [document, form]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: File | null) => void,
+  ) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      onChange(null);
+      return;
+    }
 
     const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
       toast.error(`不允許的檔案格式：${file.name}`);
+      event.target.value = '';
+      onChange(null);
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
       toast.error(`檔案大小超過限制：${file.name}（最大 10MB）`);
+      event.target.value = '';
+      onChange(null);
       return;
     }
 
-    setFormData((prev) => ({ ...prev, officeFile: file }));
-  };
-
-  const handleInputChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    if (!formData.documentKind) {
-      toast.error('文檔類型為必填');
-      return;
-    }
-
-    if (!formData.documentNumber) {
-      toast.error('文檔編號為必填');
-      return;
-    }
-
-    if (!formData.documentName) {
-      toast.error('文檔名稱為必填');
-      return;
-    }
-
-    updateDocument({
-      id: id,
-      documentKind: formData.documentKind,
-      documentNumber: formData.documentNumber,
-      documentName: formData.documentName,
-      version: formData.version,
-      documentAccessLevel: formData.documentAccessLevel,
-      officeFile: formData.officeFile || undefined,
-    });
+    onChange(file);
   };
 
   if (isLoading) {
-    return <div className="p-4">載入文檔中...</div>;
+    return (
+      <div className="max-w-4xl space-y-4">
+        <div className="h-9 w-32">
+          <Skeleton className="h-full w-full" />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-28 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Skeleton className="h-9 w-24" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32 mb-2" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full mt-3" />
+                <Skeleton className="h-3 w-48 mt-1" />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
+                <Skeleton className="h-9 w-24" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-4 w-56" />
+              <Skeleton className="h-4 w-60" />
+              <Skeleton className="h-4 w-58" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (error || !document) {
@@ -168,100 +273,230 @@ export function DocumentEditPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit();
+            }}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="documentKind">文檔類型</Label>
-                <Input
-                  id="documentKind"
-                  value={formData.documentKind}
-                  onChange={(e) =>
-                    handleInputChange('documentKind', e.target.value)
-                  }
-                  placeholder="輸入文檔類型"
-                  required
-                />
-              </div>
+              <form.Field
+                name="documentKind"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  const errorMessage = isInvalid
+                    ? getErrorMessage(
+                        field.state.meta.errors[0],
+                        '請輸入有效的文檔類型',
+                      )
+                    : null;
 
-              <div className="space-y-2">
-                <Label htmlFor="documentNumber">文檔編號</Label>
-                <Input
-                  id="documentNumber"
-                  value={formData.documentNumber}
-                  onChange={(e) =>
-                    handleInputChange('documentNumber', e.target.value)
-                  }
-                  placeholder="輸入文檔編號"
-                  required
-                />
-              </div>
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="documentKind">文檔類型</Label>
+                      <Input
+                        id="documentKind"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="輸入文檔類型"
+                        required
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && errorMessage && (
+                        <p className="text-sm text-red-500">{errorMessage}</p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="documentName">文檔名稱</Label>
-                <Input
-                  id="documentName"
-                  value={formData.documentName}
-                  onChange={(e) =>
-                    handleInputChange('documentName', e.target.value)
-                  }
-                  placeholder="輸入文檔名稱"
-                  required
-                />
-              </div>
+              <form.Field
+                name="documentNumber"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  const errorMessage = isInvalid
+                    ? getErrorMessage(
+                        field.state.meta.errors[0],
+                        '請輸入有效的文檔編號',
+                      )
+                    : null;
 
-              <div className="space-y-2">
-                <Label htmlFor="version">版本</Label>
-                <Input
-                  id="version"
-                  value={formData.version}
-                  onChange={(e) => handleInputChange('version', e.target.value)}
-                  placeholder="輸入版本（例如：1.0）"
-                  required
-                />
-              </div>
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="documentNumber">文檔編號</Label>
+                      <Input
+                        id="documentNumber"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="輸入文檔編號"
+                        required
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && errorMessage && (
+                        <p className="text-sm text-red-500">{errorMessage}</p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
 
-              <div className="space-y-2">
-                <Label htmlFor="documentAccessLevel">文檔存取等級</Label>
-                <Select
-                  value={formData.documentAccessLevel.toString()}
-                  onValueChange={(value) =>
-                    handleInputChange(
-                      'documentAccessLevel',
-                      parseInt(value, 10),
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="選擇存取等級" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">0</SelectItem>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <form.Field
+                name="documentName"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  const errorMessage = isInvalid
+                    ? getErrorMessage(
+                        field.state.meta.errors[0],
+                        '請輸入有效的文檔名稱',
+                      )
+                    : null;
+
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="documentName">文檔名稱</Label>
+                      <Input
+                        id="documentName"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="輸入文檔名稱"
+                        required
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && errorMessage && (
+                        <p className="text-sm text-red-500">{errorMessage}</p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+
+              <form.Field
+                name="version"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  const errorMessage = isInvalid
+                    ? getErrorMessage(
+                        field.state.meta.errors[0],
+                        '請輸入有效的版本號',
+                      )
+                    : null;
+
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="version">版本</Label>
+                      <Input
+                        id="version"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        onBlur={field.handleBlur}
+                        placeholder="輸入版本（例如：1.0）"
+                        required
+                        aria-invalid={isInvalid}
+                      />
+                      {isInvalid && errorMessage && (
+                        <p className="text-sm text-red-500">{errorMessage}</p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+
+              <form.Field
+                name="stageId"
+                children={(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="stage">文檔階段</Label>
+                    <Select
+                      defaultValue={document?.stageId || ''}
+                      onValueChange={(value) => field.handleChange(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="選擇階段" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {stageOptions.map((stage) => (
+                          <SelectItem key={stage.id} value={stage.id}>
+                            {stage.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              />
+
+              <form.Field
+                name="documentAccessLevel"
+                children={(field) => {
+                  const isInvalid =
+                    field.state.meta.isTouched && !field.state.meta.isValid;
+                  const errorMessage = isInvalid
+                    ? getErrorMessage(
+                        field.state.meta.errors[0],
+                        '請選擇有效的存取等級',
+                      )
+                    : null;
+
+                  return (
+                    <div className="space-y-2">
+                      <Label htmlFor="documentAccessLevel">文檔存取等級</Label>
+                      <Select
+                        value={field.state.value?.toString() ?? '1'}
+                        onValueChange={(value) =>
+                          field.handleChange(parseInt(value, 10))
+                        }
+                      >
+                        <SelectTrigger aria-invalid={isInvalid}>
+                          <SelectValue placeholder="選擇存取等級" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">0</SelectItem>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {isInvalid && errorMessage && (
+                        <p className="text-sm text-red-500">{errorMessage}</p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="office-file">Office 檔案（可選）</Label>
-                <Input
-                  id="office-file"
-                  type="file"
-                  accept=".doc,.docx,.xls,.xlsx"
-                  onChange={(e) => handleFileChange(e)}
-                />
-                {formData.officeFile && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    已選擇：{formData.officeFile.name}
-                  </p>
+              <form.Field
+                name="officeFile"
+                children={(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor="office-file">Office 檔案（可選）</Label>
+                    <Input
+                      id="office-file"
+                      type="file"
+                      accept=".doc,.docx,.xls,.xlsx"
+                      onChange={(e) => handleFileChange(e, field.handleChange)}
+                      disabled={isPending}
+                    />
+                    {field.state.value && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        已選擇：{field.state.value.name}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      允許格式：.doc, .docx, .xls, .xlsx（最大 10MB）
+                    </p>
+                  </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  允許格式：.doc, .docx, .xls, .xlsx（最大 10MB）
-                </p>
-              </div>
+              />
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">

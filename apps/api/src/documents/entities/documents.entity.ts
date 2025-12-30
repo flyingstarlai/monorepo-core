@@ -4,12 +4,18 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { DocumentStageEntity } from './document-stage.entity';
 
 @Entity('TC_APP_DOCS')
 export class DocumentsEntity {
   @PrimaryColumn({ name: 'id', length: '20' })
   id: string;
+
+  @Column({ name: 'stage_id', length: '20', nullable: true })
+  stageId: string;
 
   @Column({ name: 'document_kind', length: '20', nullable: true })
   documentKind: string;
@@ -54,6 +60,10 @@ export class DocumentsEntity {
 
   @Column({ name: 'downloaded_at_user', length: '50', nullable: true })
   downloadedAtUser: string;
+
+  @ManyToOne(() => DocumentStageEntity, { nullable: true })
+  @JoinColumn({ name: 'stage_id' })
+  stage: DocumentStageEntity;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -169,7 +169,7 @@ export class MobileAppBuildService {
     filters: BuildFilters,
     pagination: PaginationOptions,
   ): Promise<PaginatedResult<MobileAppBuild>> {
-    const whereCondition: Partial<MobileAppBuild> & Record<string, any> = {};
+    const whereCondition: Record<string, any> = {};
 
     // Apply filters
     if (filters.definitionId) {

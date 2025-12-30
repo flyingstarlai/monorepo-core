@@ -51,18 +51,7 @@ import { User } from '../users/entities/user.entity';
 import type { Response, Request } from 'express';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
-interface MulterFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  size: number;
-  destination: string;
-  filename: string;
-  path: string;
-  buffer?: Buffer;
-}
-import type { File } from '@nest-lab/multer';
+type MulterFile = Express.Multer.File;
 
 @ApiTags('Documents')
 @Controller('documents')

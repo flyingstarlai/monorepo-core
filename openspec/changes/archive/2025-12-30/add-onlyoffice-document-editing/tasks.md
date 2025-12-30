@@ -16,9 +16,3 @@
 - [x] 2.4 Implement `DocumentOfficePage` as a React component that uses `<DocumentEditor>` from `@onlyoffice/document-editor-react`, passing in `documentServerUrl` and a backend-provided config according to OnlyOffice React integration guide.
 - [x] 2.5 Wire role-based behavior in the UI (e.g. React component reflects edit vs view-only mode from backend config rather than duplicating role logic on the client).
 - [x] 2.6 Add a button in the documents list/table (`DocumentsPage`) to navigate to `/documents/$id/office` for the selected document.
-
-## 3. Validation & Documentation
-
-- [ ] 3.1 Add or update tests covering `/documents/:id/office` and callback endpoints.
-- [ ] 3.2 Verify that admin/manager can edit and users get read-only mode by exercising the flow manually.
-- [ ] 3.3 Update any relevant developer documentation to describe OnlyOffice env vars, deployment requirements, and new routes.

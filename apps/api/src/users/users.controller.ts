@@ -87,7 +87,9 @@ export class UsersController {
     if (!req.user) {
       throw new NotFoundException('User profile not found');
     }
-    return req.user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...result } = req.user;
+    return result;
   }
 
   @Put('profile')

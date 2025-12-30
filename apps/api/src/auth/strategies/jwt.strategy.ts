@@ -22,12 +22,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: JwtPayload) {
+  async validate(payload: JwtPayload): Promise<Omit<User, 'password'>> {
     if (!payload.sub) {
       throw new UnauthorizedException();
     }
 
-    // Fetch the full user from database
     const user = await this.usersRepository.findOne({
       where: { id: payload.sub, isActive: true },
     });
@@ -36,6 +35,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException();
     }
 
-    return user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...result } = user;
+    return result as Omit<User, 'password'>;
   }
 }

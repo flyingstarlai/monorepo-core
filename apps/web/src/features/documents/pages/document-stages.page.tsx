@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { DeleteStageDialog } from '../components/delete-stage-dialog';
 
 interface DocumentStageFormData {
   title: string;
@@ -45,6 +46,11 @@ export function DocumentStagesPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStage, setEditingStage] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    id: string | null;
+    title: string | null;
+    isOpen: boolean;
+  }>({ id: null, title: null, isOpen: false });
   const [formData, setFormData] = useState<DocumentStageFormData>({
     title: '',
     sortOrder: stages ? stages.length + 1 : 1,
@@ -72,22 +78,27 @@ export function DocumentStagesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    if (confirm(`確定要刪除階段 "${title}" 嗎？`)) {
-      try {
-        await deleteStage.mutateAsync(id);
-        toast.success('階段刪除成功');
-      } catch (error: unknown) {
-        if (error && typeof error === 'object' && 'response' in error) {
-          const err = error as { response?: { data?: { message?: string } } };
-          if (err.response?.data?.message) {
-            toast.error(err.response.data.message);
-          } else {
-            toast.error('刪除失敗，請稍後再試');
-          }
+  const handleDelete = (id: string, title: string) => {
+    setDeleteDialog({ id, title, isOpen: true });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.id) return;
+
+    try {
+      await deleteStage.mutateAsync(deleteDialog.id);
+      setDeleteDialog({ id: null, title: null, isOpen: false });
+      toast.success('階段刪除成功');
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { data?: { message?: string } } };
+        if (err.response?.data?.message) {
+          toast.error(err.response.data.message);
         } else {
           toast.error('刪除失敗，請稍後再試');
         }
+      } else {
+        toast.error('刪除失敗，請稍後再試');
       }
     }
   };
@@ -283,6 +294,17 @@ export function DocumentStagesPage() {
               </form>
             </DialogContent>
           </Dialog>
+
+          <DeleteStageDialog
+            id={deleteDialog.id}
+            title={deleteDialog.title}
+            isOpen={deleteDialog.isOpen}
+            onClose={() =>
+              setDeleteDialog({ id: null, title: null, isOpen: false })
+            }
+            onConfirm={confirmDelete}
+            isLoading={deleteStage.isPending}
+          />
         </div>
       </CardContent>
     </Card>

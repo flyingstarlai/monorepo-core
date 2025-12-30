@@ -10,6 +10,7 @@ import { DocumentStageEntity } from './entities/document-stage.entity';
 import { DocumentsEntity } from './entities/documents.entity';
 import { CreateDocumentStageDto } from './dto/create-document-stage.dto';
 import { UpdateDocumentStageDto } from './dto/update-document-stage.dto';
+import { IdGenerator } from '../utils/id-generator';
 
 @Injectable()
 export class DocumentStageService {
@@ -36,7 +37,10 @@ export class DocumentStageService {
   }
 
   async create(dto: CreateDocumentStageDto): Promise<DocumentStageEntity> {
-    const stage = this.documentStageRepository.create(dto);
+    const stage = this.documentStageRepository.create({
+      id: IdGenerator.generateDocumentStageId(),
+      ...dto,
+    });
     return this.documentStageRepository.save(stage);
   }
 

@@ -257,17 +257,18 @@ export function DocumentsPage() {
 
   const { data: stages } = useDocumentStages();
 
+  const defaultStageId = stages && stages.length > 0 ? stages[0]?.id : '';
+  const activeStageId = selectedStageId ?? defaultStageId;
+
   const safeDocuments = Array.isArray(documents) ? documents : [];
   const filteredDocuments = safeDocuments.filter(
     (doc) =>
-      searchTerm === '' ||
-      doc.documentKind?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.documentNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.documentName?.toLowerCase().includes(searchTerm.toLowerCase()),
+      (activeStageId ? doc.stageId === activeStageId : true) &&
+      (searchTerm === '' ||
+        doc.documentKind?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.documentNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.documentName?.toLowerCase().includes(searchTerm.toLowerCase())),
   );
-
-  const defaultStageId = stages && stages.length > 0 ? stages[0]?.id : '';
-  const activeStageId = selectedStageId ?? defaultStageId;
 
   return (
     <Card className="border-0 shadow-sm w-full">

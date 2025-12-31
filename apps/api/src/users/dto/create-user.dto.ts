@@ -5,6 +5,7 @@ import {
   IsBoolean,
   IsEmail,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
   @IsString()
@@ -17,11 +18,13 @@ export class CreateUserDto {
   @IsString()
   fullName: string;
 
+  @IsOptional()
   @IsString()
-  deptNo: string;
+  deptNo?: string;
 
+  @IsOptional()
   @IsString()
-  deptName: string;
+  deptName?: string;
 
   @IsOptional()
   @IsString()
@@ -32,6 +35,7 @@ export class CreateUserDto {
   isActive?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsEmail({}, { message: 'Please provide a valid email address' })
   email?: string;
 

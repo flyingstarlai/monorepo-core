@@ -48,10 +48,12 @@ const userFormSchema = z.object({
   // Optional here; we enforce required on create via UI
   password: z.string().optional(),
   fullName: z.string().min(2, '全名長度至少需要2個字元'),
-  email: z.string().email('請提供有效的電子郵件地址').optional(),
+  email: z
+    .union([z.string().email('請提供有效的電子郵件地址'), z.literal('')])
+    .optional(),
   signLevel: z.number().min(1, '簽署等級至少為1').optional(),
-  deptNo: z.string().min(1, '部門代碼為必填項目'),
-  deptName: z.string().min(2, '部門名稱長度至少需要2個字元'),
+  deptNo: z.string().optional(),
+  deptName: z.string().optional(),
   role: z.enum(['admin', 'manager', 'user']),
   isActive: z.boolean(),
 });
@@ -320,7 +322,6 @@ export function UserForm({
                             }}
                             aria-invalid={isInvalid}
                             placeholder="例如：21110"
-                            required
                             className="pr-[3.5rem] border-r-0 focus:border-green-500"
                           />
 
@@ -363,7 +364,6 @@ export function UserForm({
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
                           placeholder="例如：技術傳承委員會"
-                          required
                         />
                         {isInvalid && (
                           <FieldError errors={field.state.meta.errors} />

@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsEmail,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateUserDto {
   @IsOptional()
@@ -40,6 +41,7 @@ export class UpdateUserDto {
   isActive?: boolean;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsEmail({}, { message: 'Please provide a valid email address' })
   email?: string;
 

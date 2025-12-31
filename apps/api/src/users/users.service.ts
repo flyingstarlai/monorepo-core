@@ -82,6 +82,9 @@ export class UsersService implements IUsersService {
       deptName,
       role,
       isActive,
+      signLevel: createUserDto.signLevel ?? 1,
+      email: createUserDto.email ?? null,
+      managerId: createUserDto.managerId ?? null,
     });
 
     try {
@@ -305,7 +308,6 @@ export class UsersService implements IUsersService {
     username: string,
     password: string,
   ): Promise<Omit<User, 'password'> | null> {
-
     const user = await this.usersRepository.findOne({
       where: { username, isActive: true },
     });

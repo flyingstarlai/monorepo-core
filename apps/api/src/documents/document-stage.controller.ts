@@ -35,7 +35,6 @@ export class DocumentStageController {
   constructor(private readonly documentStageService: DocumentStageService) {}
 
   @Get()
-  @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Get all document stages' })
   @ApiResponse({
     status: 200,
@@ -47,7 +46,7 @@ export class DocumentStageController {
   }
 
   @Post()
-  @Roles('admin')
+  @Roles('admin', 'manager')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create new document stage' })
   @ApiResponse({
@@ -61,7 +60,7 @@ export class DocumentStageController {
   }
 
   @Put(':id')
-  @Roles('admin')
+  @Roles('admin', 'manager')
   @ApiOperation({ summary: 'Update document stage' })
   @ApiParam({ name: 'id', description: 'Stage ID' })
   @ApiResponse({

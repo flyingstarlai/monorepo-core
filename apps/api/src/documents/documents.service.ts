@@ -1069,16 +1069,16 @@ export class DocumentsService {
   }
 
   private canEditDocument(user: User): boolean {
-    return user?.role === 'admin' || user?.role === 'manager';
+    return user?.role === 'admin';
   }
 
   /**
    * Check if user can download Office files (docx, xlsx, etc.)
-   * Only admins and managers can download Office files
+   * Admins and managers can download Office files
    * Regular users (role='user') are restricted to PDF downloads only
    */
   public canDownloadOfficeFile(user: User): boolean {
-    return this.canEditDocument(user);
+    return user?.role === 'admin' || user?.role === 'manager';
   }
 
   /**

@@ -119,7 +119,7 @@ export function DocumentOfficePage() {
 
   const serverCanEdit = Boolean(
     officeConfig.config?.editorConfig?.user?.canEdit
-      ? user?.role === 'admin' || user?.role === 'manager'
+      ? user?.role === 'admin'
       : false,
   );
   const isViewOnly = !serverCanEdit;

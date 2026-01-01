@@ -7,7 +7,7 @@ Admins and managers need a centralized way to publish official documents (proced
 - Add a "Document Center" feature gated behind `FEATURE_DOC_UPLOAD` to manage official documents.
 - Define a document metadata table logically equivalent to `IDOCCTRL` with fields for document kind, code, name, current version, Office file reference (Word/Excel), PDF file reference, and audit fields (creator, created date, last modifier, modified date, last downloader, last download date).
 - Provide API endpoints for listing documents, uploading new documents, updating existing entries, and downloading files.
-- Enforce role-based behavior: admins and managers can upload or replace documents; managers can download both Office (Word/Excel) and PDF; regular users can only download PDF version.
+- Enforce role-based behavior: admins and managers can upload or replace documents; admins can edit Office documents in-place; managers can DOWNLOAD but NOT EDIT both Office (Word/Excel) and PDF; regular users can only download PDF version.
 - Track and persist last downloader and last download timestamp whenever a document is downloaded.
 - Add a Web UI page for admins/managers to upload and manage documents, and a read-only listing for regular users with download buttons aligned to their permissions.
 - Feature flag: `FEATURE_DOC_UPLOAD` must gate both API module registration and frontend routes so the feature can be turned off in some environments.
@@ -15,7 +15,7 @@ Admins and managers need a centralized way to publish official documents (proced
 - Affected code: API (new documents module, DTOs, service, controller, entity mapped to an `IDOCCTRL`-style table); Web (new "Documents" page and navigation entry, upload form, document list + downloads); Auth/roles (use existing role/guard plumbing).
 - Feature flag: `FEATURE_DOC_UPLOAD` must gate both API module registration and frontend routes so the feature can be turned off in some environments.
 - Provide API endpoints for listing documents, uploading new documents, updating existing entries, and downloading files.
-- Enforce role-based behavior: admins and managers can upload or replace documents; managers can download both Office (Word/Excel) and PDF; regular users can only download the PDF version.
+- Enforce role-based behavior: admins and managers can upload or replace documents; managers can DOWNLOAD but NOT EDIT both Office (Word/Excel) and PDF; regular users can only download PDF version.
 - Track and persist last downloader and last download timestamp whenever a document is downloaded.
 - Add a Web UI page for admins/managers to upload and manage documents, and a read-only listing for regular users with download buttons aligned to their permissions.
 

@@ -5,7 +5,7 @@
 - [x] 1.3 Ensure OnlyOffice document URL reuses existing `/documents/:id/download?type=office` endpoint.
 - [x] 1.4 Implement a new controller endpoint (e.g. `GET /documents/:id/office`) that validates access, loads document, builds OnlyOffice config, signs it with JWT, and returns it.
 - [x] 1.5 Implement an OnlyOffice callback endpoint (e.g. `POST /documents/:id/office/callback`) that validates OnlyOffice JWT, handles status codes, downloads updated content from OnlyOffice if needed, and writes it back to existing office file path.
-- [x] 1.6 Add role checks so only `admin` and `manager` get edit permissions; `user` is forced to view-only.
+- [x] 1.6 Add role checks so only `admin` gets edit permissions; `manager` and `user` are forced to view-only.
 - [x] 1.7 Add tests for config builder and access control logic.
 
 ## 2. Frontend OnlyOffice Integration

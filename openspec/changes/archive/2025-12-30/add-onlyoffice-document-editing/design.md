@@ -32,8 +32,8 @@ We want to integrate OnlyOffice Document Server to enable online viewing and edi
 - **Access Control**
   - Reuse existing `JwtAuthGuard` and `RolesGuard` on the `/documents/:id/office` config endpoint.
   - Determine `canEdit` based on `user.role`:
-    - `admin`, `manager` → edit mode enabled (`editorConfig.mode = "edit"`, `permissions.edit = true`).
-    - `user` → view-only (`editorConfig.mode = "view"`, `permissions.edit = false`).
+    - `admin` → edit mode enabled (`editorConfig.mode = "edit"`, `permissions.edit = true`).
+    - `manager`, `user` → view-only (`editorConfig.mode = "view"`, `permissions.edit = false`).
   - Reuse existing `DocumentsService.canAccessDocument` logic to ensure the document’s `documentAccessLevel` is respected.
 
 - **Callback Handling**

@@ -49,6 +49,11 @@ interface OnlyOfficeEditorConfig {
     autosave: boolean;
     forcesave: boolean;
     forcesavetype: string;
+    hideMenu?: boolean;
+    hideToolbar?: boolean;
+    hideRulers?: boolean;
+    toolbarNoTabs?: boolean;
+    toolbarHideFileName?: boolean;
   };
 }
 
@@ -901,6 +906,11 @@ export class DocumentsService {
           autosave: true,
           forcesave: true,
           forcesavetype: 'update',
+          hideMenu: false,
+          hideToolbar: false,
+          hideRulers: true,
+          toolbarNoTabs: true,
+          toolbarHideFileName: true,
         },
       },
     };

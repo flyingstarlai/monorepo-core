@@ -64,10 +64,11 @@ export class UsersService implements IUsersService {
       username,
       password,
       fullName,
-      deptNo,
-      deptName,
       role = 'user',
       isActive = true,
+      signLevel,
+      email,
+      managerId,
     } = createUserDto;
 
     this.validateRoleCreation(role, creatorRole);
@@ -82,9 +83,9 @@ export class UsersService implements IUsersService {
       deptName: createUserDto.deptName ?? 'N/A',
       role,
       isActive,
-      signLevel: createUserDto.signLevel ?? 1,
-      email: createUserDto.email ?? null,
-      managerId: createUserDto.managerId ?? null,
+      signLevel: signLevel ?? 1,
+      email: email ?? null,
+      managerId: managerId ?? null,
     });
 
     try {

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  Res,
   HttpStatus,
   HttpCode,
   ForbiddenException,
@@ -455,6 +456,118 @@ export class MobileAppBuilderController {
     } catch {
       return { status: build.status, message: 'Failed to get Jenkins status' };
     }
+  }
+
+  @Get('builds/:id/stages')
+  @ApiOperation({ summary: 'Get Jenkins pipeline stage progress' })
+  @ApiParam({ name: 'id', description: 'Build ID' })
+  @ApiResponse({ status: 200, description: 'Pipeline stage progress' })
+  async getBuildStages(@Param('id') id: string) {
+    this.checkFeatureFlag();
+
+    const build = await this.mobileAppBuildService.findById(id);
+    if (!build) {
+      throw new Error('Build not found');
+    }
+
+    const buildNumber = build.jenkinsBuildNumber;
+    const status = build.status;
+
+    return this.jenkinsService.getPipelineStageProgress(buildNumber, status);
+  }
+
+  @Get('builds/:id/console')
+  @ApiOperation({ summary: 'Get Jenkins build console output' })
+  @ApiParam({ name: 'id', description: 'Build ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Build console output (text/plain)',
+  })
+  async getBuildConsole(@Param('id') id: string, @Res() res: Response) {
+    this.checkFeatureFlag();
+
+    const build = await this.mobileAppBuildService.findById(id);
+    if (!build) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: 'Build not found',
+      });
+    }
+
+    if (!build.jenkinsQueueId) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: 'Build has not been queued with Jenkins yet',
+      });
+    }
+
+    try {
+      const consoleOutput = await this.jenkinsService.getBuildConsoleFull(
+        build.jenkinsQueueId,
+      );
+
+      if (!consoleOutput) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          message: 'Console output not available yet',
+        });
+      }
+
+      res.setHeader('Content-Type', 'text/plain');
+      res.send(consoleOutput);
+    } catch (error) {
+      this.logger.error(`Failed to get console for build ${id}:`, error);
+      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Failed to retrieve console output from Jenkins',
+      });
+    }
+  }
+
+  @Get('builds/:id/download')
+  @Roles('admin', 'manager')
+  @ApiOperation({ summary: 'Get presigned download URL for build artifact' })
+  @ApiParam({ name: 'id', description: 'Build ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Presigned URL with 1-hour expiry',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - insufficient permissions',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Build or artifact not found',
+  })
+  async getDownloadUrl(@Param('id') id: string) {
+    this.checkFeatureFlag();
+
+    const build = await this.mobileAppBuildService.findById(id);
+    if (!build) {
+      throw new Error('Build not found');
+    }
+
+    if (build.status !== 'completed' || !build.artifactPath) {
+      return {
+        url: null,
+        fileName: null,
+        expiresAt: null,
+        message:
+          build.status !== 'completed'
+            ? 'Build has not completed yet'
+            : 'Artifact not available for this build',
+      };
+    }
+
+    const presignedUrl = await this.minioService.getAndroidArtifactDownloadUrl(
+      build.artifactPath,
+    );
+
+    const expiresAt = new Date(Date.now() + 3600000).toISOString();
+    const fileName = build.artifactPath.split('/').pop() || 'app-release.apk';
+
+    return {
+      url: presignedUrl,
+      fileName,
+      expiresAt,
+    };
   }
 
   @Get('builds/analytics')

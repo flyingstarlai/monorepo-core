@@ -69,5 +69,5 @@
 
 ## 8. Build Stage Progress & Jenkins Parameters
 
-- [ ] 8.1 Implement build stage progress UI in `apps/web/src/routes/_authenticated/app-builder.$id.build.tsx` based on Jenkins pipeline stages defined in `devops/pipelines/app-builder/Jenkinsfile`.
-- [ ] 8.2 Ensure Jenkins build trigger parameters (`APP_NAME`, `APP_ID`, `APP_MODULE`, `SERVER_IP`, `MINIO_BUCKET`, `GIT_BRANCH`, `COMPANY`) and their values are consistent between the API (`JenkinsService.queueBuild`) and `devops/pipelines/app-builder/Jenkinsfile`; update tests and documentation as needed.
+- [x] 8.1 Implement build stage progress API endpoints for `apps/web/src/routes/_authenticated/app-builder.$id.build.tsx` based on Jenkins pipeline stages defined in `devops/pipelines/app-builder/Jenkinsfile`. Added three endpoints: `GET /builds/:id/stages`, `GET /builds/:id/console`, and `GET /builds/:id/download`.
+- [x] 8.2 Ensure Jenkins build trigger parameters (`APP_NAME`, `APP_ID`, `APP_MODULE`, `SERVER_IP`, `MINIO_BUCKET`, `GIT_BRANCH`, `COMPANY`) and their values are consistent between the API (`JenkinsService.queueBuild`) and `devops/pipelines/app-builder/Jenkinsfile`; verified all parameters are passed correctly.

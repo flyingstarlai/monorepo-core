@@ -23,6 +23,10 @@ export function DocumentOfficePage() {
   const { user } = useAuthContext();
   const { id } = useParams({ from: '/_authenticated/documents/$id/office' });
 
+  const { data: officeConfig, isLoading, error } = useDocumentOfficeConfig(id);
+
+  const isPdfFile = officeConfig?.config?.document?.fileType === 'pdf';
+
   const [jobId, setJobId] = useState<string | null>(null);
   const { data: conversionStatus } = useConversionStatus(id, jobId || '');
   const {
@@ -42,13 +46,31 @@ export function DocumentOfficePage() {
       toast.success('PDF 下載成功');
     },
     onError: (error: any) => {
-      // If conversion is still in progress, we'll handle jobId in caller
       if (error?.jobId) {
         return;
       }
       toast.error('PDF 下載失敗');
     },
   });
+
+  const { mutate: downloadPdfDirect, isPending: isDownloadingPdfDirect } =
+    useDownloadDocument({
+      onSuccess: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${officeConfig?.config?.document?.title || 'document'}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success('PDF 下載成功');
+      },
+      onError: () => {
+        toast.error('PDF 下載失敗');
+      },
+    });
+
   const { mutate: downloadOffice, isPending: isDownloadingOffice } =
     useDownloadDocument({
       onSuccess: (blob) => {
@@ -68,11 +90,8 @@ export function DocumentOfficePage() {
       },
     });
 
-  const { data: officeConfig, isLoading, error } = useDocumentOfficeConfig(id);
-
   useEffect(() => {
     if (conversionStatus?.status === 'completed' && jobId) {
-      // Auto-download once conversion completes
       downloadPdfAsync(id).catch((error: any) => {
         console.error('Auto PDF download failed', error);
       });
@@ -126,13 +145,15 @@ export function DocumentOfficePage() {
 
   const handleDownloadPdf = async () => {
     if (!id) return;
-    try {
-      await downloadPdf(id);
-    } catch (error: any) {
-      // If backend indicates conversion is still in progress,
-      // capture the jobId so we can poll status and auto-download later.
-      if (error?.jobId) {
-        setJobId(error.jobId);
+    if (isPdfFile) {
+      downloadPdfDirect({ id, type: 'pdf' });
+    } else {
+      try {
+        await downloadPdf(id);
+      } catch (error: any) {
+        if (error?.jobId) {
+          setJobId(error.jobId);
+        }
       }
     }
   };
@@ -158,7 +179,7 @@ export function DocumentOfficePage() {
         </Link>
 
         <div className="flex items-center gap-2">
-          {officeConfig?.config?.document?.fileType && (
+          {!isPdfFile && officeConfig?.config?.document?.fileType && (
             <Button
               variant="outline"
               size="sm"
@@ -178,15 +199,16 @@ export function DocumentOfficePage() {
             variant="outline"
             size="sm"
             onClick={handleDownloadPdf}
-            disabled={isDownloadingPdf}
+            disabled={isDownloadingPdf || isDownloadingPdfDirect}
           >
-            {isDownloadingPdf ? (
+            {isDownloadingPdf || isDownloadingPdfDirect ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <FileText className="mr-2 h-4 w-4" />
             )}
-            {conversionStatus?.status === 'processing' ||
-            conversionStatus?.status === 'pending'
+            {!isPdfFile &&
+            (conversionStatus?.status === 'processing' ||
+              conversionStatus?.status === 'pending')
               ? '轉換中...'
               : '下載 PDF'}
           </Button>

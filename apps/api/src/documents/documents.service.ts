@@ -498,7 +498,10 @@ export class DocumentsService {
       );
     }
 
-    qb.orderBy('document.documentKind', 'ASC').addOrderBy('document.createdAt', 'DESC');
+    qb.orderBy('document.documentKind', 'ASC').addOrderBy(
+      'document.createdAt',
+      'DESC',
+    );
 
     const documents = await qb.getMany();
     return documents.map((document) => this.mapToResponse(document));
@@ -566,6 +569,9 @@ export class DocumentsService {
           'pdf',
           pdfFile,
         );
+        if (!officeFile) {
+          document.officeFilePath = document.pdfFilePath;
+        }
       }
 
       const savedDocument = await this.documentsRepository.save(document);
@@ -624,6 +630,10 @@ export class DocumentsService {
           'pdf',
           pdfFile,
         );
+        if (!officeFile) {
+          this.deleteFileIfExists(document.officeFilePath);
+          document.officeFilePath = document.pdfFilePath;
+        }
       }
 
       const savedDocument = await this.documentsRepository.save(document);
@@ -869,8 +879,10 @@ export class DocumentsService {
       ['ppt', 'pptx', 'pps', 'ppsx', 'odp', 'otp'].includes(fileExt)
     ) {
       documentType = 'slide';
-    } else if (fileExt && ['pdf', 'djvu', 'oxps', 'xps', 'txt'].includes(fileExt)) {
+    } else if (fileExt && ['pdf', 'djvu', 'oxps', 'xps'].includes(fileExt)) {
       documentType = 'pdf';
+    } else if (fileExt === 'txt') {
+      documentType = 'word';
     }
 
     const config: OnlyOfficeConfig = {
@@ -1065,7 +1077,7 @@ export class DocumentsService {
       xls: 'application/vnd.ms-excel',
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       pdf: 'application/pdf',
-      txt: 'text/plain',
+      txt: 'text/plain; charset=utf-8',
     };
     return contentTypeMap[ext || ''] || 'application/octet-stream';
   }

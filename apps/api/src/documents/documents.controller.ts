@@ -147,7 +147,8 @@ export class DocumentsController {
           file.mimetype.includes('wordprocessingml.document') ||
           file.mimetype.includes('spreadsheetml.sheet') ||
           file.mimetype.includes('msword') ||
-          file.mimetype.includes('vnd.ms-excel'),
+          file.mimetype.includes('vnd.ms-excel') ||
+          file.mimetype === 'text/plain',
       );
       pdfFile = files.find((file) => file.mimetype === 'application/pdf');
 
@@ -155,7 +156,7 @@ export class DocumentsController {
 
       if (officeFile) {
         const ext = officeFile.originalname.split('.').pop()?.toLowerCase();
-        const allowed = ['doc', 'docx', 'xls', 'xlsx'];
+        const allowed = ['doc', 'docx', 'xls', 'xlsx', 'txt'];
         if (!ext || !allowed.includes(ext)) {
           validationErrors.push(`Office file: invalid type "${ext}"`);
           this.logger.warn(
@@ -237,7 +238,8 @@ export class DocumentsController {
           file.mimetype.includes('wordprocessingml.document') ||
           file.mimetype.includes('spreadsheetml.sheet') ||
           file.mimetype.includes('msword') ||
-          file.mimetype.includes('vnd.ms-excel'),
+          file.mimetype.includes('vnd.ms-excel') ||
+          file.mimetype === 'text/plain',
       );
       pdfFile = files.find((file) => file.mimetype === 'application/pdf');
 
@@ -245,7 +247,7 @@ export class DocumentsController {
 
       if (officeFile) {
         const ext = officeFile.originalname.split('.').pop()?.toLowerCase();
-        const allowed = ['doc', 'docx', 'xls', 'xlsx'];
+        const allowed = ['doc', 'docx', 'xls', 'xlsx', 'txt'];
         if (!ext || !allowed.includes(ext)) {
           validationErrors.push(`Office file: invalid type "${ext}"`);
           this.logger.warn(

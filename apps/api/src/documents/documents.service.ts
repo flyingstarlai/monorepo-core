@@ -498,7 +498,7 @@ export class DocumentsService {
       );
     }
 
-    qb.orderBy('document.createdAt', 'DESC');
+    qb.orderBy('document.documentKind', 'ASC').addOrderBy('document.createdAt', 'DESC');
 
     const documents = await qb.getMany();
     return documents.map((document) => this.mapToResponse(document));
@@ -869,7 +869,7 @@ export class DocumentsService {
       ['ppt', 'pptx', 'pps', 'ppsx', 'odp', 'otp'].includes(fileExt)
     ) {
       documentType = 'slide';
-    } else if (fileExt && ['pdf', 'djvu', 'oxps', 'xps'].includes(fileExt)) {
+    } else if (fileExt && ['pdf', 'djvu', 'oxps', 'xps', 'txt'].includes(fileExt)) {
       documentType = 'pdf';
     }
 
@@ -1006,6 +1006,7 @@ export class DocumentsService {
       'application/msword': 'doc',
       'application/vnd.ms-excel': 'xls',
       'application/pdf': 'pdf',
+      'text/plain': 'txt',
     };
 
     if (file.mimetype && mimeTypeMap[file.mimetype]) {
@@ -1064,6 +1065,7 @@ export class DocumentsService {
       xls: 'application/vnd.ms-excel',
       xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       pdf: 'application/pdf',
+      txt: 'text/plain',
     };
     return contentTypeMap[ext || ''] || 'application/octet-stream';
   }

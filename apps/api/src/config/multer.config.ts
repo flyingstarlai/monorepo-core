@@ -15,7 +15,7 @@ interface MulterFile {
 }
 
 const UPLOAD_DEST = process.env.UPLOAD_DEST_DIR || './uploads/documents';
-const MAX_FILE_SIZE = parseInt(process.env.UPLOAD_MAX_FILE_SIZE || '10485760');
+const MAX_FILE_SIZE = parseInt(process.env.UPLOAD_MAX_FILE_SIZE || '104857600');
 
 const allowedMimeTypes = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -23,9 +23,10 @@ const allowedMimeTypes = [
   'application/msword',
   'application/vnd.ms-excel',
   'application/pdf',
+  'text/plain',
 ];
 
-const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf'];
+const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt'];
 
 const getFileName = (
   req: Request,

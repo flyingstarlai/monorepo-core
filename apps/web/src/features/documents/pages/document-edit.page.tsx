@@ -123,7 +123,7 @@ export function DocumentEditPage() {
       return;
     }
 
-    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx'];
+    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -133,8 +133,8 @@ export function DocumentEditPage() {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(`檔案大小超過限制：${file.name}（最大 10MB）`);
+    if (file.size > 100 * 1024 * 1024) {
+      toast.error(`檔案大小超過限制：${file.name}（最大 100MB）`);
       event.target.value = '';
       onChange(null);
       return;
@@ -474,29 +474,29 @@ export function DocumentEditPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <form.Field
-                name="officeFile"
-                children={(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor="office-file">Office 檔案（可選）</Label>
-                    <Input
-                      id="office-file"
-                      type="file"
-                      accept=".doc,.docx,.xls,.xlsx"
-                      onChange={(e) => handleFileChange(e, field.handleChange)}
-                      disabled={isPending}
-                    />
-                    {field.state.value && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        已選擇：{field.state.value.name}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">
-                      允許格式：.doc, .docx, .xls, .xlsx（最大 10MB）
-                    </p>
-                  </div>
-                )}
-              />
+               <form.Field
+                 name="officeFile"
+                 children={(field) => (
+                   <div className="space-y-2">
+                     <Label htmlFor="office-file">檔案（可選）</Label>
+                     <Input
+                       id="office-file"
+                       type="file"
+                       accept=".doc,.docx,.xls,.xlsx,.pdf,.txt"
+                       onChange={(e) => handleFileChange(e, field.handleChange)}
+                       disabled={isPending}
+                     />
+                     {field.state.value && (
+                       <p className="text-sm text-muted-foreground mt-1">
+                         已選擇：{field.state.value.name}
+                       </p>
+                     )}
+                     <p className="text-xs text-muted-foreground mt-1">
+                       允許格式：.doc, .docx, .xls, .xlsx, .pdf, .txt（最大 100MB）
+                     </p>
+                   </div>
+                 )}
+               />
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
@@ -524,8 +524,8 @@ export function DocumentEditPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <ul className="list-disc list-inside space-y-1">
-            <li>最大大小：每個檔案 10MB</li>
-            <li>允許格式：.doc, .docx, .xls, .xlsx</li>
+            <li>最大大小：每個檔案 100MB</li>
+            <li>允許格式：.doc, .docx, .xls, .xlsx, .pdf, .txt</li>
             <li>如需替換檔案，請選擇新檔案上傳</li>
             <li>否則僅更新文檔資訊即可</li>
           </ul>

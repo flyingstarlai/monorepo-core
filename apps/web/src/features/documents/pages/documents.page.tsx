@@ -11,13 +11,15 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
-import { Plus, Search, FileDown, FileEdit, Settings } from 'lucide-react';
+import { Plus, Search, FileDown, FileEdit, Settings, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
-import { useDocuments } from '../hooks/use-documents';
+import { useDocuments, useDeleteDocument } from '../hooks/use-documents';
 import { useDocumentStages } from '../hooks/use-document-stages';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DeleteDocumentDialog } from '../components/delete-document-dialog';
+import { toast } from 'sonner';
 
 const formatDate = (dateString: string | undefined): string => {
   if (!dateString) return '-';
@@ -41,6 +43,7 @@ interface DocumentTableProps {
   isManager: boolean;
   canUpload: boolean;
   navigate: any;
+  onDelete: (id: string, documentNumber: string, documentName: string) => void;
 }
 
 function DocumentTable({
@@ -50,6 +53,7 @@ function DocumentTable({
   isManager,
   canUpload,
   navigate,
+  onDelete,
 }: DocumentTableProps) {
   const columnWidths = [
     'w-20',
@@ -214,6 +218,20 @@ function DocumentTable({
                         編輯
                       </Button>
                     )}
+
+                    {canUpload && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          onDelete(doc.id, doc.documentNumber, doc.documentName)
+                        }
+                        className="h-8"
+                      >
+                        <Trash2 className="mr-1 h-4 w-4" />
+                        刪除
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -243,6 +261,12 @@ export function DocumentsPage() {
   const [selectedStageId, setSelectedStageId] = useState<string | undefined>(
     undefined,
   );
+  const [deleteDialog, setDeleteDialog] = useState<{
+    id: string | null;
+    documentNumber: string | null;
+    documentName: string | null;
+    isOpen: boolean;
+  }>({ id: null, documentNumber: null, documentName: null, isOpen: false });
   const navigate = useNavigate();
 
   const isAdmin = user?.role === 'admin';
@@ -257,8 +281,27 @@ export function DocumentsPage() {
 
   const { data: stages } = useDocumentStages();
 
+  const deleteDocument = useDeleteDocument({
+    onSuccess: () => {
+      toast.success('文檔刪除成功');
+      setDeleteDialog({ id: null, documentNumber: null, documentName: null, isOpen: false });
+    },
+    onError: () => {
+      toast.error('刪除失敗，請稍後再試');
+    },
+  });
+
   const defaultStageId = stages && stages.length > 0 ? stages[0]?.id : '';
   const activeStageId = selectedStageId ?? defaultStageId;
+
+  const handleDelete = (id: string, documentNumber: string, documentName: string) => {
+    setDeleteDialog({ id, documentNumber, documentName, isOpen: true });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.id) return;
+    await deleteDocument.mutateAsync(deleteDialog.id);
+  };
 
   const safeDocuments = Array.isArray(documents) ? documents : [];
   const filteredDocuments = safeDocuments.filter(
@@ -271,90 +314,103 @@ export function DocumentsPage() {
   );
 
   return (
-    <Card className="border-0 shadow-sm w-full">
-      <CardContent className="p-4">
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <FileDown className="h-5 w-5 text-muted-foreground" />
-              <span className="font-semibold">文檔</span>
-              <Badge variant="secondary" className="text-xs">
-                {filteredDocuments.length} / {safeDocuments.length}
-              </Badge>
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="搜尋文檔..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-48 h-9 text-sm"
-                />
+    <>
+      <Card className="border-0 shadow-sm w-full">
+        <CardContent className="p-4">
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileDown className="h-5 w-5 text-muted-foreground" />
+                <span className="font-semibold">文檔</span>
+                <Badge variant="secondary" className="text-xs">
+                  {filteredDocuments.length} / {safeDocuments.length}
+                </Badge>
               </div>
 
-              {canUpload && (
-                <Button
-                  onClick={() => navigate({ to: '/documents/create' })}
-                  size="sm"
-                  className="h-9"
-                >
-                  <Plus className="mr-1 h-4 w-4" />
-                  上傳文檔
-                </Button>
-              )}
-            </div>
-          </div>
+              <div className="flex flex-wrap gap-2 items-center">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜尋文檔..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-48 h-9 text-sm"
+                  />
+                </div>
 
-          <div className="w-full overflow-x-auto">
-            <Tabs
-              value={activeStageId}
-              onValueChange={(value) => setSelectedStageId(value)}
-              className="w-full"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <TabsList className="inline-flex h-9 min-w-[400px] flex-1 items-center rounded-lg bg-slate-100 p-1">
-                  {stages?.map((stage) => (
-                    <TabsTrigger
-                      key={stage.id}
-                      value={stage.id}
-                      className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200"
-                    >
-                      {stage.title} ({stage.documentCount || 0})
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-
-                {isAdmin && (
+                {canUpload && (
                   <Button
+                    onClick={() => navigate({ to: '/documents/create' })}
                     size="sm"
-                    variant="ghost"
-                    onClick={() => navigate({ to: '/documents/stages' })}
-                    className="h-9 w-9 p-0"
-                    title="階段管理"
+                    className="h-9"
                   >
-                    <Settings className="h-4 w-4" />
+                    <Plus className="mr-1 h-4 w-4" />
+                    上傳文檔
                   </Button>
                 )}
               </div>
+            </div>
 
-              {activeStageId && (
-                <TabsContent value={activeStageId} className="mt-4">
-                  <DocumentTable
-                    documents={filteredDocuments}
-                    isLoading={isLoading}
-                    isAdmin={isAdmin}
-                    isManager={isManager}
-                    canUpload={canUpload}
-                    navigate={navigate}
-                  />
-                </TabsContent>
-              )}
-            </Tabs>
+            <div className="w-full overflow-x-auto">
+              <Tabs
+                value={activeStageId}
+                onValueChange={(value) => setSelectedStageId(value)}
+                className="w-full"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <TabsList className="inline-flex h-9 min-w-[400px] flex-1 items-center rounded-lg bg-slate-100 p-1">
+                    {stages?.map((stage) => (
+                      <TabsTrigger
+                        key={stage.id}
+                        value={stage.id}
+                        className="flex-1 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200"
+                      >
+                        {stage.title} ({stage.documentCount || 0})
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+
+                  {isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => navigate({ to: '/documents/stages' })}
+                      className="h-9 w-9 p-0"
+                      title="階段管理"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                {activeStageId && (
+                  <TabsContent value={activeStageId} className="mt-4">
+                    <DocumentTable
+                      documents={filteredDocuments}
+                      isLoading={isLoading}
+                      isAdmin={isAdmin}
+                      isManager={isManager}
+                      canUpload={canUpload}
+                      navigate={navigate}
+                      onDelete={handleDelete}
+                    />
+                  </TabsContent>
+                )}
+              </Tabs>
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <DeleteDocumentDialog
+        id={deleteDialog.id}
+        documentNumber={deleteDialog.documentNumber}
+        documentName={deleteDialog.documentName}
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ id: null, documentNumber: null, documentName: null, isOpen: false })}
+        onConfirm={confirmDelete}
+        isLoading={deleteDocument.isPending}
+      />
+    </>
   );
 }

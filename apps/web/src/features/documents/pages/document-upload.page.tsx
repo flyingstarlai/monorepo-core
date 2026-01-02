@@ -64,7 +64,7 @@ export function DocumentUploadPage() {
 
     setUploadError(null);
 
-    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx'];
+    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -72,8 +72,8 @@ export function DocumentUploadPage() {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError(`檔案大小超過限制：${file.name}（最大 10MB）`);
+    if (file.size > 100 * 1024 * 1024) {
+      setUploadError(`檔案大小超過限制：${file.name}（最大 100MB）`);
       return;
     }
 
@@ -108,7 +108,7 @@ export function DocumentUploadPage() {
     }
 
     if (!formData.officeFile) {
-      setUploadError('請選擇 Office 檔案');
+      setUploadError('請選擇檔案（Office/PDF/TXT）');
       return;
     }
 
@@ -159,7 +159,7 @@ export function DocumentUploadPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">上傳新文檔</h1>
           <p className="text-slate-600 mt-2">
-            上傳 Office（.doc, .docx, .xls, .xlsx）檔案，最大 10MB。
+            上傳 Office、PDF 或 TXT 檔案（.doc, .docx, .xls, .xlsx, .pdf, .txt），最大 100MB。
           </p>
         </div>
       </div>
@@ -275,11 +275,11 @@ export function DocumentUploadPage() {
             {/* File Upload Section */}
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="office-file">Office 檔案</Label>
+                <Label htmlFor="office-file">檔案</Label>
                 <Input
                   id="office-file"
                   type="file"
-                  accept=".doc,.docx,.xls,.xlsx"
+                  accept=".doc,.docx,.xls,.xlsx,.pdf,.txt"
                   onChange={(e) => handleFileChange(e)}
                   required
                 />
@@ -289,7 +289,7 @@ export function DocumentUploadPage() {
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground mt-1">
-                  允許格式：.doc, .docx, .xls, .xlsx（最大 10MB）
+                  允許格式：.doc, .docx, .xls, .xlsx, .pdf, .txt（最大 100MB）
                 </p>
               </div>
             </div>
@@ -329,8 +329,8 @@ export function DocumentUploadPage() {
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <ul className="list-disc list-inside space-y-1">
-            <li>最大大小：每個檔案 10MB</li>
-            <li>允許格式：.doc, .docx, .xls, .xlsx</li>
+            <li>最大大小：每個檔案 100MB</li>
+            <li>允許格式：.doc, .docx, .xls, .xlsx, .pdf, .txt</li>
             <li>如需替換檔案，請選擇新檔案上傳</li>
             <li>否則僅更新文檔資訊即可</li>
           </ul>

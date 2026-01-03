@@ -79,35 +79,6 @@ export function DashboardHeader() {
       });
     }
 
-    // Users
-    else if (first === 'users') {
-      breadcrumbs.push({
-        label: '用戶管理',
-        href: '/users',
-        isCurrentPage: normalizedSegments.length === 1,
-      });
-
-      if (second === 'create') {
-        breadcrumbs.push({
-          label: '新增用戶',
-          href: '/users/create',
-          isCurrentPage: true,
-        });
-      } else if (second && third === 'edit') {
-        breadcrumbs.push({
-          label: '編輯用戶',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      } else if (second) {
-        breadcrumbs.push({
-          label: '用戶詳情',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      }
-    }
-
     // App Builder
     else if (first === 'app-builder') {
       breadcrumbs.push({

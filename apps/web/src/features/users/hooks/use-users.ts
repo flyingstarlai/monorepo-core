@@ -5,7 +5,9 @@ import type {
   CreateUserData,
   UpdateUserData,
   FactoryUser,
-  FactoryDepartment,
+  Department,
+  CreateDepartmentData,
+  UpdateDepartmentData,
 } from '../types/user.types';
 
 export const useUsers = () => {
@@ -157,13 +159,93 @@ export const useFactoryUsers = () => {
 
 export const useFactoryDepartments = () => {
   return useQuery({
-    queryKey: ['factory-departments'],
-    queryFn: async (): Promise<FactoryDepartment[]> => {
-      const response = await api.get('/users/factory-departments');
-      return response.data as FactoryDepartment[];
+    queryKey: ['departments'],
+    queryFn: async (): Promise<Department[]> => {
+      const response = await api.get('/departments');
+      return response.data as Department[];
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
     retryDelay: 1000,
+  });
+};
+
+export const useDepartments = () => {
+  return useQuery({
+    queryKey: ['departments-all'],
+    queryFn: async (): Promise<Department[]> => {
+      const response = await api.get('/departments');
+      return response.data as Department[];
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+export const useDepartment = (deptNo: string) => {
+  return useQuery({
+    queryKey: ['department', deptNo],
+    queryFn: async (): Promise<Department> => {
+      const response = await api.get(`/departments/${deptNo}`);
+      return response.data as Department;
+    },
+    enabled: !!deptNo,
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useCreateDepartment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateDepartmentData): Promise<Department> => {
+      const response = await api.post('/departments', data);
+      return response.data as Department;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+  });
+};
+
+export const useUpdateDepartment = (deptNo: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: UpdateDepartmentData): Promise<Department> => {
+      const response = await api.put(`/departments/${deptNo}`, data);
+      return response.data as Department;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+  });
+};
+
+export const useToggleDepartmentActive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (deptNo: string): Promise<Department> => {
+      const response = await api.patch(`/departments/${deptNo}/toggle-active`);
+      return response.data as Department;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
+  });
+};
+
+export const useDeleteDepartment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (deptNo: string): Promise<void> => {
+      await api.delete(`/departments/${deptNo}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+    },
   });
 };

@@ -17,7 +17,6 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
-import { FactoryDepartmentDto } from './dto/factory-department.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { MobileLoginHistoryDto } from './dto/mobile-login-history.dto';
@@ -68,16 +67,6 @@ export class UsersController {
       return await this.usersService.getFactoryUsers();
     } catch (error) {
       console.error('Factory users endpoint error:', error);
-      throw error;
-    }
-  }
-
-  @Get('factory-departments')
-  async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
-    try {
-      return await this.usersService.getFactoryDepartments();
-    } catch (error) {
-      console.error('Factory departments endpoint error:', error);
       throw error;
     }
   }

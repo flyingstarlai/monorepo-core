@@ -52,7 +52,7 @@ function UsersLayout() {
         {isUsersIndex && getCreateUserLink() && (
           <Link to={getCreateUserLink()}>
             <Button className="flex items-center space-x-2">
-              <span>建立用戶</span>
+              <span>新增用戶</span>
             </Button>
           </Link>
         )}

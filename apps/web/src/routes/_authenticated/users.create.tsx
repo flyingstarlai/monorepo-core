@@ -55,11 +55,11 @@ function UsersCreate() {
         onSubmit={handleSubmit}
         isLoading={createUserMutation.isPending}
         currentUserRole={user?.role}
-        title="建立新用戶"
+        title="新增用戶"
         description={
           user?.role === 'manager'
-            ? '作為維護員，您只能建立具有「一般用戶」角色的用戶。'
-            : '建立一個具有適當權限的新用戶。'
+            ? '作為維護員，您只能新增具有「一般用戶」角色的用戶。'
+            : undefined
         }
       />
     </div>

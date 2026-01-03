@@ -139,19 +139,18 @@ export function UserForm({
   return (
     <LoadingOverlay
       isLoading={isLoading}
-      message={isEdit ? '更新用戶中...' : '建立用戶中...'}
+      message={isEdit ? '更新用戶中...' : '新增用戶中...'}
     >
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium text-slate-900">
-            {title || (isEdit ? '編輯用戶' : '建立新用戶')}
+            {title || (isEdit ? '編輯用戶' : '新增用戶')}
           </CardTitle>
-          <CardDescription className="text-slate-600">
-            {description ||
-              (isEdit
-                ? '更新用戶資訊和權限'
-                : '新增一個新用戶到系統並設定適當權限')}
-          </CardDescription>
+          {description && (
+            <CardDescription className="text-slate-600">
+              {description}
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent className="p-6">
           <form
@@ -424,7 +423,7 @@ export function UserForm({
                 ) : (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 md:col-span-2">
                     <p className="text-sm text-yellow-800">
-                      您的角色沒有權限建立具有特定角色的用戶。
+                      您的角色沒有權限新增具有特定角色的用戶。
                     </p>
                   </div>
                 )}
@@ -508,7 +507,7 @@ export function UserForm({
                 重設
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isEdit ? '更新用戶' : '建立用戶'}
+                {isEdit ? '更新用戶' : '新增用戶'}
               </Button>
             </div>
           </form>

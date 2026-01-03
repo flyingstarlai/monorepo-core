@@ -83,7 +83,6 @@ function UserEdit() {
         isLoading={updateUserMutation.isPending}
         currentUserRole={currentUser?.role}
         title="編輯用戶"
-        description="更新用戶資訊和權限。"
       />
     </div>
   );

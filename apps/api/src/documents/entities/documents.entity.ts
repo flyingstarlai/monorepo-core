@@ -29,7 +29,12 @@ export class DocumentsEntity {
   @Column({ name: 'office_file_path', length: '255', nullable: true })
   officeFilePath: string;
 
-  @Column({ name: 'pdf_file_path', length: '255', nullable: true })
+  @Column({
+    name: 'pdf_file_path',
+    length: '255',
+    nullable: true,
+    select: false,
+  })
   pdfFilePath: string;
 
   @Column({

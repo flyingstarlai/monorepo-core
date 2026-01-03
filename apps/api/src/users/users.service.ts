@@ -8,11 +8,12 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User, UserRole } from './entities/user.entity';
 import { LoginHistory } from './entities/login-history.entity';
+import { Department } from './entities/department.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
-import { FactoryDepartmentDto } from './dto/factory-department.dto';
+import { DepartmentDto } from './dto/department.dto';
 import { IdGenerator } from '../utils/id-generator';
 import { formatDateUTC8 } from '../utils/date-formatter';
 import { UsersFilterDto } from './dto/users-filter.dto';
@@ -49,8 +50,12 @@ export class UsersService implements IUsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(LoginHistory)
     private readonly loginHistoryRepo: Repository<LoginHistory>,
+
     @InjectRepository(UserGroupMembership)
     private readonly membershipRepository: Repository<UserGroupMembership>,
+
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
     private jwtService: JwtService,
   ) {
     this.shouldHashPassword = process.env.FEATURE_HASHED === 'true';
@@ -462,25 +467,233 @@ export class UsersService implements IUsersService {
     }));
   }
 
-  async getFactoryDepartments(): Promise<FactoryDepartmentDto[]> {
+  async getFactoryDepartments(): Promise<DepartmentDto[]> {
     try {
-      const result = await this.usersRepository.query('EXEC ACM_FACTORY_DEPT');
-      return this.transformFactoryDepartments(result as UserFactoryData[]);
+      const departments = await this.departmentRepository.find({
+        where: { isActive: true },
+        select: ['deptNo', 'deptName'],
+        order: { deptName: 'ASC' },
+      });
+
+      return departments.map((dept) => ({
+        deptNo: dept.deptNo,
+        deptName: dept.deptName,
+        parentDeptNo: null,
+        deptLevel: 0,
+        managerId: null,
+        isActive: true,
+        createdAt: null,
+        updatedAt: null,
+      }));
     } catch (error) {
-      console.error('Error executing ACM_FACTORY_DEPT procedure:', error);
+      console.error('Error retrieving departments:', error);
       throw new BadRequestException(
-        'Failed to retrieve factory departments. Please try again later.',
+        'Failed to retrieve departments. Please try again later.',
       );
     }
   }
 
-  private transformFactoryDepartments(
-    rawData: UserFactoryData[],
-  ): FactoryDepartmentDto[] {
-    return rawData.map((item) => ({
-      deptNo: item.dept_no || '',
-      deptName: item.dept_name || '',
-    }));
+  async findAllDepartments(): Promise<DepartmentDto[]> {
+    try {
+      const departments = await this.departmentRepository.find({
+        order: { deptName: 'ASC' },
+      });
+
+      return departments.map((dept) => ({
+        deptNo: dept.deptNo,
+        deptName: dept.deptName,
+        parentDeptNo: dept.parentDeptNo,
+        deptLevel: dept.deptLevel,
+        managerId: dept.managerId,
+        isActive: dept.isActive,
+        createdAt: dept.createdAt ? formatDateUTC8(dept.createdAt) : null,
+        updatedAt: dept.updatedAt ? formatDateUTC8(dept.updatedAt) : null,
+      }));
+    } catch (error) {
+      console.error('Error retrieving all departments:', error);
+      throw new BadRequestException(
+        'Failed to retrieve departments. Please try again later.',
+      );
+    }
+  }
+
+  async findOneDepartment(deptNo: string): Promise<DepartmentDto> {
+    try {
+      const dept = await this.departmentRepository.findOne({
+        where: { deptNo },
+      });
+
+      if (!dept) {
+        throw new NotFoundException(`Department with code ${deptNo} not found`);
+      }
+
+      return {
+        deptNo: dept.deptNo,
+        deptName: dept.deptName,
+        parentDeptNo: dept.parentDeptNo,
+        deptLevel: dept.deptLevel,
+        managerId: dept.managerId,
+        isActive: dept.isActive,
+        createdAt: dept.createdAt ? formatDateUTC8(dept.createdAt) : null,
+        updatedAt: dept.updatedAt ? formatDateUTC8(dept.updatedAt) : null,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error retrieving department:', error);
+      throw new BadRequestException(
+        'Failed to retrieve department. Please try again later.',
+      );
+    }
+  }
+
+  async createDepartment(createDepartmentDto: any): Promise<DepartmentDto> {
+    try {
+      const existingDept = await this.departmentRepository.findOne({
+        where: { deptNo: createDepartmentDto.deptNo },
+      });
+
+      if (existingDept) {
+        throw new BadRequestException(
+          `Department with code ${createDepartmentDto.deptNo} already exists`,
+        );
+      }
+
+      const department = this.departmentRepository.create({
+        deptNo: createDepartmentDto.deptNo,
+        deptName: createDepartmentDto.deptName,
+        parentDeptNo: createDepartmentDto.parentDeptNo ?? null,
+        deptLevel: createDepartmentDto.deptLevel ?? 0,
+        managerId: createDepartmentDto.managerId ?? null,
+        isActive: createDepartmentDto.isActive ?? true,
+      });
+
+      const savedDept = await this.departmentRepository.save(department);
+
+      return {
+        deptNo: savedDept.deptNo,
+        deptName: savedDept.deptName,
+        parentDeptNo: savedDept.parentDeptNo,
+        deptLevel: savedDept.deptLevel,
+        managerId: savedDept.managerId,
+        isActive: savedDept.isActive,
+        createdAt: savedDept.createdAt
+          ? formatDateUTC8(savedDept.createdAt)
+          : null,
+        updatedAt: savedDept.updatedAt
+          ? formatDateUTC8(savedDept.updatedAt)
+          : null,
+      };
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Error creating department:', error);
+      throw new BadRequestException(
+        'Failed to create department. Please try again later.',
+      );
+    }
+  }
+
+  async updateDepartment(
+    deptNo: string,
+    updateDepartmentDto: any,
+  ): Promise<DepartmentDto> {
+    try {
+      const dept = await this.departmentRepository.findOne({
+        where: { deptNo },
+      });
+
+      if (!dept) {
+        throw new NotFoundException(`Department with code ${deptNo} not found`);
+      }
+
+      await this.departmentRepository.update(deptNo, updateDepartmentDto);
+
+      const updatedDept: Department = await this.departmentRepository.findOne({
+        where: { deptNo },
+      });
+
+      return {
+        deptNo: updatedDept.deptNo,
+        deptName: updatedDept.deptName,
+        parentDeptNo: updatedDept.parentDeptNo,
+        deptLevel: updatedDept.deptLevel,
+        managerId: updatedDept.managerId,
+        isActive: updatedDept.isActive,
+        createdAt: updatedDept.createdAt
+          ? formatDateUTC8(updatedDept.createdAt)
+          : null,
+        updatedAt: updatedDept.updatedAt
+          ? formatDateUTC8(updatedDept.updatedAt)
+          : null,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error updating department:', error);
+      throw new BadRequestException(
+        'Failed to update department. Please try again later.',
+      );
+    }
+  }
+
+  async toggleDepartmentActive(deptNo: string): Promise<DepartmentDto> {
+    const dept = await this.departmentRepository.findOne({
+      where: { deptNo },
+    });
+
+    if (!dept) {
+      throw new NotFoundException(`Department with code ${deptNo} not found`);
+    }
+
+    const newActiveStatus = !dept.isActive;
+    await this.departmentRepository.update(deptNo, {
+      isActive: newActiveStatus,
+    });
+
+    const updatedDept = await this.departmentRepository.findOne({
+      where: { deptNo },
+    });
+
+    return {
+      deptNo: updatedDept.deptNo,
+      deptName: updatedDept.deptName,
+      parentDeptNo: updatedDept.parentDeptNo,
+      deptLevel: updatedDept.deptLevel,
+      managerId: updatedDept.managerId,
+      isActive: updatedDept.isActive,
+      createdAt: updatedDept.createdAt
+        ? formatDateUTC8(updatedDept.createdAt)
+        : null,
+      updatedAt: updatedDept.updatedAt
+        ? formatDateUTC8(updatedDept.updatedAt)
+        : null,
+    };
+  }
+
+  async removeDepartment(deptNo: string): Promise<void> {
+    try {
+      const dept = await this.departmentRepository.findOne({
+        where: { deptNo },
+      });
+
+      if (!dept) {
+        throw new NotFoundException(`Department with code ${deptNo} not found`);
+      }
+
+      await this.departmentRepository.delete(deptNo);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Error deleting department:', error);
+      throw new BadRequestException(
+        'Failed to delete department. Please try again later.',
+      );
+    }
   }
 
   async findLoginHistoryByUserId(

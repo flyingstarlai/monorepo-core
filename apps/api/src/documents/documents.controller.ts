@@ -187,6 +187,7 @@ export class DocumentsController {
     }
 
     return this.documentsService.createWithFiles(
+      '',
       createDocumentDto,
       user,
       officeFile,

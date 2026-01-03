@@ -50,7 +50,7 @@ export const useCreateGroup = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      toast.success('群組建立成功');
+      toast.success('群組新增成功');
     },
   });
 };

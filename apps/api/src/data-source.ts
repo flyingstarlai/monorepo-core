@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { User } from './users/entities/user.entity';
+import { Department } from './users/entities/department.entity';
 import {
   MobileAppDefinition,
   MobileAppBuild,
@@ -21,6 +22,7 @@ export const AppDataSource = new DataSource({
   logging: process.env.NODE_ENV === 'development',
   entities: [
     User,
+    Department,
     MobileAppDefinition,
     MobileAppBuild,
     MobileAppIdentifier,

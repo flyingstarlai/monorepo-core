@@ -21,6 +21,7 @@ import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedGroupsIndexRouteImport } from './routes/_authenticated/groups.index'
 import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents.index'
 import { Route as AuthenticatedDocumentStagesIndexRouteImport } from './routes/_authenticated/document-stages.index'
+import { Route as AuthenticatedDepartmentsIndexRouteImport } from './routes/_authenticated/departments.index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps.index'
 import { Route as AuthenticatedAppBuilderIndexRouteImport } from './routes/_authenticated/app-builder.index'
 import { Route as AuthenticatedUsersGroupsRouteImport } from './routes/_authenticated/users/groups'
@@ -107,6 +108,12 @@ const AuthenticatedDocumentStagesIndexRoute =
   AuthenticatedDocumentStagesIndexRouteImport.update({
     id: '/document-stages/',
     path: '/document-stages/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDepartmentsIndexRoute =
+  AuthenticatedDepartmentsIndexRouteImport.update({
+    id: '/departments/',
+    path: '/departments/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/app-builder': typeof AuthenticatedAppBuilderIndexRoute
   '/apps/': typeof AuthenticatedAppsIndexRoute
+  '/departments': typeof AuthenticatedDepartmentsIndexRoute
   '/document-stages': typeof AuthenticatedDocumentStagesIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/groups': typeof AuthenticatedGroupsIndexRoute
@@ -315,6 +323,7 @@ export interface FileRoutesByTo {
   '/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/app-builder': typeof AuthenticatedAppBuilderIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
+  '/departments': typeof AuthenticatedDepartmentsIndexRoute
   '/document-stages': typeof AuthenticatedDocumentStagesIndexRoute
   '/documents': typeof AuthenticatedDocumentsIndexRoute
   '/groups': typeof AuthenticatedGroupsIndexRoute
@@ -355,6 +364,7 @@ export interface FileRoutesById {
   '/_authenticated/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/_authenticated/app-builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
+  '/_authenticated/departments/': typeof AuthenticatedDepartmentsIndexRoute
   '/_authenticated/document-stages/': typeof AuthenticatedDocumentStagesIndexRoute
   '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/_authenticated/groups/': typeof AuthenticatedGroupsIndexRoute
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/users/groups'
     | '/app-builder'
     | '/apps/'
+    | '/departments'
     | '/document-stages'
     | '/documents'
     | '/groups'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/users/groups'
     | '/app-builder'
     | '/apps'
+    | '/departments'
     | '/document-stages'
     | '/documents'
     | '/groups'
@@ -469,6 +481,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users/groups'
     | '/_authenticated/app-builder/'
     | '/_authenticated/apps/'
+    | '/_authenticated/departments/'
     | '/_authenticated/document-stages/'
     | '/_authenticated/documents/'
     | '/_authenticated/groups/'
@@ -575,6 +588,13 @@ declare module '@tanstack/react-router' {
       path: '/document-stages'
       fullPath: '/document-stages'
       preLoaderRoute: typeof AuthenticatedDocumentStagesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/departments/': {
+      id: '/_authenticated/departments/'
+      path: '/departments'
+      fullPath: '/departments'
+      preLoaderRoute: typeof AuthenticatedDepartmentsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/apps/': {
@@ -855,6 +875,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedGroupsIdRoute: typeof AuthenticatedGroupsIdRoute
   AuthenticatedGroupsCreateRoute: typeof AuthenticatedGroupsCreateRoute
   AuthenticatedAppBuilderIndexRoute: typeof AuthenticatedAppBuilderIndexRoute
+  AuthenticatedDepartmentsIndexRoute: typeof AuthenticatedDepartmentsIndexRoute
   AuthenticatedDocumentStagesIndexRoute: typeof AuthenticatedDocumentStagesIndexRoute
   AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
@@ -880,6 +901,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGroupsIdRoute: AuthenticatedGroupsIdRoute,
   AuthenticatedGroupsCreateRoute: AuthenticatedGroupsCreateRoute,
   AuthenticatedAppBuilderIndexRoute: AuthenticatedAppBuilderIndexRoute,
+  AuthenticatedDepartmentsIndexRoute: AuthenticatedDepartmentsIndexRoute,
   AuthenticatedDocumentStagesIndexRoute: AuthenticatedDocumentStagesIndexRoute,
   AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedGroupsIndexRoute: AuthenticatedGroupsIndexRoute,

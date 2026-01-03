@@ -2,8 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Users, UserPlus, Settings } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
+import { Users } from 'lucide-react';
 
 function UserGroupsPage() {
   // Mock data - in real implementation, this would come from API
@@ -32,34 +31,7 @@ function UserGroupsPage() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/users">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              返回用戶列表
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">用戶群組管理</h1>
-            <p className="text-muted-foreground">管理用戶群組和權限分配</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Settings className="w-4 h-4 mr-2" />
-            群組設定
-          </Button>
-          <Button asChild>
-            <Link to="/groups/create">
-              <UserPlus className="w-4 h-4 mr-2" />
-              建立群組
-            </Link>
-          </Button>
-        </div>
-      </div>
-
+    <div className="space-y-4">
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>

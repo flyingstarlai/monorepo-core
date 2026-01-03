@@ -67,3 +67,40 @@ export interface FactoryDepartment {
   deptNo: string;
   deptName: string;
 }
+
+export interface Department {
+  deptNo: string;
+  deptName: string;
+  parentDeptNo: string | null;
+  deptLevel: number;
+  managerId: string | null;
+  isActive: boolean;
+  createdAt: Date | null;
+  updatedAt: Date | null;
+}
+
+export interface CreateDepartmentData {
+  deptNo: string;
+  deptName: string;
+  parentDeptNo?: string;
+  deptLevel?: number;
+  managerId?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateDepartmentData {
+  deptName?: string;
+  parentDeptNo?: string;
+  deptLevel?: number;
+  managerId?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateDepartmentData {
+  deptNo?: string;
+  deptName?: string;
+  parentDeptNo?: string;
+  deptLevel?: number;
+  managerId?: string;
+  isActive?: boolean;
+}

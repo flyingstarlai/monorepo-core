@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useFactoryDepartments } from '../hooks/use-users';
-import type { FactoryDepartment } from '../types/user.types';
+import type { Department } from '../types/user.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
@@ -18,7 +18,7 @@ import { Search, X } from 'lucide-react';
 interface DepartmentSearchDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onDepartmentSelect: (department: FactoryDepartment) => void;
+  onDepartmentSelect: (department: Department) => void;
 }
 
 export function DepartmentSearchDrawer({
@@ -53,14 +53,14 @@ export function DepartmentSearchDrawer({
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  const handleDepartmentSelect = (department: FactoryDepartment) => {
+  const handleDepartmentSelect = (department: Department) => {
     onDepartmentSelect(department);
     onClose();
   };
 
   const handleRowKeyDown = (
     e: ReactKeyboardEvent<HTMLTableRowElement>,
-    department: FactoryDepartment,
+    department: Department,
   ) => {
     if (e.key === 'Enter') {
       e.preventDefault();

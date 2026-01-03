@@ -186,7 +186,7 @@ export function DashboardOverview() {
                       </p>
                       <p className="text-sm text-slate-600">
                         {activity.action === 'created'
-                          ? '建立帳戶'
+                          ? '新增帳戶'
                           : '更新個人資料'}{' '}
                         • {activity.deptName}
                       </p>

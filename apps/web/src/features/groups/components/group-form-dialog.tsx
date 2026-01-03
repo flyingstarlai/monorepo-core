@@ -86,7 +86,7 @@ export function GroupFormDialog({
     });
   });
 
-  const title = mode === 'create' ? '建立新群組' : '編輯群組';
+  const title = mode === 'create' ? '新增群組' : '編輯群組';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -25,24 +25,35 @@ export function DashboardHeader() {
       (segment) => segment !== '_authenticated',
     );
 
+    // Prevent leaking layout prefixes like "settings" into other sections
+    let normalizedSegments = [...filteredSegments];
+    if (normalizedSegments[0] === 'settings' && normalizedSegments.length > 1) {
+      const allowedSettingsChildren = ['profile', 'account'];
+      if (!allowedSettingsChildren.includes(normalizedSegments[1])) {
+        normalizedSegments = normalizedSegments.slice(1);
+      }
+    }
+
     const breadcrumbs: Array<{
       label: string;
       href: string;
       isCurrentPage: boolean;
     }> = [];
 
-    if (filteredSegments.length === 0) {
+    if (normalizedSegments.length === 0) {
       return breadcrumbs;
     }
 
-    const [first, second, third] = filteredSegments;
+    const first: string = normalizedSegments[0] || '';
+    const second: string = normalizedSegments[1] || '';
+    const third: string = normalizedSegments[2] || '';
 
     // Dashboard and subpages
     if (first === 'dashboard') {
       breadcrumbs.push({
         label: '儀表板',
         href: '/dashboard',
-        isCurrentPage: filteredSegments.length === 1,
+        isCurrentPage: normalizedSegments.length === 1,
       });
 
       if (second === 'profile') {
@@ -54,17 +65,31 @@ export function DashboardHeader() {
       }
     }
 
+    // Users Groups
+    else if (first === 'users' && second === 'groups') {
+      breadcrumbs.push({
+        label: '用戶管理',
+        href: '/users',
+        isCurrentPage: false,
+      });
+      breadcrumbs.push({
+        label: '用戶群組',
+        href: '/users/groups',
+        isCurrentPage: true,
+      });
+    }
+
     // Users
     else if (first === 'users') {
       breadcrumbs.push({
         label: '用戶管理',
         href: '/users',
-        isCurrentPage: filteredSegments.length === 1,
+        isCurrentPage: normalizedSegments.length === 1,
       });
 
       if (second === 'create') {
         breadcrumbs.push({
-          label: '建立用戶',
+          label: '新增用戶',
           href: '/users/create',
           isCurrentPage: true,
         });
@@ -75,7 +100,6 @@ export function DashboardHeader() {
           isCurrentPage: true,
         });
       } else if (second) {
-        // user detail (id present)
         breadcrumbs.push({
           label: '用戶詳情',
           href: location.pathname,
@@ -89,7 +113,7 @@ export function DashboardHeader() {
       breadcrumbs.push({
         label: 'App Builder',
         href: '/app-builder',
-        isCurrentPage: filteredSegments.length === 1,
+        isCurrentPage: normalizedSegments.length === 1,
       });
 
       if (second === 'create') {
@@ -124,12 +148,12 @@ export function DashboardHeader() {
       breadcrumbs.push({
         label: '文檔',
         href: '/documents',
-        isCurrentPage: filteredSegments.length === 1,
+        isCurrentPage: normalizedSegments.length === 1,
       });
 
       if (second === 'create') {
         breadcrumbs.push({
-          label: '建立文檔',
+          label: '新增文檔',
           href: '/documents/create',
           isCurrentPage: true,
         });
@@ -154,18 +178,50 @@ export function DashboardHeader() {
       }
     }
 
+    // Departments
+    else if (first === 'departments') {
+      breadcrumbs.push({
+        label: '部門',
+        href: '/departments',
+        isCurrentPage: normalizedSegments.length === 1,
+      });
+    }
+
+    // Groups
+    else if (first === 'groups') {
+      breadcrumbs.push({
+        label: '群組',
+        href: '/groups',
+        isCurrentPage: normalizedSegments.length === 1,
+      });
+
+      if (second) {
+        breadcrumbs.push({
+          label: '群組成員管理',
+          href: location.pathname,
+          isCurrentPage: true,
+        });
+      }
+    }
+
     // Settings
     else if (first === 'settings') {
       breadcrumbs.push({
         label: '設定',
         href: '/settings/profile',
-        isCurrentPage: filteredSegments.length === 1,
+        isCurrentPage: normalizedSegments.length === 1,
       });
 
       if (second === 'profile') {
         breadcrumbs.push({
           label: '個人資料',
           href: '/settings/profile',
+          isCurrentPage: true,
+        });
+      } else if (second === 'account') {
+        breadcrumbs.push({
+          label: '帳戶設定',
+          href: '/settings/account',
           isCurrentPage: true,
         });
       }
@@ -180,11 +236,12 @@ export function DashboardHeader() {
       });
     }
 
-    // Fallback: show first segment as the current page
+    // Fallback: show first segment as current page
     else {
-      const firstSegment = filteredSegments[0] || '';
+      const firstSegment =
+        (first || '').charAt(0).toUpperCase() + (first || '').slice(1);
       breadcrumbs.push({
-        label: firstSegment.charAt(0).toUpperCase() + firstSegment.slice(1),
+        label: firstSegment,
         href: location.pathname,
         isCurrentPage: true,
       });

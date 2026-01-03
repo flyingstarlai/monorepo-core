@@ -62,8 +62,8 @@ function AppBuilderCreate() {
       <DefinitionForm
         onSubmit={handleSubmit}
         isLoading={createDefinitionMutation.isPending}
-        title="建立新的應用程式定義"
-        description="建立一個新的 Android 應用程式定義，用於建置和部署。"
+        title="新增應用程式定義"
+        description="新增一個新的 Android 應用程式定義，用於建置和部署。"
       />
     </div>
   );

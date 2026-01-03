@@ -36,16 +36,9 @@ function AuthenticatedLayout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <DashboardHeader />
+        <DashboardHeader key={`dashboard-header-${location.pathname}`} />
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div
-            className={cn(
-              'mx-auto w-full max-w-7xl flex-1',
-              isOfficeRoute && 'h-full',
-            )}
-          >
-            <Outlet />
-          </div>
+          <Outlet />
         </div>
       </SidebarInset>
     </SidebarProvider>

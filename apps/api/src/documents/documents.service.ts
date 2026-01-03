@@ -352,23 +352,7 @@ export class DocumentsService {
       }
     }
 
-    // 2. If the document already has a stored PDF path, use it
-    if (document.pdfFilePath) {
-      const absolutePath = join(UPLOAD_DEST_DIR, document.pdfFilePath);
-      if (existsSync(absolutePath)) {
-        await this.recordDownload(documentId, user);
-        const stats = statSync(absolutePath);
-
-        return {
-          stream: createReadStream(absolutePath),
-          contentType: 'application/pdf',
-          fileName: `${document.documentNumber || document.id}.pdf`,
-          fileSize: stats.size,
-        };
-      }
-    }
-
-    // 3. Otherwise perform a synchronous conversion now
+    // 2. Otherwise perform a synchronous conversion now
     const jobId = `${documentId}_${Date.now()}`;
     const job: ConversionJob = {
       documentId,
@@ -533,6 +517,7 @@ export class DocumentsService {
   }
 
   async createWithFiles(
+    id: string,
     createDocumentDto: CreateDocumentDto,
     user: User,
     officeFile?: MulterFile,
@@ -562,26 +547,21 @@ export class DocumentsService {
         );
       }
 
-      if (pdfFile) {
-        document.pdfFilePath = this.storeUploadedFile(
+      if (pdfFile && !officeFile) {
+        const pdfPath = this.storeUploadedFile(
           documentId,
           document.documentKind,
           'pdf',
           pdfFile,
         );
-        if (!officeFile) {
-          document.officeFilePath = document.pdfFilePath;
-        }
+        document.officeFilePath = pdfPath;
       }
 
       const savedDocument = await this.documentsRepository.save(document);
       return this.mapToResponse(savedDocument);
     } catch (error) {
       this.logger.error('Failed to create document', error);
-      this.cleanupUploadedFiles([
-        document.officeFilePath,
-        document.pdfFilePath,
-      ]);
+      this.cleanupUploadedFiles([document.officeFilePath]);
       throw new InternalServerErrorException('Failed to create document');
     }
   }
@@ -622,18 +602,15 @@ export class DocumentsService {
         );
       }
 
-      if (pdfFile) {
-        this.deleteFileIfExists(document.pdfFilePath);
-        document.pdfFilePath = this.storeUploadedFile(
+      if (pdfFile && !officeFile) {
+        const pdfPath = this.storeUploadedFile(
           document.id,
           document.documentKind,
           'pdf',
           pdfFile,
         );
-        if (!officeFile) {
-          this.deleteFileIfExists(document.officeFilePath);
-          document.officeFilePath = document.pdfFilePath;
-        }
+        this.deleteFileIfExists(document.officeFilePath);
+        document.officeFilePath = pdfPath;
       }
 
       const savedDocument = await this.documentsRepository.save(document);
@@ -656,7 +633,7 @@ export class DocumentsService {
     }
 
     await this.documentsRepository.delete(id);
-    this.cleanupUploadedFiles([document.officeFilePath, document.pdfFilePath]);
+    this.cleanupUploadedFiles([document.officeFilePath]);
   }
 
   async getFileStream(
@@ -668,7 +645,7 @@ export class DocumentsService {
     stream: NodeJS.ReadableStream;
     contentType: string;
     fileName: string;
-    fileSize?: number;
+    fileSize: number;
   }> {
     const bypassAccessCheck = options?.bypassAccessCheck ?? false;
 

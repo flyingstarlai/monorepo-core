@@ -30,6 +30,7 @@ import {
   ChevronDown,
   UsersRound,
   FileText,
+  Building2,
 } from 'lucide-react';
 
 export function AppSidebar() {
@@ -41,6 +42,9 @@ export function AppSidebar() {
     location.pathname.startsWith('/app-builder'),
   );
   const [userGroupExpanded, setUserGroupExpanded] = React.useState(true);
+  const [usersExpanded, setUsersExpanded] = React.useState(
+    location.pathname.startsWith('/users'),
+  );
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -73,6 +77,16 @@ export function AppSidebar() {
                 icon: UsersRound,
                 isActive: location.pathname === '/users',
               },
+              ...(adminOrManager
+                ? [
+                    {
+                      title: '部門管理',
+                      url: '/departments',
+                      icon: Building2,
+                      isActive: location.pathname === '/departments',
+                    },
+                  ]
+                : []),
               ...(isAdmin
                 ? [
                     {
@@ -182,6 +196,8 @@ export function AppSidebar() {
                             setAppBuilderExpanded(!appBuilderExpanded);
                           } else if (item.title === '用戶與群組管理') {
                             setUserGroupExpanded(!userGroupExpanded);
+                          } else if (item.title === '用戶與群組管理') {
+                            setUsersExpanded(!usersExpanded);
                           }
                         }}
                         isActive={item.isActive}
@@ -201,7 +217,7 @@ export function AppSidebar() {
                       </SidebarMenuButton>
                       {((item.title === 'App Builder' && appBuilderExpanded) ||
                         (item.title === '用戶與群組管理' &&
-                          userGroupExpanded)) && (
+                          (userGroupExpanded || usersExpanded))) && (
                         <SidebarMenuSub>
                           {item.items?.map((subItem) => (
                             <SidebarMenuSubItem

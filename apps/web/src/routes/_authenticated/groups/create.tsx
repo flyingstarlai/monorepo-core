@@ -19,7 +19,7 @@ function CreateGroupPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">建立群組</h1>
+          <h1 className="text-3xl font-bold">新增群組</h1>
           <p className="text-muted-foreground">
             創建新的用戶群組來管理權限和資源存取
           </p>
@@ -110,7 +110,7 @@ function CreateGroupPage() {
                     <Label htmlFor="perm-builder" className="flex-1">
                       <div className="font-medium">App Builder</div>
                       <div className="text-sm text-muted-foreground">
-                        建立和管理應用
+                        新增和管理應用
                       </div>
                     </Label>
                   </div>
@@ -123,7 +123,7 @@ function CreateGroupPage() {
             <Button variant="outline">取消</Button>
             <Button>
               <Save className="w-4 h-4 mr-2" />
-              建立群組
+              新增群組
             </Button>
           </div>
         </div>

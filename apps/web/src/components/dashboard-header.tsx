@@ -29,7 +29,10 @@ export function DashboardHeader() {
     let normalizedSegments = [...filteredSegments];
     if (normalizedSegments[0] === 'settings' && normalizedSegments.length > 1) {
       const allowedSettingsChildren = ['profile', 'account'];
-      if (!allowedSettingsChildren.includes(normalizedSegments[1])) {
+      if (
+        normalizedSegments[1] &&
+        !allowedSettingsChildren.includes(normalizedSegments[1])
+      ) {
         normalizedSegments = normalizedSegments.slice(1);
       }
     }

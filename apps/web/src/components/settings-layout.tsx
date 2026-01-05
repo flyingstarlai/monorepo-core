@@ -19,45 +19,47 @@ export function SettingsLayout() {
   const location = useLocation();
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">設定</h1>
-        <p className="text-slate-600 mt-2">管理您的個人資料和帳戶設定。</p>
-      </div>
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">設定</h1>
+          <p className="text-slate-600 mt-2">管理您的個人資料和帳戶設定。</p>
+        </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Settings Navigation */}
-        <nav className="lg:w-64">
-          <div className="bg-white rounded-lg p-2">
-            <ul className="space-y-1">
-              {settingsNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Settings Navigation */}
+          <nav className="lg:w-64">
+            <div className="bg-white rounded-lg p-2">
+              <ul className="space-y-1">
+                {settingsNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
 
-                return (
-                  <li key={item.href}>
-                    <Link
-                      to={item.href}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-slate-100 text-slate-900'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.title}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                          isActive
+                            ? 'bg-slate-100 text-slate-900'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50',
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.title}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </nav>
+
+          {/* Settings Content */}
+          <div className="flex-1">
+            <Outlet />
           </div>
-        </nav>
-
-        {/* Settings Content */}
-        <div className="flex-1">
-          <Outlet />
         </div>
       </div>
     </div>

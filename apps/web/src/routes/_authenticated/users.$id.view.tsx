@@ -33,5 +33,9 @@ function UserDetailView() {
     );
   }
 
-  return <UserDetail user={user!} isLoading={isLoading} />;
+  return (
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <UserDetail user={user!} isLoading={isLoading} />
+    </div>
+  );
 }

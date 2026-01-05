@@ -182,7 +182,7 @@ export function DashboardHeader() {
     else if (first === 'settings') {
       breadcrumbs.push({
         label: '設定',
-        href: '/settings/profile',
+        href: '/settings',
         isCurrentPage: normalizedSegments.length === 1,
       });
 

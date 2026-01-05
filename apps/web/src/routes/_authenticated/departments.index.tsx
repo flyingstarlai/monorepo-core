@@ -119,150 +119,51 @@ function DepartmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">部門管理</h1>
-          <p className="text-slate-600 mt-2">管理組織架構中的部門結構。</p>
-        </div>
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              新增部門
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>新增部門</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="deptNo">部門代碼</Label>
-                  <Input
-                    id="deptNo"
-                    value={formData.deptNo}
-                    onChange={(e) =>
-                      setFormData({ ...formData, deptNo: e.target.value })
-                    }
-                    placeholder="例如：IT001"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="parentDeptNo">上層部門代碼</Label>
-                  <Input
-                    id="parentDeptNo"
-                    value={formData.parentDeptNo}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        parentDeptNo: e.target.value,
-                      })
-                    }
-                    placeholder="選填：上層部門代碼"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="deptName">部門名稱</Label>
-                <Input
-                  id="deptName"
-                  value={formData.deptName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, deptName: e.target.value })
-                  }
-                  placeholder="例如：資訊科技部"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="deptLevel">部門層級</Label>
-                  <Input
-                    id="deptLevel"
-                    type="number"
-                    value={formData.deptLevel}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        deptLevel: Number(e.target.value),
-                      })
-                    }
-                    min={0}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="managerId">管理者 ID</Label>
-                  <Input
-                    id="managerId"
-                    value={formData.managerId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, managerId: e.target.value })
-                    }
-                    placeholder="選填：管理者使用者 ID"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="active"
-                    checked={formData.isActive}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, isActive: checked })
-                    }
-                  />
-                  <Label htmlFor="active" className="cursor-pointer">
-                    啟用狀態
-                  </Label>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {formData.isActive ? '部門將被啟用' : '部門將被停用'}
-                </span>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                取消
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">部門管理</h1>
+            <p className="text-slate-600 mt-2">管理組織架構中的部門結構。</p>
+          </div>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={handleCreate}>
+                <Plus className="mr-2 h-4 w-4" />
+                新增部門
               </Button>
-              <Button onClick={handleCreate}>新增部門</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {editingDept && (
-          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
               <DialogHeader>
-                <DialogTitle>編輯部門</DialogTitle>
+                <DialogTitle>新增部門</DialogTitle>
               </DialogHeader>
               <div className="space-y-6 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="deptNo">部門代碼</Label>
-                  <Input
-                    id="deptNo"
-                    value={formData.deptNo}
-                    disabled
-                    className="bg-muted/30"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="parentDeptNo">上層部門代碼</Label>
-                  <Input
-                    id="parentDeptNo"
-                    value={formData.parentDeptNo}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        parentDeptNo: e.target.value,
-                      })
-                    }
-                    placeholder="選填：上層部門代碼"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="deptNo">部門代碼</Label>
+                    <Input
+                      id="deptNo"
+                      value={formData.deptNo}
+                      onChange={(e) =>
+                        setFormData({ ...formData, deptNo: e.target.value })
+                      }
+                      placeholder="例如：IT001"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="parentDeptNo">上層部門代碼</Label>
+                    <Input
+                      id="parentDeptNo"
+                      value={formData.parentDeptNo}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          parentDeptNo: e.target.value,
+                        })
+                      }
+                      placeholder="選填：上層部門代碼"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -325,23 +226,133 @@ function DepartmentsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCreateOpen(false)}
+                >
                   取消
                 </Button>
-                <Button onClick={handleUpdate}>儲存變更</Button>
+                <Button onClick={handleCreate}>新增部門</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+
+          {editingDept && (
+            <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>編輯部門</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="deptNo">部門代碼</Label>
+                    <Input
+                      id="deptNo"
+                      value={formData.deptNo}
+                      disabled
+                      className="bg-muted/30"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="parentDeptNo">上層部門代碼</Label>
+                    <Input
+                      id="parentDeptNo"
+                      value={formData.parentDeptNo}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          parentDeptNo: e.target.value,
+                        })
+                      }
+                      placeholder="選填：上層部門代碼"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="deptName">部門名稱</Label>
+                    <Input
+                      id="deptName"
+                      value={formData.deptName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, deptName: e.target.value })
+                      }
+                      placeholder="例如：資訊科技部"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="deptLevel">部門層級</Label>
+                      <Input
+                        id="deptLevel"
+                        type="number"
+                        value={formData.deptLevel}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            deptLevel: Number(e.target.value),
+                          })
+                        }
+                        min={0}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="managerId">管理者 ID</Label>
+                      <Input
+                        id="managerId"
+                        value={formData.managerId}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            managerId: e.target.value,
+                          })
+                        }
+                        placeholder="選填：管理者使用者 ID"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="active"
+                        checked={formData.isActive}
+                        onCheckedChange={(checked) =>
+                          setFormData({ ...formData, isActive: checked })
+                        }
+                      />
+                      <Label htmlFor="active" className="cursor-pointer">
+                        啟用狀態
+                      </Label>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {formData.isActive ? '部門將被啟用' : '部門將被停用'}
+                    </span>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditOpen(false)}
+                  >
+                    取消
+                  </Button>
+                  <Button onClick={handleUpdate}>儲存變更</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+
+        <DepartmentDataTable
+          data={departments}
+          isLoading={isLoading}
+          columns={columns}
+        />
+
+        <DeleteDialog />
       </div>
-
-      <DepartmentDataTable
-        data={departments}
-        isLoading={isLoading}
-        columns={columns}
-      />
-
-      <DeleteDialog />
     </div>
   );
 }

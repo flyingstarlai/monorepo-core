@@ -33,12 +33,18 @@ export function UserList() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Users Data Table with Integrated Filters */}
-      <UserDataTable data={usersData} isLoading={isLoading} columns={columns} />
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="space-y-6">
+        {/* Users Data Table with Integrated Filters */}
+        <UserDataTable
+          data={usersData}
+          isLoading={isLoading}
+          columns={columns}
+        />
 
-      {/* Delete Confirmation Dialog */}
-      <DeleteDialog />
+        {/* Delete Confirmation Dialog */}
+        <DeleteDialog />
+      </div>
     </div>
   );
 }

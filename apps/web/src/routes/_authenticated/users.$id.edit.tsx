@@ -63,27 +63,29 @@ function UserEdit() {
   }
 
   return (
-    <div className="max-w-2xl space-y-4">
-      {/* Back Button */}
-      <Link to="/users/$id/view" params={{ id }} replace preload="intent">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center space-x-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>返回用戶</span>
-        </Button>
-      </Link>
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="max-w-2xl space-y-4">
+        {/* Back Button */}
+        <Link to="/users/$id/view" params={{ id }} replace preload="intent">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>返回用戶</span>
+          </Button>
+        </Link>
 
-      {/* User Form */}
-      <UserForm
-        user={user} // Pass user data for edit mode
-        onSubmit={handleSubmit}
-        isLoading={updateUserMutation.isPending}
-        currentUserRole={currentUser?.role}
-        title="編輯用戶"
-      />
+        {/* User Form */}
+        <UserForm
+          user={user} // Pass user data for edit mode
+          onSubmit={handleSubmit}
+          isLoading={updateUserMutation.isPending}
+          currentUserRole={currentUser?.role}
+          title="編輯用戶"
+        />
+      </div>
     </div>
   );
 }

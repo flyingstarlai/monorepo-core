@@ -37,31 +37,33 @@ function UsersCreate() {
   };
 
   return (
-    <div className="max-w-2xl space-y-4">
-      {/* Back Button */}
-      <Link to="/users">
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center space-x-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>返回用戶列表</span>
-        </Button>
-      </Link>
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="max-w-2xl space-y-4">
+        {/* Back Button */}
+        <Link to="/users">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>返回用戶列表</span>
+          </Button>
+        </Link>
 
-      {/* User Form */}
-      <UserForm
-        onSubmit={handleSubmit}
-        isLoading={createUserMutation.isPending}
-        currentUserRole={user?.role}
-        title="新增用戶"
-        description={
-          user?.role === 'manager'
-            ? '作為維護員，您只能新增具有「一般用戶」角色的用戶。'
-            : undefined
-        }
-      />
+        {/* User Form */}
+        <UserForm
+          onSubmit={handleSubmit}
+          isLoading={createUserMutation.isPending}
+          currentUserRole={user?.role}
+          title="新增用戶"
+          description={
+            user?.role === 'manager'
+              ? '作為維護員，您只能新增具有「一般用戶」角色的用戶。'
+              : undefined
+          }
+        />
+      </div>
     </div>
   );
 }

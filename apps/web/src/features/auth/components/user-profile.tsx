@@ -91,46 +91,48 @@ export function UserProfile() {
         isLoading={updateProfile.isPending}
         message="更新個人資料中..."
       >
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-slate-900">
-                編輯個人資料
-              </h3>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  disabled={updateProfile.isPending}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  取消
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSaveProfile}
-                  disabled={updateProfile.isPending}
-                >
-                  <Check className="h-4 w-4 mr-2" />
-                  儲存
-                </Button>
+        <div className="mx-auto w-full max-w-7xl flex-1">
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-medium text-slate-900">
+                  編輯個人資料
+                </h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    disabled={updateProfile.isPending}
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    取消
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveProfile}
+                    disabled={updateProfile.isPending}
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    儲存
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="max-w-md">
-              <label className="text-sm font-medium text-slate-700 block mb-2">
-                全名
-              </label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                placeholder="請輸入您的全名"
-              />
-              <p className="text-sm text-slate-500 mt-2">
-                只有您的全名可以編輯。請聯繫系統管理員以更改其他資訊。
-              </p>
+              <div className="max-w-md">
+                <label className="text-sm font-medium text-slate-700 block mb-2">
+                  全名
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                  placeholder="請輸入您的全名"
+                />
+                <p className="text-sm text-slate-500 mt-2">
+                  只有您的全名可以編輯。請聯繫系統管理員以更改其他資訊。
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -139,66 +141,68 @@ export function UserProfile() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-medium text-slate-900">個人資料</h3>
-          <Button
-            onClick={handleEditProfile}
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            編輯個人資料
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="text-sm font-medium text-slate-700 block mb-2">
-              用戶名
-            </label>
-            <p className="text-base text-slate-900">{user.username}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-slate-700 block mb-2">
-              全名
-            </label>
-            <p className="text-base text-slate-900">{user.fullName}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-slate-700 block mb-2">
-              部門
-            </label>
-            <p className="text-base text-slate-900">{user.deptName}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-slate-700 block mb-2">
-              部門代碼
-            </label>
-            <p className="text-base text-slate-900">{user.deptNo}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-slate-700 block mb-2">
-              角色
-            </label>
-            <Badge
-              variant="outline"
-              style={{
-                backgroundColor: RoleService.getRoleColor(user.role),
-                color: 'white',
-                borderColor: RoleService.getRoleColor(user.role),
-              }}
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-medium text-slate-900">個人資料</h3>
+            <Button
+              onClick={handleEditProfile}
+              size="sm"
+              className="flex items-center gap-2"
             >
-              {RoleService.getRoleDisplayName(user.role)}
-            </Badge>
+              <Edit className="h-4 w-4" />
+              編輯個人資料
+            </Button>
           </div>
-          <div>
-            <label className="text-sm font-medium text-slate-700 block mb-2">
-              狀態
-            </label>
-            <Badge variant={user.isActive ? 'success' : 'destructive'}>
-              {user.isActive ? '啟用' : '停用'}
-            </Badge>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">
+                用戶名
+              </label>
+              <p className="text-base text-slate-900">{user.username}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">
+                全名
+              </label>
+              <p className="text-base text-slate-900">{user.fullName}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">
+                部門
+              </label>
+              <p className="text-base text-slate-900">{user.deptName}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">
+                部門代碼
+              </label>
+              <p className="text-base text-slate-900">{user.deptNo}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">
+                角色
+              </label>
+              <Badge
+                variant="outline"
+                style={{
+                  backgroundColor: RoleService.getRoleColor(user.role),
+                  color: 'white',
+                  borderColor: RoleService.getRoleColor(user.role),
+                }}
+              >
+                {RoleService.getRoleDisplayName(user.role)}
+              </Badge>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-slate-700 block mb-2">
+                狀態
+              </label>
+              <Badge variant={user.isActive ? 'success' : 'destructive'}>
+                {user.isActive ? '啟用' : '停用'}
+              </Badge>
+            </div>
           </div>
         </div>
       </div>

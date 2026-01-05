@@ -6,5 +6,9 @@ export const Route = createFileRoute('/_authenticated/users/')({
 });
 
 function UsersIndex() {
-  return <UserList />;
+  return (
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <UserList />
+    </div>
+  );
 }

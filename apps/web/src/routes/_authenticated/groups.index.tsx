@@ -77,37 +77,39 @@ function GroupsIndex() {
     createGroupMutation.isPending || updateGroupMutation.isPending;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">群組管理</h1>
-          <p className="text-slate-600 mt-2">
-            管理系統中的用戶群組和成員分配。
-          </p>
+    <div className="mx-auto w-full max-w-7xl flex-1">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">群組管理</h1>
+            <p className="text-slate-600 mt-2">
+              管理系統中的用戶群組和成員分配。
+            </p>
+          </div>
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            新增群組
+          </Button>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          新增群組
-        </Button>
+
+        <GroupDataTable data={groups} isLoading={isLoading} columns={columns} />
+
+        <GroupFormDialog
+          mode={editingGroup ? 'edit' : 'create'}
+          open={isCreateOpen || !!editingGroup}
+          onOpenChange={(open) => {
+            if (!open) {
+              setIsCreateOpen(false);
+              setEditingGroup(null);
+            }
+          }}
+          onSubmit={editingGroup ? handleEdit : handleCreate}
+          isSubmitting={isSubmitting}
+          group={editingGroup}
+        />
+
+        <DeleteDialog />
       </div>
-
-      <GroupDataTable data={groups} isLoading={isLoading} columns={columns} />
-
-      <GroupFormDialog
-        mode={editingGroup ? 'edit' : 'create'}
-        open={isCreateOpen || !!editingGroup}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsCreateOpen(false);
-            setEditingGroup(null);
-          }
-        }}
-        onSubmit={editingGroup ? handleEdit : handleCreate}
-        isSubmitting={isSubmitting}
-        group={editingGroup}
-      />
-
-      <DeleteDialog />
     </div>
   );
 }

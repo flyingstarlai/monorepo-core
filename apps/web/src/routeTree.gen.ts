@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users.index'
@@ -77,6 +78,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -100,9 +106,9 @@ const AuthenticatedGroupsIndexRoute =
   } as any)
 const AuthenticatedDocumentsIndexRoute =
   AuthenticatedDocumentsIndexRouteImport.update({
-    id: '/documents/',
-    path: '/documents/',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDocumentsRoute,
   } as any)
 const AuthenticatedDocumentStagesIndexRoute =
   AuthenticatedDocumentStagesIndexRouteImport.update({
@@ -169,15 +175,15 @@ const AuthenticatedGroupsIdRoute = AuthenticatedGroupsIdRouteImport.update({
 } as any)
 const AuthenticatedDocumentsStagesRoute =
   AuthenticatedDocumentsStagesRouteImport.update({
-    id: '/documents/stages',
-    path: '/documents/stages',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/stages',
+    path: '/stages',
+    getParentRoute: () => AuthenticatedDocumentsRoute,
   } as any)
 const AuthenticatedDocumentsCreateRoute =
   AuthenticatedDocumentsCreateRouteImport.update({
-    id: '/documents/create',
-    path: '/documents/create',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/create',
+    path: '/create',
+    getParentRoute: () => AuthenticatedDocumentsRoute,
   } as any)
 const AuthenticatedAppsIdRoute = AuthenticatedAppsIdRouteImport.update({
   id: '/$id',
@@ -228,15 +234,15 @@ const AuthenticatedUsersIdEditRoute =
   } as any)
 const AuthenticatedDocumentsIdOfficeRoute =
   AuthenticatedDocumentsIdOfficeRouteImport.update({
-    id: '/documents/$id/office',
-    path: '/documents/$id/office',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/$id/office',
+    path: '/$id/office',
+    getParentRoute: () => AuthenticatedDocumentsRoute,
   } as any)
 const AuthenticatedDocumentsIdEditRoute =
   AuthenticatedDocumentsIdEditRouteImport.update({
-    id: '/documents/$id/edit',
-    path: '/documents/$id/edit',
-    getParentRoute: () => AuthenticatedRoute,
+    id: '/$id/edit',
+    path: '/$id/edit',
+    getParentRoute: () => AuthenticatedDocumentsRoute,
   } as any)
 const AuthenticatedAppsIdLoginsRoute =
   AuthenticatedAppsIdLoginsRouteImport.update({
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/unauthorized': typeof UnauthorizedRoute
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/documents': typeof AuthenticatedDocumentsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/users': typeof AuthenticatedUsersRouteWithChildren
   '/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
@@ -289,7 +296,7 @@ export interface FileRoutesByFullPath {
   '/apps/': typeof AuthenticatedAppsIndexRoute
   '/departments': typeof AuthenticatedDepartmentsIndexRoute
   '/document-stages': typeof AuthenticatedDocumentStagesIndexRoute
-  '/documents': typeof AuthenticatedDocumentsIndexRoute
+  '/documents/': typeof AuthenticatedDocumentsIndexRoute
   '/groups': typeof AuthenticatedGroupsIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
@@ -346,6 +353,7 @@ export interface FileRoutesById {
   '/unauthorized': typeof UnauthorizedRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/documents': typeof AuthenticatedDocumentsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRouteWithChildren
   '/_authenticated/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
@@ -387,6 +395,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/apps'
     | '/dashboard'
+    | '/documents'
     | '/settings'
     | '/users'
     | '/app-builder/create'
@@ -407,7 +416,7 @@ export interface FileRouteTypes {
     | '/apps/'
     | '/departments'
     | '/document-stages'
-    | '/documents'
+    | '/documents/'
     | '/groups'
     | '/users/'
     | '/app-builder/$id/build'
@@ -463,6 +472,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/_authenticated/apps'
     | '/_authenticated/dashboard'
+    | '/_authenticated/documents'
     | '/_authenticated/settings'
     | '/_authenticated/users'
     | '/_authenticated/app-builder/create'
@@ -548,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/documents': {
+      id: '/_authenticated/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -578,10 +595,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/documents/': {
       id: '/_authenticated/documents/'
-      path: '/documents'
-      fullPath: '/documents'
+      path: '/'
+      fullPath: '/documents/'
       preLoaderRoute: typeof AuthenticatedDocumentsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedDocumentsRoute
     }
     '/_authenticated/document-stages/': {
       id: '/_authenticated/document-stages/'
@@ -662,17 +679,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/documents/stages': {
       id: '/_authenticated/documents/stages'
-      path: '/documents/stages'
+      path: '/stages'
       fullPath: '/documents/stages'
       preLoaderRoute: typeof AuthenticatedDocumentsStagesRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedDocumentsRoute
     }
     '/_authenticated/documents/create': {
       id: '/_authenticated/documents/create'
-      path: '/documents/create'
+      path: '/create'
       fullPath: '/documents/create'
       preLoaderRoute: typeof AuthenticatedDocumentsCreateRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedDocumentsRoute
     }
     '/_authenticated/apps/$id': {
       id: '/_authenticated/apps/$id'
@@ -732,17 +749,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/documents/$id/office': {
       id: '/_authenticated/documents/$id/office'
-      path: '/documents/$id/office'
+      path: '/$id/office'
       fullPath: '/documents/$id/office'
       preLoaderRoute: typeof AuthenticatedDocumentsIdOfficeRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedDocumentsRoute
     }
     '/_authenticated/documents/$id/edit': {
       id: '/_authenticated/documents/$id/edit'
-      path: '/documents/$id/edit'
+      path: '/$id/edit'
       fullPath: '/documents/$id/edit'
       preLoaderRoute: typeof AuthenticatedDocumentsIdEditRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedDocumentsRoute
     }
     '/_authenticated/apps/$id/logins': {
       id: '/_authenticated/apps/$id/logins'
@@ -800,6 +817,28 @@ const AuthenticatedAppsRouteChildren: AuthenticatedAppsRouteChildren = {
 
 const AuthenticatedAppsRouteWithChildren =
   AuthenticatedAppsRoute._addFileChildren(AuthenticatedAppsRouteChildren)
+
+interface AuthenticatedDocumentsRouteChildren {
+  AuthenticatedDocumentsCreateRoute: typeof AuthenticatedDocumentsCreateRoute
+  AuthenticatedDocumentsStagesRoute: typeof AuthenticatedDocumentsStagesRoute
+  AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
+  AuthenticatedDocumentsIdEditRoute: typeof AuthenticatedDocumentsIdEditRoute
+  AuthenticatedDocumentsIdOfficeRoute: typeof AuthenticatedDocumentsIdOfficeRoute
+}
+
+const AuthenticatedDocumentsRouteChildren: AuthenticatedDocumentsRouteChildren =
+  {
+    AuthenticatedDocumentsCreateRoute: AuthenticatedDocumentsCreateRoute,
+    AuthenticatedDocumentsStagesRoute: AuthenticatedDocumentsStagesRoute,
+    AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
+    AuthenticatedDocumentsIdEditRoute: AuthenticatedDocumentsIdEditRoute,
+    AuthenticatedDocumentsIdOfficeRoute: AuthenticatedDocumentsIdOfficeRoute,
+  }
+
+const AuthenticatedDocumentsRouteWithChildren =
+  AuthenticatedDocumentsRoute._addFileChildren(
+    AuthenticatedDocumentsRouteChildren,
+  )
 
 interface AuthenticatedSettingsRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -864,30 +903,27 @@ const AuthenticatedAppBuilderIdHistoryRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAppsRoute: typeof AuthenticatedAppsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRouteWithChildren
   AuthenticatedAppBuilderCreateRoute: typeof AuthenticatedAppBuilderCreateRoute
   AuthenticatedAppBuilderIdentifierRoute: typeof AuthenticatedAppBuilderIdentifierRoute
   AuthenticatedAppBuilderSettingsRoute: typeof AuthenticatedAppBuilderSettingsRoute
   AuthenticatedAppBuilderSystemStatusRoute: typeof AuthenticatedAppBuilderSystemStatusRoute
-  AuthenticatedDocumentsCreateRoute: typeof AuthenticatedDocumentsCreateRoute
-  AuthenticatedDocumentsStagesRoute: typeof AuthenticatedDocumentsStagesRoute
   AuthenticatedGroupsIdRoute: typeof AuthenticatedGroupsIdRoute
   AuthenticatedGroupsCreateRoute: typeof AuthenticatedGroupsCreateRoute
   AuthenticatedAppBuilderIndexRoute: typeof AuthenticatedAppBuilderIndexRoute
   AuthenticatedDepartmentsIndexRoute: typeof AuthenticatedDepartmentsIndexRoute
   AuthenticatedDocumentStagesIndexRoute: typeof AuthenticatedDocumentStagesIndexRoute
-  AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
   AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
   AuthenticatedAppBuilderIdBuildRoute: typeof AuthenticatedAppBuilderIdBuildRoute
   AuthenticatedAppBuilderIdHistoryRoute: typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
-  AuthenticatedDocumentsIdEditRoute: typeof AuthenticatedDocumentsIdEditRoute
-  AuthenticatedDocumentsIdOfficeRoute: typeof AuthenticatedDocumentsIdOfficeRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppsRoute: AuthenticatedAppsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDocumentsRoute: AuthenticatedDocumentsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRouteWithChildren,
   AuthenticatedAppBuilderCreateRoute: AuthenticatedAppBuilderCreateRoute,
@@ -896,20 +932,15 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppBuilderSettingsRoute: AuthenticatedAppBuilderSettingsRoute,
   AuthenticatedAppBuilderSystemStatusRoute:
     AuthenticatedAppBuilderSystemStatusRoute,
-  AuthenticatedDocumentsCreateRoute: AuthenticatedDocumentsCreateRoute,
-  AuthenticatedDocumentsStagesRoute: AuthenticatedDocumentsStagesRoute,
   AuthenticatedGroupsIdRoute: AuthenticatedGroupsIdRoute,
   AuthenticatedGroupsCreateRoute: AuthenticatedGroupsCreateRoute,
   AuthenticatedAppBuilderIndexRoute: AuthenticatedAppBuilderIndexRoute,
   AuthenticatedDepartmentsIndexRoute: AuthenticatedDepartmentsIndexRoute,
   AuthenticatedDocumentStagesIndexRoute: AuthenticatedDocumentStagesIndexRoute,
-  AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
   AuthenticatedGroupsIndexRoute: AuthenticatedGroupsIndexRoute,
   AuthenticatedAppBuilderIdBuildRoute: AuthenticatedAppBuilderIdBuildRoute,
   AuthenticatedAppBuilderIdHistoryRoute:
     AuthenticatedAppBuilderIdHistoryRouteWithChildren,
-  AuthenticatedDocumentsIdEditRoute: AuthenticatedDocumentsIdEditRoute,
-  AuthenticatedDocumentsIdOfficeRoute: AuthenticatedDocumentsIdOfficeRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

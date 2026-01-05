@@ -11,7 +11,14 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
-import { Plus, Search, FileDown, FileEdit, Settings, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  FileDown,
+  FileEdit,
+  Settings,
+  Trash2,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from '@tanstack/react-router';
 import { useDocuments, useDeleteDocument } from '../hooks/use-documents';
@@ -274,8 +281,6 @@ export function DocumentsPage() {
   const canUpload = isAdmin || isManager;
 
   const { data: documents, isLoading } = useDocuments({
-    documentKind: searchTerm,
-    search: searchTerm,
     stageId: selectedStageId,
   });
 
@@ -284,7 +289,12 @@ export function DocumentsPage() {
   const deleteDocument = useDeleteDocument({
     onSuccess: () => {
       toast.success('文檔刪除成功');
-      setDeleteDialog({ id: null, documentNumber: null, documentName: null, isOpen: false });
+      setDeleteDialog({
+        id: null,
+        documentNumber: null,
+        documentName: null,
+        isOpen: false,
+      });
     },
     onError: () => {
       toast.error('刪除失敗，請稍後再試');
@@ -294,7 +304,11 @@ export function DocumentsPage() {
   const defaultStageId = stages && stages.length > 0 ? stages[0]?.id : '';
   const activeStageId = selectedStageId ?? defaultStageId;
 
-  const handleDelete = (id: string, documentNumber: string, documentName: string) => {
+  const handleDelete = (
+    id: string,
+    documentNumber: string,
+    documentName: string,
+  ) => {
     setDeleteDialog({ id, documentNumber, documentName, isOpen: true });
   };
 
@@ -407,7 +421,14 @@ export function DocumentsPage() {
         documentNumber={deleteDialog.documentNumber}
         documentName={deleteDialog.documentName}
         isOpen={deleteDialog.isOpen}
-        onClose={() => setDeleteDialog({ id: null, documentNumber: null, documentName: null, isOpen: false })}
+        onClose={() =>
+          setDeleteDialog({
+            id: null,
+            documentNumber: null,
+            documentName: null,
+            isOpen: false,
+          })
+        }
         onConfirm={confirmDelete}
         isLoading={deleteDocument.isPending}
       />

@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useNavigate, Link } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,7 +70,14 @@ export function DocumentUploadPage() {
 
     setUploadError(null);
 
-    const allowedExtensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt'];
+    const allowedExtensions = [
+      '.doc',
+      '.docx',
+      '.xls',
+      '.xlsx',
+      '.pdf',
+      '.txt',
+    ];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
 
     if (!allowedExtensions.includes(fileExtension)) {
@@ -141,8 +154,7 @@ export function DocumentUploadPage() {
   }
 
   return (
-    <div className="max-w-4xl space-y-4">
-      {/* Back Button */}
+    <div className="max-w-2xl space-y-4">
       <Link to="/documents">
         <Button
           variant="outline"
@@ -154,17 +166,6 @@ export function DocumentUploadPage() {
         </Button>
       </Link>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">上傳新文檔</h1>
-          <p className="text-slate-600 mt-2">
-            上傳 Office、PDF 或 TXT 檔案（.doc, .docx, .xls, .xlsx, .pdf, .txt），最大 100MB。
-          </p>
-        </div>
-      </div>
-
-      {/* Success/Error Messages */}
       {uploadError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4 text-red-500" />
@@ -172,8 +173,16 @@ export function DocumentUploadPage() {
         </Alert>
       )}
 
-      {/* Upload Form */}
       <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium text-slate-900">
+            上傳新文檔
+          </CardTitle>
+          <CardDescription className="text-slate-600">
+            上傳 Office、PDF 或 TXT 檔案（.doc, .docx, .xls, .xlsx, .pdf,
+            .txt），最大 100MB。
+          </CardDescription>
+        </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Document Details Section */}

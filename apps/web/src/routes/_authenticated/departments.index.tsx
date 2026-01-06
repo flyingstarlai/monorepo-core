@@ -81,6 +81,7 @@ function DepartmentsPage() {
     onEdit: handleEdit,
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
+    departments,
   });
 
   const handleCreate = async () => {

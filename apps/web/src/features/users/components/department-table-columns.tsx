@@ -15,12 +15,14 @@ interface DepartmentTableColumnsProps {
   onEdit?: (dept: Department) => void;
   onDelete?: (dept: Department) => void;
   onToggleStatus?: (dept: Department) => void;
+  departments?: Department[] | undefined;
 }
 
 export function createDepartmentTableColumns({
   onEdit,
   onDelete,
   onToggleStatus,
+  departments,
 }: DepartmentTableColumnsProps): ColumnDef<Department>[] {
   return [
     {
@@ -37,7 +39,10 @@ export function createDepartmentTableColumns({
       cell: ({ row }) => {
         const dept = row.original;
         return (
-          <div className="font-medium text-slate-900">{dept.deptName}</div>
+          <div className="font-medium text-slate-900">
+            <div>{dept.deptNo}</div>
+            <div>{dept.deptName}</div>
+          </div>
         );
       },
     },
@@ -46,11 +51,14 @@ export function createDepartmentTableColumns({
       header: '上層部門',
       cell: ({ row }) => {
         const dept = row.original;
-        return (
-          <div className="text-sm text-slate-600">
-            {dept.parentDeptNo || '-'}
-          </div>
+        const parentDept = departments?.find(
+          (d) => d.deptNo === dept.parentDeptNo,
         );
+        const displayValue = parentDept
+          ? `${dept.parentDeptNo} - ${parentDept.deptName}`
+          : dept.parentDeptNo || '-';
+
+        return <div className="text-sm text-slate-600">{displayValue}</div>;
       },
     },
     {

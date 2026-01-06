@@ -21,7 +21,11 @@ import {
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import type { Department } from '@/features/users/types/user.types';
+import { Combobox } from '@/components/ui/combobox';
+import type {
+  Department,
+  UpdateDepartmentData,
+} from '@/features/users/types/user.types';
 
 export const Route = createFileRoute('/_authenticated/departments/')({
   component: DepartmentsPage,
@@ -44,6 +48,17 @@ function DepartmentsPage() {
     managerId: '',
     isActive: true,
   });
+
+  const departmentOptions = [
+    { value: '', label: '無上層部門' },
+    ...(departments
+      ?.filter((dept) => dept.isActive)
+      .filter((dept) => !editingDept || dept.deptNo !== editingDept.deptNo)
+      .map((dept) => ({
+        value: dept.deptNo,
+        label: `${dept.deptNo} - ${dept.deptName}`,
+      })) || []),
+  ];
 
   const { handleEdit, handleDelete, handleToggleStatus, DeleteDialog } =
     useDepartmentTableActions({
@@ -88,7 +103,7 @@ function DepartmentsPage() {
   const handleUpdate = async () => {
     if (!editingDept) return;
     try {
-      const updateData: any = {
+      const updateData: UpdateDepartmentData = {
         deptName: formData.deptName,
         deptLevel: formData.deptLevel,
         isActive: formData.isActive,
@@ -133,7 +148,7 @@ function DepartmentsPage() {
                 新增部門
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[800px]">
               <DialogHeader>
                 <DialogTitle>新增部門</DialogTitle>
               </DialogHeader>
@@ -152,16 +167,16 @@ function DepartmentsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="parentDeptNo">上層部門代碼</Label>
-                    <Input
-                      id="parentDeptNo"
+                    <Combobox
+                      options={departmentOptions}
                       value={formData.parentDeptNo}
-                      onChange={(e) =>
+                      onValueChange={(value) =>
                         setFormData({
                           ...formData,
-                          parentDeptNo: e.target.value,
+                          parentDeptNo: value,
                         })
                       }
-                      placeholder="選填：上層部門代碼"
+                      placeholder="選擇上層部門"
                     />
                   </div>
                 </div>
@@ -239,34 +254,35 @@ function DepartmentsPage() {
 
           {editingDept && (
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-              <DialogContent className="sm:max-w-[600px]">
+              <DialogContent className="sm:max-w-[800px]">
                 <DialogHeader>
                   <DialogTitle>編輯部門</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-6 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="deptNo">部門代碼</Label>
-                    <Input
-                      id="deptNo"
-                      value={formData.deptNo}
-                      disabled
-                      className="bg-muted/30"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="parentDeptNo">上層部門代碼</Label>
-                    <Input
-                      id="parentDeptNo"
-                      value={formData.parentDeptNo}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          parentDeptNo: e.target.value,
-                        })
-                      }
-                      placeholder="選填：上層部門代碼"
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="deptNo">部門代碼</Label>
+                      <Input
+                        id="deptNo"
+                        value={formData.deptNo}
+                        disabled
+                        className="bg-muted/30"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="parentDeptNo">上層部門代碼</Label>
+                      <Combobox
+                        options={departmentOptions}
+                        value={formData.parentDeptNo}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            parentDeptNo: value,
+                          })
+                        }
+                        placeholder="選擇上層部門"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">

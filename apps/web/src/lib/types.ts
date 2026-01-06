@@ -27,7 +27,7 @@ export interface MobileAppBuild {
   buildType?: 'release' | 'debug' | 'profile';
   buildParameters?: string;
   performanceMetrics?: string;
-  stagesSnapshot?: any;
+  stagesSnapshot?: BuildStageProgress;
   stageSnapshotFetchedAt?: string;
 }
 

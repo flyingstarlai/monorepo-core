@@ -139,7 +139,7 @@ export class MobileAppBuild {
     name: 'test_results',
     nullable: true,
   })
-  testResults?: any;
+  testResults?: Record<string, unknown>;
 
   @Column({
     type: 'nvarchar',
@@ -147,7 +147,7 @@ export class MobileAppBuild {
     name: 'quality_metrics',
     nullable: true,
   })
-  qualityMetrics?: any;
+  qualityMetrics?: Record<string, unknown>;
 
   @Column({
     type: 'nvarchar',
@@ -155,7 +155,7 @@ export class MobileAppBuild {
     name: 'stages_snapshot',
     nullable: true,
   })
-  stagesSnapshot?: any;
+  stagesSnapshot?: Record<string, unknown>;
 
   @Column({
     type: 'datetime',

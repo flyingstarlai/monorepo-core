@@ -3,6 +3,18 @@
  * Provides structured error handling for API responses
  */
 
+/**
+ * Standard API Error Response structure
+ */
+export interface ApiResponseError {
+  message: string;
+  code?: string;
+  statusCode?: number;
+  field?: string;
+  errors?: Record<string, string[]>;
+  value?: unknown;
+}
+
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -216,12 +228,12 @@ export class NetworkError extends ApiError {
  */
 export class ValidationError extends ApiError {
   public readonly field?: string;
-  public readonly value?: any;
+  public readonly value?: unknown;
 
   constructor(
     message: string,
     field?: string,
-    value?: any,
+    value?: unknown,
     code: string = 'VALIDATION_ERROR',
   ) {
     super(message, code, 400);
@@ -233,17 +245,18 @@ export class ValidationError extends ApiError {
   /**
    * Create ValidationError from API response
    */
-  static fromResponse(response: any): ValidationError {
-    if (response.field && response.message) {
+  static fromResponse(data: unknown): ValidationError {
+    const errorData = data as ApiResponseError | undefined;
+    if (errorData?.field && errorData.message) {
       return new ValidationError(
-        response.message,
-        response.field,
-        response.value,
-        response.code,
+        errorData.message,
+        errorData.field,
+        errorData.value,
+        errorData.code,
       );
     }
 
-    return new ValidationError(response.message || 'Validation failed');
+    return new ValidationError(errorData?.message || 'Validation failed');
   }
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -15,18 +16,26 @@ import {
   Plus,
   Search,
   FileDown,
-  FileEdit,
   Settings,
+  MoreHorizontal,
+  Eye,
+  PencilLine,
   Trash2,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useNavigate } from '@tanstack/react-router';
-import { useDocuments, useDeleteDocument } from '../hooks/use-documents';
+import { useDocuments } from '../hooks/use-documents';
 import { useDocumentStages } from '../hooks/use-document-stages';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DeleteDocumentDialog } from '../components/delete-document-dialog';
-import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useDocumentTableActions } from '../components/use-document-table-actions';
+import type { DocumentResponseDto } from '../types/documents.types';
 
 const formatDate = (dateString: string | undefined): string => {
   if (!dateString) return '-';
@@ -44,22 +53,20 @@ const formatDate = (dateString: string | undefined): string => {
 };
 
 interface DocumentTableProps {
-  documents: any[];
+  documents: DocumentResponseDto[];
   isLoading?: boolean;
-  isAdmin: boolean;
-  isManager: boolean;
   canUpload: boolean;
-  navigate: any;
-  onDelete: (id: string, documentNumber: string, documentName: string) => void;
+  onView?: (doc: DocumentResponseDto) => void;
+  onEdit?: (doc: DocumentResponseDto) => void;
+  onDelete?: (id: string, documentNumber: string, documentName: string) => void;
 }
 
 function DocumentTable({
   documents,
   isLoading,
-  isAdmin,
-  isManager,
   canUpload,
-  navigate,
+  onView,
+  onEdit,
   onDelete,
 }: DocumentTableProps) {
   const columnWidths = [
@@ -191,55 +198,45 @@ function DocumentTable({
                   )}
                 </TableCell>
                 <TableCell className="py-3 px-4">
-                  <div className="flex items-center space-x-2">
-                    {doc.officeFilePath &&
-                      import.meta.env.VITE_FEATURE_DOC_SERVER === 'true' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            navigate({
-                              to: `/documents/${doc.id}/office`,
-                            })
-                          }
-                          title={isAdmin || isManager ? '開啟文檔' : '在線查看'}
-                          className="h-8"
-                        >
-                          <FileEdit className="mr-1 h-4 w-4" />
-                          {isAdmin || isManager ? '開啟文檔' : '在線查看'}
-                        </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">操作選單</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {doc.officeFilePath &&
+                        import.meta.env.VITE_FEATURE_DOC_SERVER === 'true' && (
+                          <DropdownMenuItem onClick={() => onView?.(doc)}>
+                            <Eye className="mr-2 h-4 w-4" />
+                            查看文檔
+                          </DropdownMenuItem>
+                        )}
+                      {canUpload && (
+                        <DropdownMenuItem onClick={() => onEdit?.(doc)}>
+                          <PencilLine className="mr-2 h-4 w-4" />
+                          編輯
+                        </DropdownMenuItem>
                       )}
-
-                    {canUpload && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          navigate({
-                            to: `/documents/${doc.id}/edit`,
-                          })
-                        }
-                        className="h-8"
-                      >
-                        <Plus className="mr-1 h-4 w-4" />
-                        編輯
-                      </Button>
-                    )}
-
-                    {canUpload && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          onDelete(doc.id, doc.documentNumber, doc.documentName)
-                        }
-                        className="h-8"
-                      >
-                        <Trash2 className="mr-1 h-4 w-4" />
-                        刪除
-                      </Button>
-                    )}
-                  </div>
+                      <DropdownMenuSeparator />
+                      {canUpload && (
+                        <DropdownMenuItem
+                          onClick={() =>
+                            onDelete?.(
+                              doc.id,
+                              doc.documentNumber,
+                              doc.documentName,
+                            )
+                          }
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          刪除
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))
@@ -264,58 +261,32 @@ function DocumentTable({
 
 export function DocumentsPage() {
   const { user } = useAuthContext();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStageId, setSelectedStageId] = useState<string | undefined>(
     undefined,
   );
-  const [deleteDialog, setDeleteDialog] = useState<{
-    id: string | null;
-    documentNumber: string | null;
-    documentName: string | null;
-    isOpen: boolean;
-  }>({ id: null, documentNumber: null, documentName: null, isOpen: false });
-  const navigate = useNavigate();
 
   const isAdmin = user?.role === 'admin';
   const isManager = user?.role === 'manager';
   const canUpload = isAdmin || isManager;
 
-  const { data: documents, isLoading } = useDocuments({
+  const {
+    data: documents,
+    isLoading,
+    refetch,
+  } = useDocuments({
     stageId: selectedStageId,
   });
 
   const { data: stages } = useDocumentStages();
 
-  const deleteDocument = useDeleteDocument({
-    onSuccess: () => {
-      toast.success('文檔刪除成功');
-      setDeleteDialog({
-        id: null,
-        documentNumber: null,
-        documentName: null,
-        isOpen: false,
-      });
-    },
-    onError: () => {
-      toast.error('刪除失敗，請稍後再試');
-    },
+  const { onView, onEdit, onDelete, DeleteDialog } = useDocumentTableActions({
+    onRefresh: refetch,
   });
 
   const defaultStageId = stages && stages.length > 0 ? stages[0]?.id : '';
   const activeStageId = selectedStageId ?? defaultStageId;
-
-  const handleDelete = (
-    id: string,
-    documentNumber: string,
-    documentName: string,
-  ) => {
-    setDeleteDialog({ id, documentNumber, documentName, isOpen: true });
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteDialog.id) return;
-    await deleteDocument.mutateAsync(deleteDialog.id);
-  };
 
   const safeDocuments = Array.isArray(documents) ? documents : [];
   const filteredDocuments = safeDocuments.filter(
@@ -402,11 +373,10 @@ export function DocumentsPage() {
                     <DocumentTable
                       documents={filteredDocuments}
                       isLoading={isLoading}
-                      isAdmin={isAdmin}
-                      isManager={isManager}
                       canUpload={canUpload}
-                      navigate={navigate}
-                      onDelete={handleDelete}
+                      onView={onView}
+                      onEdit={onEdit}
+                      onDelete={onDelete}
                     />
                   </TabsContent>
                 )}
@@ -416,22 +386,7 @@ export function DocumentsPage() {
         </CardContent>
       </Card>
 
-      <DeleteDocumentDialog
-        id={deleteDialog.id}
-        documentNumber={deleteDialog.documentNumber}
-        documentName={deleteDialog.documentName}
-        isOpen={deleteDialog.isOpen}
-        onClose={() =>
-          setDeleteDialog({
-            id: null,
-            documentNumber: null,
-            documentName: null,
-            isOpen: false,
-          })
-        }
-        onConfirm={confirmDelete}
-        isLoading={deleteDocument.isPending}
-      />
+      <DeleteDialog />
     </>
   );
 }

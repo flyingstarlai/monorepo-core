@@ -19,6 +19,11 @@ import { User } from '../users/entities/user.entity';
 import { IdGenerator } from '../utils/id-generator';
 import { DocumentStageService } from './document-stage.service';
 import {
+  OnlyOfficeConfig,
+  OnlyOfficeDocumentConfig,
+  OnlyOfficeEditorConfig,
+} from './interfaces/onlyoffice-config.interface';
+import {
   existsSync,
   unlinkSync,
   mkdirSync,
@@ -34,51 +39,6 @@ import axios from 'axios';
 import * as jwt from 'jsonwebtoken';
 
 type MulterFile = Express.Multer.File;
-
-interface OnlyOfficeEditorConfig {
-  mode: 'edit' | 'view';
-  lang: string;
-  callbackUrl: string;
-  user: {
-    id: string;
-    name: string;
-    role: string;
-    canEdit: boolean;
-  };
-  customization: {
-    autosave: boolean;
-    forcesave: boolean;
-    forcesavetype: string;
-    hideMenu?: boolean;
-    hideToolbar?: boolean;
-    hideRulers?: boolean;
-    toolbarNoTabs?: boolean;
-    toolbarHideFileName?: boolean;
-  };
-}
-
-interface OnlyOfficeDocumentConfig {
-  fileType: string;
-  key: string;
-  title: string;
-  url: string;
-  permissions: {
-    edit: boolean;
-    comment: boolean;
-    download: boolean;
-    print: boolean;
-    fillForms: boolean;
-    modifyFilter: boolean;
-    modifyContentControl: boolean;
-    review: boolean;
-  };
-}
-
-interface OnlyOfficeConfig {
-  documentType: 'word' | 'cell' | 'slide' | 'pdf';
-  document: OnlyOfficeDocumentConfig;
-  editorConfig: OnlyOfficeEditorConfig;
-}
 
 interface ConversionJob {
   documentId: string;

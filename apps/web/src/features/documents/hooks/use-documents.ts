@@ -4,9 +4,13 @@ import type {
   DocumentResponseDto,
   OnlyofficeConfigDto,
   ConversionStatus,
+  DocumentsQuery,
+  CreateDocumentDto,
+  UpdateDocumentDto,
 } from '../types/documents.types';
+import type { AppError } from '@/lib/error-types';
 
-export const useDocuments = (query?: any) => {
+export const useDocuments = (query?: DocumentsQuery) => {
   return useQuery({
     queryKey: ['documents', query],
     queryFn: async (): Promise<DocumentResponseDto[]> => {
@@ -38,13 +42,13 @@ export const useDocument = (id: string) => {
 };
 
 export const useCreateDocument = (options?: {
-  onSuccess?: (data: DocumentResponseDto, variables: unknown) => void;
-  onError?: (error: any) => void;
+  onSuccess?: (data: DocumentResponseDto, variables: CreateDocumentDto) => void;
+  onError?: (error: AppError | unknown) => void;
 }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: CreateDocumentDto) => {
       const formData = new FormData();
       formData.append('documentKind', data.documentKind);
       formData.append('documentNumber', data.documentNumber);
@@ -84,13 +88,16 @@ export const useCreateDocument = (options?: {
 };
 
 export const useUpdateDocument = (options?: {
-  onSuccess?: (data: DocumentResponseDto, variables: any) => void;
-  onError?: (error: any) => void;
+  onSuccess?: (
+    data: DocumentResponseDto,
+    variables: UpdateDocumentDto & { id: string },
+  ) => void;
+  onError?: (error: AppError | unknown) => void;
 }) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: UpdateDocumentDto & { id: string }) => {
       const formData = new FormData();
       if (data.documentKind !== undefined) {
         formData.append('documentKind', data.documentKind);
@@ -140,7 +147,7 @@ export const useUpdateDocument = (options?: {
 
 export const useDeleteDocument = (options?: {
   onSuccess?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: AppError | unknown) => void;
 }) => {
   const queryClient = useQueryClient();
 
@@ -160,7 +167,7 @@ export const useDeleteDocument = (options?: {
 
 export const useDownloadDocument = (options?: {
   onSuccess?: (blob: Blob) => void;
-  onError?: (error: any) => void;
+  onError?: (error: AppError | unknown) => void;
 }) => {
   const queryClient = useQueryClient();
 
@@ -229,8 +236,8 @@ export const useConversionStatus = (documentId: string, jobId: string) => {
     },
     enabled: !!jobId,
     refetchInterval: (data: any) => {
-      const shouldPoll =
-        data?.status === 'pending' || data?.status === 'processing';
+      const status = (data as ConversionStatus | undefined)?.status;
+      const shouldPoll = status === 'pending' || status === 'processing';
       return shouldPoll ? 2000 : false;
     },
     staleTime: 0,
@@ -239,7 +246,7 @@ export const useConversionStatus = (documentId: string, jobId: string) => {
 
 export const useDownloadConvertedPdf = (options?: {
   onSuccess?: (blob: Blob) => void;
-  onError?: (error: any) => void;
+  onError?: (error: AppError | unknown) => void;
 }) => {
   const queryClient = useQueryClient();
 

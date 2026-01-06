@@ -7,6 +7,7 @@ import {
 import { useAuthContext } from '@/features/auth/hooks/use-auth-context';
 import { useRouter } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 
 export const Route = createFileRoute('/_authenticated/users')({
   beforeLoad: ({ context, location }) => {
@@ -52,6 +53,7 @@ function UsersLayout() {
         {isUsersIndex && getCreateUserLink() && (
           <Link to={getCreateUserLink()}>
             <Button className="flex items-center space-x-2">
+              <Plus className="mr-2 h-4 w-4" />
               <span>新增用戶</span>
             </Button>
           </Link>

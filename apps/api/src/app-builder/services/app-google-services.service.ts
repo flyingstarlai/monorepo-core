@@ -6,6 +6,16 @@ import { UploadGoogleServicesDto } from '../dto/upload-google-services.dto';
 import { IdGenerator } from '../../utils/id-generator';
 import { MinioService } from '../../minio/minio.service';
 
+export interface GoogleServicesData {
+  client: Array<{
+    client_info?: {
+      android_client_info?: {
+        package_name?: string;
+      };
+    };
+  }>;
+}
+
 @Injectable()
 export class MobileAppGoogleServicesService {
   constructor(
@@ -82,7 +92,7 @@ export class MobileAppGoogleServicesService {
       const clientInfo = googleServices.client || [];
 
       return clientInfo
-        .map((client: any) => {
+        .map((client: GoogleServicesData['client'][number]) => {
           const packageName =
             client.client_info?.android_client_info?.package_name || '';
 

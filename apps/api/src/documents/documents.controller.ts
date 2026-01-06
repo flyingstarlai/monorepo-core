@@ -15,6 +15,7 @@ import {
   ForbiddenException,
   InternalServerErrorException,
   BadRequestException,
+  UnauthorizedException,
   Req,
   UseInterceptors,
   UploadedFiles,
@@ -48,7 +49,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { OnlyofficeAuthorized } from '../auth/decorators/onlyoffice-authorized.decorator';
 import { User } from '../users/entities/user.entity';
 
-import type { Response, Request } from 'express';
+import type { Response } from 'express';
+import type { AuthenticatedRequest } from '../types/auth.types';
 import { FilesInterceptor } from '@nestjs/platform-express';
 
 type MulterFile = Express.Multer.File;
@@ -80,10 +82,13 @@ export class DocumentsController {
   })
   async findAll(
     @Query() query: ListDocumentsDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<DocumentResponseDto[]> {
     this.checkFeatureFlag();
-    const user = req.user as User;
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     return this.documentsService.findAll(query, user);
   }
 
@@ -98,10 +103,13 @@ export class DocumentsController {
   })
   async findOne(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
-    const user = req.user as User;
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     return this.documentsService.findOne(id, user);
   }
 
@@ -122,18 +130,19 @@ export class DocumentsController {
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
 
-    const user = req.user as User;
+    const authenticatedReq = req as unknown as AuthenticatedRequest;
+    const user = authenticatedReq.user;
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
     const createDocumentDto = {
-      documentKind: req.body.documentKind,
-      documentNumber: req.body.documentNumber,
-      documentName: req.body.documentName,
-      version: req.body.version,
-      documentAccessLevel: req.body.documentAccessLevel,
-      stageId: req.body.stageId || undefined,
+      documentKind: (req.body as unknown as any).documentKind,
+      documentNumber: (req.body as unknown as any).documentNumber,
+      documentName: (req.body as unknown as any).documentName,
+      version: (req.body as unknown as any).version,
+      documentAccessLevel: (req.body as unknown as any).documentAccessLevel,
+      stageId: (req.body as unknown as any).stageId || undefined,
     } as CreateDocumentDto;
 
     let officeFile: MulterFile | undefined;
@@ -214,18 +223,19 @@ export class DocumentsController {
   ): Promise<DocumentResponseDto> {
     this.checkFeatureFlag();
 
-    const user = req.user as User;
+    const authenticatedReq = req as unknown as AuthenticatedRequest;
+    const user = authenticatedReq.user;
     if (!user) {
       throw new ForbiddenException('User not authenticated');
     }
 
     const updateDocumentDto = {
-      documentKind: req.body.documentKind,
-      documentNumber: req.body.documentNumber,
-      documentName: req.body.documentName,
-      version: req.body.version,
-      documentAccessLevel: req.body.documentAccessLevel,
-      stageId: req.body.stageId || undefined,
+      documentKind: (req.body as unknown as any).documentKind,
+      documentNumber: (req.body as unknown as any).documentNumber,
+      documentName: (req.body as unknown as any).documentName,
+      version: (req.body as unknown as any).version,
+      documentAccessLevel: (req.body as unknown as any).documentAccessLevel,
+      stageId: (req.body as unknown as any).stageId || undefined,
     } as UpdateDocumentDto;
 
     let officeFile: MulterFile | undefined;
@@ -293,9 +303,15 @@ export class DocumentsController {
   @ApiOperation({ summary: 'Delete document' })
   @ApiParam({ name: 'id', description: 'Document ID' })
   @ApiResponse({ status: 204, description: 'Document deleted' })
-  async remove(@Param('id') id: string, @Req() req: any): Promise<void> {
+  async remove(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ): Promise<void> {
     this.checkFeatureFlag();
-    const user = req.user as User;
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     await this.documentsService.remove(id, user);
   }
 
@@ -312,7 +328,7 @@ export class DocumentsController {
   async download(
     @Param('id') id: string,
     @Query('type') type: 'office' | 'pdf' = 'pdf',
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
     this.checkFeatureFlag();
@@ -325,12 +341,15 @@ export class DocumentsController {
     const onlyofficeSecretHeader = req.headers['x-onlyoffice-secret'];
     const isOnlyofficeRequest = req.onlyofficeAuthorized === true;
     this.logger.log(
-      `Authorization header: ${authHeader ? authHeader.substring(0, 50) : 'NONE'}`,
+      `Authorization header: ${authHeader ? (Array.isArray(authHeader) ? authHeader[0] : authHeader).substring(0, 50) : 'NONE'}`,
     );
     this.logger.log(
       `X-OnlyOffice-Secret header: ${
         onlyofficeSecretHeader
-          ? onlyofficeSecretHeader.substring(0, 50)
+          ? (Array.isArray(onlyofficeSecretHeader)
+              ? onlyofficeSecretHeader[0]
+              : onlyofficeSecretHeader
+            ).substring(0, 50)
           : 'NONE'
       }`,
     );
@@ -414,11 +433,14 @@ export class DocumentsController {
   })
   async getOnlyOfficeConfig(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<OnlyofficeConfigDto> {
     this.checkFeatureFlag();
 
-    const user = req.user as User;
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     const documentServerUrl = process.env.ONLYOFFICE_DOCUMENT_SERVER_URL;
 
     if (!documentServerUrl) {
@@ -475,11 +497,14 @@ export class DocumentsController {
   })
   async initiatePdfConversion(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<{ jobId: string }> {
     this.checkFeatureFlag();
 
-    const user = req.user as User;
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     this.logger.log(
       `User ${user.id} initiating PDF conversion for document ${id}`,
     );
@@ -550,12 +575,15 @@ export class DocumentsController {
   @ApiResponse({ status: 200, description: 'PDF file download' })
   async downloadConvertedPdf(
     @Param('id') id: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
     @Res() res: Response,
   ): Promise<void> {
     this.checkFeatureFlag();
 
-    const user = req.user as User;
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('User not authenticated');
+    }
     this.logger.log(
       `User ${user.id} downloading converted PDF for document ${id}`,
     );

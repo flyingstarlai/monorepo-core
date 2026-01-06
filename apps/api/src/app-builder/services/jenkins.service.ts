@@ -2,6 +2,33 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
 
+export interface JenkinsArtifact {
+  fileName: string;
+  relativePath: string;
+}
+
+export interface JenkinsQueueItemData {
+  id: number;
+  task?: {
+    name?: string;
+    url?: string;
+  };
+  why?: string;
+  stuck?: boolean;
+  inQueueSince?: number;
+}
+
+export interface JenkinsJobData {
+  name: string;
+  url?: string;
+  color?: string;
+  lastBuild?: {
+    number?: number;
+    result?: string;
+    timestamp?: number;
+  };
+}
+
 export interface JenkinsQueueResponse {
   id: number;
   url: string;
@@ -579,7 +606,7 @@ export class JenkinsService {
       const artifacts = response.data.artifacts || [];
       const baseUrl = `${this.jenkinsClient.defaults.baseURL}/job/${jobName}/${buildNumber}`;
 
-      return artifacts.map((artifact: any) => ({
+      return artifacts.map((artifact: JenkinsArtifact) => ({
         name: artifact.fileName,
         url: `${baseUrl}/artifact/${artifact.relativePath}`,
       }));
@@ -648,16 +675,18 @@ export class JenkinsService {
       const response = await this.jenkinsClient.get(
         '/queue/api/json?tree=items[id,task[name,url],why,inQueueSince,stuck]',
       );
-      const items = (response.data?.items || []).map((item: any) => ({
-        id: item.id,
-        jobName: item.task?.name,
-        url: item.task?.url,
-        why: item.why,
-        stuck: Boolean(item.stuck),
-        queuedAt: item.inQueueSince
-          ? new Date(item.inQueueSince as number).toISOString()
-          : undefined,
-      }));
+      const items = (response.data?.items || []).map(
+        (item: JenkinsQueueItemData) => ({
+          id: item.id,
+          jobName: item.task?.name,
+          url: item.task?.url,
+          why: item.why,
+          stuck: Boolean(item.stuck),
+          queuedAt: item.inQueueSince
+            ? new Date(item.inQueueSince as number).toISOString()
+            : undefined,
+        }),
+      );
 
       return {
         available: true,
@@ -680,7 +709,7 @@ export class JenkinsService {
         '/api/json?tree=jobs[name,url,color,lastBuild[number,result,timestamp]]',
       );
       const jobs = response.data?.jobs || [];
-      return jobs.map((job: any) => ({
+      return jobs.map((job: JenkinsJobData) => ({
         name: job.name,
         url: job.url,
         color: job.color,

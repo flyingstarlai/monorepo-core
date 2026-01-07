@@ -3,7 +3,7 @@
 # Build and push API Docker image to Docker Hub
 # Target: twsbpmac/acm-api
 # Target size: 500-600MB
-# Usage: ./scripts/build-api.sh [version]
+# Usage: ./scripts/build-api.sh [version] [company]
 
 set -e
 
@@ -19,13 +19,28 @@ else
     VERSION=$(node -p "require('./package.json').version")
 fi
 
+# Get company from argument or default to empty (latest)
+if [ -n "$2" ]; then
+    COMPANY="$2"
+else
+    COMPANY=""
+fi
+
 # Full image names
-IMAGE_LATEST="${IMAGE_NAME}:latest"
-IMAGE_VERSIONED="${IMAGE_NAME}:${VERSION}"
+if [ -n "$COMPANY" ]; then
+    IMAGE_LATEST="${IMAGE_NAME}:latest-${COMPANY}"
+    IMAGE_VERSIONED="${IMAGE_NAME}:${VERSION}-${COMPANY}"
+else
+    IMAGE_LATEST="${IMAGE_NAME}:latest"
+    IMAGE_VERSIONED="${IMAGE_NAME}:${VERSION}"
+fi
 
 echo "🚀 Building API Docker image..."
 echo "Image: ${IMAGE_NAME}"
 echo "Version: ${VERSION}"
+if [ -n "$COMPANY" ]; then
+    echo "Company: ${COMPANY}"
+fi
 echo "Dockerfile: ${DOCKERFILE}"
 echo "Context: ${BUILD_CONTEXT}"
 echo ""

@@ -2,7 +2,7 @@
 
 # Build and push Web Docker image to Docker Hub
 # Target: twsbpmac/acm
-# Usage: ./scripts/build-web.sh [version]
+# Usage: ./scripts/build-web.sh [version] [company]
 
 set -e
 
@@ -18,13 +18,28 @@ else
     VERSION=$(node -p "require('./package.json').version")
 fi
 
+# Get company from argument or default to empty (latest)
+if [ -n "$2" ]; then
+    COMPANY="$2"
+else
+    COMPANY=""
+fi
+
 # Full image names
-IMAGE_LATEST="${IMAGE_NAME}:latest"
-IMAGE_VERSIONED="${IMAGE_NAME}:${VERSION}"
+if [ -n "$COMPANY" ]; then
+    IMAGE_LATEST="${IMAGE_NAME}:latest-${COMPANY}"
+    IMAGE_VERSIONED="${IMAGE_NAME}:${VERSION}-${COMPANY}"
+else
+    IMAGE_LATEST="${IMAGE_NAME}:latest"
+    IMAGE_VERSIONED="${IMAGE_NAME}:${VERSION}"
+fi
 
 echo "🚀 Building Web Docker image..."
 echo "Image: ${IMAGE_NAME}"
 echo "Version: ${VERSION}"
+if [ -n "$COMPANY" ]; then
+    echo "Company: ${COMPANY}"
+fi
 echo "Dockerfile: ${DOCKERFILE}"
 echo "Context: ${BUILD_CONTEXT}"
 echo ""
@@ -45,8 +60,14 @@ fi
 
 # Build the image
 echo "📦 Building Docker image..."
+BUILD_ARGS=""
+if [ -n "$COMPANY" ]; then
+    BUILD_ARGS="--build-arg COMPANY_ID=${COMPANY}"
+fi
+
 docker build \
     -f "${DOCKERFILE}" \
+    ${BUILD_ARGS} \
     -t "${IMAGE_LATEST}" \
     -t "${IMAGE_VERSIONED}" \
     "${BUILD_CONTEXT}"

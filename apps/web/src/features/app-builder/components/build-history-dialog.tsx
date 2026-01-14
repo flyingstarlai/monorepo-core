@@ -20,7 +20,10 @@ import {
 import type { MobileAppDefinition, MobileAppBuild } from '../types';
 import { useAuth } from '../../../features/auth/hooks/use-auth';
 import { BuildHistoryTable } from './build-history-table';
-import { BuildHistoryFilters, type BuildFilters } from './build-history-filters';
+import {
+  BuildHistoryFilters,
+  type BuildFilters,
+} from './build-history-filters';
 import { BuildErrorDisplay } from './build-error-display';
 import { BuildHistoryDetailDrawer } from './build-history-detail-drawer';
 // import { BuildComparisonTool } from './BuildComparisonTool';
@@ -116,7 +119,7 @@ export function BuildHistoryDialog({
     }
   };
 
-  const filteredBuilds = builds?.filter((build) =>
+  const filteredBuilds = builds?.filter((build: MobileAppBuild) =>
     mode === 'app' && definition
       ? build.appDefinitionId === definition.id
       : true,
@@ -203,13 +206,17 @@ export function BuildHistoryDialog({
               <TabsContent value="errors" className="space-y-4">
                 <div className="grid gap-4">
                   {filteredBuilds
-                    ?.filter((build) => build.status === 'failed')
-                    .map((build) => (
+                    ?.filter(
+                      (build: MobileAppBuild) => build.status === 'failed',
+                    )
+                    .map((build: MobileAppBuild) => (
                       <BuildErrorDisplay
                         key={build.id}
-                        build={build}
-                        onRetry={(build) => handleBuildAction(build, 'retry')}
-                        onViewFullLog={(build) => {
+                        build={build as MobileAppBuild}
+                        onRetry={(build: MobileAppBuild) =>
+                          handleBuildAction(build, 'retry')
+                        }
+                        onViewFullLog={(build: MobileAppBuild) => {
                           if (build.consoleUrl) {
                             window.open(build.consoleUrl, '_blank');
                           }
@@ -217,8 +224,9 @@ export function BuildHistoryDialog({
                       />
                     ))}
                   {(!filteredBuilds ||
-                    filteredBuilds.filter((build) => build.status === 'failed')
-                      .length === 0) && (
+                    filteredBuilds.filter(
+                      (build: MobileAppBuild) => build.status === 'failed',
+                    ).length === 0) && (
                     <div className="text-center py-8 text-muted-foreground">
                       No failed builds found in the current time range
                     </div>

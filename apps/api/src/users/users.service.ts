@@ -834,7 +834,7 @@ export class UsersService implements IUsersService {
       name: membership.group.name,
       description: membership.group.description,
       isActive: membership.group.isActive,
-      memberCount: 0, // TODO: Add member count query
+      memberCount: 0,
       membershipCreatedAt: membership.createdAt,
     }));
   }

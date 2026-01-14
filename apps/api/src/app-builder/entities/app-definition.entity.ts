@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { MobileAppBuild } from './app-build.entity';
+import { Company } from './company.entity';
 
 @Entity('TC_APP_DEFINITION')
 export class MobileAppDefinition {
@@ -24,6 +27,14 @@ export class MobileAppDefinition {
 
   @Column({ type: 'nvarchar', length: 45, name: 'server_ip' })
   serverIp: string;
+
+  @Column({
+    type: 'nvarchar',
+    length: 50,
+    name: 'company_code',
+    nullable: true,
+  })
+  companyCode: string;
 
   @Column({ type: 'nvarchar', length: 50, name: 'created_by' })
   createdBy: string;

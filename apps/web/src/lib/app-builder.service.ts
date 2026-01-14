@@ -10,16 +10,17 @@ import type {
   JenkinsConnectionStatus,
   JenkinsQueueInfo,
   BuildStageProgress,
+  Company,
+  CreateCompanyData,
+  UpdateCompanyData,
 } from './types';
 
-// Mock service for development - replace with actual API calls
 const mobileAppBuilderService = {
   async getModules(): Promise<DashboardModule[]> {
     const { apiClient } = await import('./api-client');
     const res = await apiClient.get<{ value: string; label: string }[]>(
       '/app-builder/modules',
     );
-    // Map API dto -> UI type
     return (res.data || []).map((m) => ({
       id: m.value,
       name: m.label,
@@ -27,6 +28,12 @@ const mobileAppBuilderService = {
       version: '',
       enabled: true,
     }));
+  },
+
+  async getCompanies(): Promise<Company[]> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.get<Company[]>('/app-builder/companies');
+    return res.data || [];
   },
 
   async getAppIds(): Promise<AppIdDto[]> {
@@ -52,10 +59,13 @@ const mobileAppBuilderService = {
     return res.data;
   },
 
-  async getDefinitions(): Promise<MobileAppDefinition[]> {
+  async getDefinitions(companyCode?: string): Promise<MobileAppDefinition[]> {
     const { apiClient } = await import('./api-client');
+    const params = companyCode
+      ? `?companyCode=${encodeURIComponent(companyCode)}`
+      : '';
     const res = await apiClient.get<MobileAppDefinition[]>(
-      '/app-builder/definitions',
+      `/app-builder/definitions${params}`,
     );
     return res.data || [];
   },
@@ -66,6 +76,14 @@ const mobileAppBuilderService = {
       `/app-builder/definitions/${id}`,
     );
     return res.data;
+  },
+
+  async getBuilds(appDefinitionId: string): Promise<MobileAppBuild[]> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.get<MobileAppBuild[]>(
+      `/app-builder/definitions/${appDefinitionId}/builds`,
+    );
+    return res.data || [];
   },
 
   async createDefinition(
@@ -96,46 +114,6 @@ const mobileAppBuilderService = {
     await apiClient.delete(`/app-builder/definitions/${id}`);
   },
 
-  async getBuilds(
-    appDefinitionId?: string,
-    filters?: any,
-  ): Promise<MobileAppBuild[]> {
-    const { apiClient } = await import('./api-client');
-    const params = new URLSearchParams();
-
-    if (appDefinitionId) params.append('definitionId', appDefinitionId);
-
-    if (filters?.statuses?.length)
-      params.append('status', filters.statuses.join(','));
-    if (filters?.appIds?.length)
-      params.append('appIds', filters.appIds.join(','));
-    if (filters?.modules?.length)
-      params.append('modules', filters.modules.join(','));
-    if (filters?.startedBy) params.append('startedBy', filters.startedBy);
-    if (filters?.buildNumber?.from)
-      params.append('buildNumberFrom', filters.buildNumber.from.toString());
-    if (filters?.buildNumber?.to)
-      params.append('buildNumberTo', filters.buildNumber.to.toString());
-    if (filters?.dateRange?.from)
-      params.append('dateFrom', filters.dateRange.from.toISOString());
-    if (filters?.dateRange?.to)
-      params.append('dateTo', filters.dateRange.to.toISOString());
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.sort) params.append('sort', filters.sort);
-    if (filters?.order) params.append('order', filters.order);
-
-    const url = `/app-builder/builds${params.toString() ? `?${params.toString()}` : ''}`;
-    const res = await apiClient.get<MobileAppBuild[] | any>(url);
-
-    // Handle paginated response if returned
-    if (res.data?.data) {
-      return res.data.data; // Return just the builds array for backward compatibility
-    }
-
-    return res.data || [];
-  },
-
   async getBuild(id: string): Promise<MobileAppBuild> {
     const { apiClient } = await import('./api-client');
     const res = await apiClient.get<MobileAppBuild>(
@@ -146,7 +124,6 @@ const mobileAppBuilderService = {
 
   async getBuildStatus(id: string): Promise<MobileAppBuild> {
     const { apiClient } = await import('./api-client');
-    // Note: API returns { status, jenkinsStatus }. For now, fetch the build entity then overlay status if present.
     const [buildRes, statusRes] = await Promise.all([
       apiClient.get<MobileAppBuild>(`/app-builder/builds/${id}`),
       apiClient.get<{ status: string }>(`/app-builder/builds/${id}/status`),
@@ -280,6 +257,40 @@ const mobileAppBuilderService = {
     );
     return res.data;
   },
+
+  async createCompany(companyData: CreateCompanyData): Promise<Company> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.post<Company>(
+      '/app-builder/companies',
+      companyData,
+    );
+    return res.data;
+  },
+
+  async updateCompany(
+    companyCode: string,
+    data: UpdateCompanyData,
+  ): Promise<Company> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.put<Company>(
+      `/app-builder/companies/${companyCode}`,
+      data,
+    );
+    return res.data;
+  },
+
+  async deleteCompany(companyCode: string): Promise<void> {
+    const { apiClient } = await import('./api-client');
+    await apiClient.delete(`/app-builder/companies/${companyCode}`);
+  },
+
+  async toggleCompanyActive(companyCode: string): Promise<Company> {
+    const { apiClient } = await import('./api-client');
+    const res = await apiClient.patch<Company>(
+      `/app-builder/companies/${companyCode}/toggle-active`,
+    );
+    return res.data;
+  },
 };
 
 export type {
@@ -294,6 +305,9 @@ export type {
   JenkinsConnectionStatus,
   JenkinsQueueInfo,
   BuildStageProgress,
+  Company,
+  CreateCompanyData,
+  UpdateCompanyData,
 };
 
 export default mobileAppBuilderService;

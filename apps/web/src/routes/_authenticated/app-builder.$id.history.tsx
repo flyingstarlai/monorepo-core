@@ -112,7 +112,7 @@ function AppBuilderHistoryPage() {
   }
 
   const filteredBuilds = builds?.filter(
-    (b) => b.appDefinitionId === definition.id,
+    (b: MobileAppBuild) => b.appDefinitionId === definition.id,
   );
   const canDownload = (build: MobileAppBuild) =>
     build.status === 'completed' &&
@@ -192,7 +192,7 @@ function AppBuilderHistoryPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredBuilds?.map((build) => {
+            {filteredBuilds?.map((build: MobileAppBuild) => {
               const duration =
                 build.startedAt && build.completedAt
                   ? formatDistanceToNow(new Date(build.completedAt), {

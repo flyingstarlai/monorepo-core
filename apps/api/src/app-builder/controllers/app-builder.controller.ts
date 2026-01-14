@@ -72,10 +72,15 @@ export class MobileAppBuilderController {
 
   @Get('definitions')
   @ApiOperation({ summary: 'Get all mobile app definitions' })
+  @ApiQuery({
+    name: 'companyCode',
+    required: false,
+    description: 'Filter by company code',
+  })
   @ApiResponse({ status: 200, description: 'List of mobile app definitions' })
-  async getDefinitions() {
+  async getDefinitions(@Query('companyCode') companyCode?: string) {
     this.checkFeatureFlag();
-    return this.mobileAppDefinitionService.findAll();
+    return this.mobileAppDefinitionService.findAll(companyCode);
   }
 
   @Get('definitions/:id')

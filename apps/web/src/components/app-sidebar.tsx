@@ -140,6 +140,12 @@ export function AppSidebar() {
                 isActive: location.pathname.includes('/identifier'),
               },
               {
+                title: 'Companies',
+                url: '/app-builder/companies',
+                icon: Building2,
+                isActive: location.pathname === '/app-builder/companies',
+              },
+              {
                 title: 'Settings',
                 url: '/app-builder/settings',
                 icon: Settings,

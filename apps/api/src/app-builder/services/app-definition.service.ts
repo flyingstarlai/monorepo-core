@@ -38,9 +38,20 @@ export class MobileAppDefinitionService {
     return this.mobileAppDefinitionRepository.save(definition);
   }
 
-  async findAll(): Promise<MobileAppDefinition[]> {
+  async findAll(companyCode?: string): Promise<MobileAppDefinition[]> {
+    const whereCondition = companyCode ? { companyCode } : {};
+
     return this.mobileAppDefinitionRepository.find({
-      relations: ['builds'],
+      where: whereCondition,
+      relations: ['builds', 'company'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findByCompany(companyCode: string): Promise<MobileAppDefinition[]> {
+    return this.mobileAppDefinitionRepository.find({
+      where: { companyCode },
+      relations: ['builds', 'company'],
       order: { createdAt: 'DESC' },
     });
   }

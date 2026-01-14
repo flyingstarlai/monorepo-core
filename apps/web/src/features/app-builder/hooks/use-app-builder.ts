@@ -1,233 +1,237 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { MobileAppBuild } from '../../../lib/types';
-import mobileAppBuilderService from '../../../lib/app-builder.service';
+import { api } from '@/lib/api-client';
+import type {
+  MobileAppBuild,
+  DashboardModule,
+  PresignedDownloadResponse,
+  JenkinsConnectionStatus,
+  JenkinsQueueInfo,
+  BuildStageProgress,
+  AppIdDto,
+} from '../../../lib/types';
+
+// Re-export from other hook files for backward compatibility
+export * from './use-app-definition';
+export * from './use-app-company';
 
 export function useModules() {
   return useQuery({
     queryKey: ['app-builder', 'modules'],
-    queryFn: () => mobileAppBuilderService.getModules(),
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    queryFn: async (): Promise<DashboardModule[]> => {
+      const response = await api.get<{ value: string; label: string }[]>(
+        '/app-builder/modules',
+      );
+      return (response.data || []).map((m) => ({
+        id: m.value,
+        name: m.label,
+        description: undefined,
+        version: '',
+        enabled: true,
+      }));
+    },
+    staleTime: 1000 * 60 * 10,
   });
 }
 
 export function useAppIds() {
   return useQuery({
     queryKey: ['app-builder', 'app-ids'],
-    queryFn: async () => {
-      const appIds = await mobileAppBuilderService.getAppIds();
+    queryFn: async (): Promise<AppIdDto[]> => {
+      const response = await api.get<AppIdDto[]>('/app-builder/app-ids');
+      const appIds = response.data || [];
 
-      // Sort by appId in alphanumeric order (TCS01, TCS02, TCS03, etc.)
+      const extractNumber = (appId: string): number => {
+        const match = appId.match(/TCS(\d+)/);
+        return match && match[1] ? parseInt(match[1], 10) : 0;
+      };
+
       return appIds.sort((a, b) => {
-        // Extract numeric part from appId (e.g., TCS01 -> 01)
-        const extractNumber = (appId: string): number => {
-          const match = appId.match(/TCS(\d+)/);
-          return match && match[1] ? parseInt(match[1], 10) : 0;
-        };
-
         const numA = extractNumber(a.appId!);
         const numB = extractNumber(b.appId!);
-
         return numA - numB;
       });
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-}
-
-export function useDefinitions() {
-  return useQuery({
-    queryKey: ['app-builder', 'definitions'],
-    queryFn: () => mobileAppBuilderService.getDefinitions(),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-}
-
-export function useDefinition(id: string) {
-  return useQuery({
-    queryKey: ['app-builder', 'definitions', id],
-    queryFn: () => mobileAppBuilderService.getDefinition(id),
-    enabled: !!id,
-  });
-}
-
-export function useBuilds(appDefinitionId?: string, filters?: any) {
-  return useQuery({
-    queryKey: ['app-builder', 'builds', appDefinitionId, filters],
-    queryFn: () => mobileAppBuilderService.getBuilds(appDefinitionId, filters),
-    staleTime: 1000 * 30, // 30 seconds
-    refetchInterval: 1000 * 30, // Refresh every 30 seconds
+    enabled: true,
   });
 }
 
 export function useBuild(id: string) {
   return useQuery({
     queryKey: ['app-builder', 'builds', id],
-    queryFn: () => mobileAppBuilderService.getBuild(id),
+    queryFn: async (): Promise<MobileAppBuild> => {
+      const response = await api.get<MobileAppBuild>(
+        `/app-builder/builds/${id}`,
+      );
+      return response.data;
+    },
     enabled: !!id,
     refetchInterval: (query) => {
       const build = query.state.data;
-      // Poll more frequently for active builds
-      if (build?.status === 'queued' || build?.status === 'building') {
-        return 5000; // 5 seconds
+      const buildStatus = build?.status;
+
+      if (buildStatus === 'queued' || buildStatus === 'building') {
+        return 5000;
       }
-      return false; // Don't refetch completed/failed builds
+      return false;
     },
   });
 }
 
-export function useCreateDefinition() {
-  const queryClient = useQueryClient();
+export function useBuilds(
+  appDefinitionId?: string,
+  filters?: {
+    definitionId?: string;
+    dateRange?: { from: Date; to: Date };
+    statuses: string[];
+    appIds: string[];
+    modules: string[];
+    startedBy?: string;
+    buildNumber?: { from?: number; to?: number };
+  },
+) {
+  return useQuery({
+    queryKey: ['app-builder', 'builds', appDefinitionId, filters],
+    queryFn: async (): Promise<MobileAppBuild[]> => {
+      if (!appDefinitionId) return Promise.resolve([]);
 
-  return useMutation({
-    mutationFn: (
-      data: Parameters<typeof mobileAppBuilderService.createDefinition>[0],
-    ) => mobileAppBuilderService.createDefinition(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['app-builder', 'definitions'],
-      });
+      const params = new URLSearchParams();
+
+      if (filters?.definitionId)
+        params.append('definitionId', filters.definitionId);
+      if (filters?.statuses?.length)
+        params.append('status', filters.statuses.join(','));
+      if (filters?.appIds?.length)
+        params.append('appIds', filters.appIds.join(','));
+      if (filters?.modules?.length)
+        params.append('modules', filters.modules.join(','));
+      if (filters?.startedBy) params.append('startedBy', filters.startedBy);
+      if (filters?.buildNumber?.from)
+        params.append('buildNumberFrom', filters.buildNumber.from.toString());
+      if (filters?.buildNumber?.to)
+        params.append('buildNumberTo', filters.buildNumber.to.toString());
+      if (filters?.dateRange?.from)
+        params.append('dateFrom', filters.dateRange.from.toISOString());
+      if (filters?.dateRange?.to)
+        params.append('dateTo', filters.dateRange.to.toISOString());
+
+      const response = await api.get<MobileAppBuild[]>(
+        `/app-builder/builds?${params.toString()}`,
+      );
+      return response.data ?? [];
     },
-  });
-}
-
-export function useUpdateDefinition() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: Parameters<typeof mobileAppBuilderService.updateDefinition>[1];
-    }) => mobileAppBuilderService.updateDefinition(id, data),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({
-        queryKey: ['app-builder', 'definitions'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['app-builder', 'definitions', id],
-      });
-    },
-  });
-}
-
-export function useDeleteDefinition() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => mobileAppBuilderService.deleteDefinition(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['app-builder', 'definitions'],
-      });
-    },
-  });
-}
-
-export function useTriggerBuild() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      appDefinitionId,
-      data,
-    }: {
-      appDefinitionId: string;
-      data?: any;
-    }) => mobileAppBuilderService.triggerBuild(appDefinitionId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['app-builder', 'builds'],
-      });
-    },
-  });
-}
-
-export function useDownloadArtifact() {
-  return useMutation({
-    mutationFn: (buildId: string) =>
-      mobileAppBuilderService.getPresignedDownloadUrl(buildId),
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 30,
   });
 }
 
 export function useJenkinsStatus() {
   return useQuery({
     queryKey: ['app-builder', 'jenkins', 'status'],
-    queryFn: () => mobileAppBuilderService.getJenkinsStatus(),
-    refetchInterval: 1000 * 30, // refresh every 30 seconds
+    queryFn: async (): Promise<JenkinsConnectionStatus> => {
+      const response = await api.get<JenkinsConnectionStatus>(
+        '/app-builder/jenkins/status',
+      );
+      return response.data;
+    },
+    staleTime: 1000 * 60,
   });
 }
 
 export function useJenkinsQueue() {
   return useQuery({
     queryKey: ['app-builder', 'jenkins', 'queue'],
-    queryFn: () => mobileAppBuilderService.getJenkinsQueue(),
-    refetchInterval: 1000 * 15, // refresh every 15 seconds
+    queryFn: async (): Promise<JenkinsQueueInfo> => {
+      const response = await api.get<JenkinsQueueInfo>(
+        '/app-builder/jenkins/queue',
+      );
+      return response.data;
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 30,
   });
 }
 
 export function useBuildStages(
-  buildId?: string,
-  buildStatus?: MobileAppBuild['status'],
+  buildId: string,
+  shouldFetch?: boolean | string,
 ) {
   return useQuery({
     queryKey: ['app-builder', 'builds', buildId, 'stages'],
-    queryFn: () => mobileAppBuilderService.getBuildStages(buildId!),
-    enabled: !!buildId,
-    refetchInterval: (query) => {
-      if (!buildId) {
-        return false;
-      }
-      const stageData = query.state.data;
-      const stageFailed = stageData?.stages?.some(
-        (stage) => stage.status === 'failed',
+    queryFn: async (): Promise<BuildStageProgress> => {
+      const response = await api.get<BuildStageProgress>(
+        `/app-builder/builds/${buildId}/stages`,
       );
-      if (stageFailed) {
-        return false;
-      }
-      if (buildStatus && !['queued', 'building'].includes(buildStatus)) {
-        return false;
-      }
-      return 1000 * 5;
+      return response.data;
+    },
+    enabled:
+      !!buildId &&
+      (shouldFetch === true ||
+        (typeof shouldFetch === 'string' &&
+          ['queued', 'building', 'failed'].includes(shouldFetch))),
+    refetchInterval: 2000,
+  });
+}
+
+export function useBuildConsole(
+  buildId: string,
+  shouldFetch?: boolean | string,
+) {
+  return useQuery({
+    queryKey: ['app-builder', 'builds', buildId, 'console'],
+    queryFn: async (): Promise<string> => {
+      const response = await api.get(`/app-builder/builds/${buildId}/console`, {
+        responseType: 'text',
+      });
+      return response.data ?? '';
+    },
+    enabled:
+      !!buildId &&
+      (shouldFetch === true ||
+        (typeof shouldFetch === 'string' && shouldFetch === 'failed')),
+    refetchInterval: 2000,
+  });
+}
+
+export function useDownloadArtifact() {
+  return useMutation({
+    mutationFn: async (buildId: string): Promise<PresignedDownloadResponse> => {
+      const response = await api.get<PresignedDownloadResponse>(
+        `/app-builder/builds/${buildId}/download`,
+      );
+      return response.data;
     },
   });
 }
 
-export function useBuildConsole(buildId?: string, enabled?: boolean) {
+export function useGetIdentifiers() {
   return useQuery({
-    queryKey: ['app-builder', 'builds', buildId, 'console'],
-    queryFn: () => mobileAppBuilderService.getBuildConsole(buildId!),
-    enabled: Boolean(buildId) && Boolean(enabled),
-    refetchOnWindowFocus: false,
+    queryKey: ['app-builder', 'identifiers'],
+    queryFn: async (): Promise<AppIdDto[]> => {
+      const response = await api.get<AppIdDto[]>(
+        '/app-builder/google-services',
+      );
+      return response.data || [];
+    },
   });
 }
 
-export function useBuildAnalytics(timeRange?: number, groupBy?: string) {
-  return useQuery({
-    queryKey: ['app-builder', 'builds', 'analytics', timeRange, groupBy],
-    queryFn: () =>
-      mobileAppBuilderService.getBuildAnalytics?.(timeRange, groupBy),
-    enabled: !!mobileAppBuilderService.getBuildAnalytics,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-}
+export function useUploadGoogleServices() {
+  const queryClient = useQueryClient();
 
-export function useBuildComparison(build1Id: string, build2Id: string) {
-  return useQuery({
-    queryKey: ['app-builder', 'builds', 'compare', build1Id, build2Id],
-    queryFn: () => mobileAppBuilderService.compareBuilds?.(build1Id, build2Id),
-    enabled:
-      !!build1Id && !!build2Id && !!mobileAppBuilderService.compareBuilds,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
-}
-
-export function useBuildSummary(timeRange?: number) {
-  return useQuery({
-    queryKey: ['app-builder', 'builds', 'summary', timeRange],
-    queryFn: () => mobileAppBuilderService.getBuildSummary?.(timeRange),
-    enabled: !!mobileAppBuilderService.getBuildSummary,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+  return useMutation({
+    mutationFn: async (data: {
+      content: string;
+    }): Promise<{ message: string; count: number }> => {
+      const response = await api.post<{ message: string; count: number }>(
+        '/app-builder/google-services',
+        data,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['app-builder', 'identifiers'],
+      });
+    },
   });
 }

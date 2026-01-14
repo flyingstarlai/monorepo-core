@@ -4,9 +4,19 @@ export interface MobileAppDefinition {
   appId: string;
   appModule: string;
   serverIp: string;
+  companyCode?: string;
+  company?: Company;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Company {
+  companyCode: string;
+  companyName: string;
+  isActive: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface MobileAppBuild {
@@ -51,11 +61,24 @@ export interface UpdateDefinitionRequest {
   appId?: string;
   appModule?: string;
   serverIp?: string;
+  companyCode?: string;
+}
+
+export interface CreateCompanyData {
+  companyCode: string;
+  companyName: string;
+  isActive?: boolean;
+}
+
+export interface UpdateCompanyData {
+  companyName?: string;
+  isActive?: boolean;
 }
 
 export interface TriggerBuildRequest {
   version?: string;
   buildNumber?: number;
+  parameters?: string;
 }
 
 export interface PresignedDownloadResponse {

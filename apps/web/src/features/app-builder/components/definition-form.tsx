@@ -12,13 +12,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useModules, useAppIds } from '../hooks/use-app-builder';
+import { useModules, useAppIds, useCompanies } from '../hooks/use-app-builder';
 
 const createDefinitionSchema = z.object({
   appName: z.string().min(1, 'App name is required'),
   appId: z.string().min(1, 'App ID is required'),
   appModule: z.string().min(1, 'App module is required'),
   serverIp: z.string().min(1, 'Server IP is required'),
+  companyCode: z.string().min(1, 'Company code is required'),
 });
 
 export type CreateDefinitionData = z.infer<typeof createDefinitionSchema>;
@@ -40,6 +41,7 @@ export function DefinitionForm({
 }: DefinitionFormProps) {
   const { data: modules } = useModules();
   const { data: appIds } = useAppIds();
+  const { data: companies } = useCompanies();
 
   const form = useForm<CreateDefinitionData>({
     resolver: zodResolver(createDefinitionSchema),
@@ -114,12 +116,37 @@ export function DefinitionForm({
                     options={
                       modules?.map((module) => ({
                         value: module.id,
-                        label: `${module.name} (${module.id})`,
+                        label: module.name,
                       })) || []
                     }
                     value={field.value}
                     onValueChange={field.onChange}
-                    placeholder="Select app module"
+                    placeholder="Select app module from Dashboard"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="companyCode"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Company</FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={[
+                      { value: 'TWSBP', label: 'TWSBP' },
+                      ...(companies?.map((company: any) => ({
+                        value: company.companyCode,
+                        label: company.companyName,
+                      })) || []),
+                    ]}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select company"
                   />
                 </FormControl>
                 <FormMessage />

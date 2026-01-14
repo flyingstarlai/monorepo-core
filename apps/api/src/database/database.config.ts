@@ -9,6 +9,7 @@ import {
   MobileAppBuild,
   MobileAppIdentifier,
 } from '../app-builder/entities/index';
+import { Company as CompanyEntity } from '../app-builder/entities/company.entity';
 import { ModuleEntity } from '../app-builder/entities/dashboard-module.entity';
 import { Group } from '../groups/entities/group.entity';
 import { UserGroupMembership } from '../groups/entities/user-group-membership.entity';
@@ -35,6 +36,7 @@ import { Department } from '../users/entities/department.entity';
           MobileAppBuild,
           MobileAppIdentifier,
           ModuleEntity,
+          CompanyEntity,
           Group,
           UserGroupMembership,
           DocumentsEntity,

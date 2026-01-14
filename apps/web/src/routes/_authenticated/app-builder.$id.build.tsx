@@ -14,7 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PipelineStagesTimeline } from '@/features/app-builder/components/pipeline-stages-timeline';
 import { ArrowLeft } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef } from 'react';
-import type { BuildStageDetail } from '@/lib/types';
+import type { BuildStageDetail, MobileAppBuild } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 
 const DEFAULT_PIPELINE_STAGE_NAMES = [
@@ -100,7 +100,9 @@ function AppBuilderBuildPage() {
   const monitoredBuild = useMemo(() => {
     // If a specific buildId is provided in URL, prioritize it
     if (urlBuildId && builds) {
-      const specificBuild = builds.find((b) => b.id === urlBuildId);
+      const specificBuild = builds.find(
+        (b: MobileAppBuild) => b.id === urlBuildId,
+      );
       if (specificBuild) {
         return specificBuild;
       }
@@ -110,7 +112,7 @@ function AppBuilderBuildPage() {
     if (!builds || builds.length === 0) {
       return undefined;
     }
-    const active = builds.find((b) =>
+    const active = builds.find((b: MobileAppBuild) =>
       ['queued', 'building'].includes(b.status),
     );
     return active ?? builds[0];

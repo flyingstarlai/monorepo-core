@@ -16,6 +16,7 @@ import {
   useDeleteDefinition,
   useJenkinsStatus,
   useJenkinsQueue,
+  useCompanies,
 } from './hooks/use-app-builder';
 import { DeleteDefinitionDialog } from './components/delete-definition-dialog';
 import {
@@ -25,14 +26,17 @@ import {
   Search,
   Server,
   Activity,
+  Building2,
 } from 'lucide-react';
-import type { MobileAppDefinition } from './types';
+import type { MobileAppDefinition, Company } from '../../lib/types';
 
 export function MobileAppBuilderPage() {
   const { data: definitions, isLoading, error } = useDefinitions();
+  const { data: companies } = useCompanies();
   const deleteDefinition = useDeleteDefinition();
 
   const [query, setQuery] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('all');
   const [deletingDefinition, setDeletingDefinition] =
     useState<MobileAppDefinition | null>(null);
 
@@ -55,8 +59,19 @@ export function MobileAppBuilderPage() {
   const filteredDefinitions = useMemo(() => {
     if (!definitions) return [];
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return definitions;
+
     return definitions.filter((definition) => {
+      // Company filter
+      if (
+        selectedCompany !== 'all' &&
+        definition.companyCode !== selectedCompany
+      ) {
+        return false;
+      }
+
+      // Text search filter
+      if (!normalizedQuery) return true;
+
       const valuesToSearch = [
         definition.appName,
         definition.appId,
@@ -67,7 +82,7 @@ export function MobileAppBuilderPage() {
         value?.toLowerCase().includes(normalizedQuery),
       );
     });
-  }, [definitions, query]);
+  }, [definitions, query, selectedCompany]);
 
   const handleDelete = (def: MobileAppDefinition) => {
     setDeletingDefinition(def);
@@ -180,9 +195,9 @@ export function MobileAppBuilderPage() {
         <div>
           <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
             <h2 className="text-2xl font-semibold">App Definitions</h2>
-            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+            <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
               <div className="relative md:w-72">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
@@ -191,12 +206,32 @@ export function MobileAppBuilderPage() {
                   aria-label="Search definitions"
                 />
               </div>
-              <Button size="sm" asChild className="md:w-auto">
-                <Link to="/app-builder/create">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New
-                </Link>
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <select
+                    value={selectedCompany}
+                    onChange={(e) => setSelectedCompany(e.target.value)}
+                    className="pl-10 h-9 px-3 text-sm border rounded-md bg-background"
+                  >
+                    <option value="all">All Companies</option>
+                    {companies?.map((company: Company) => (
+                      <option
+                        key={company.companyCode}
+                        value={company.companyCode}
+                      >
+                        {company.companyName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button size="sm" asChild className="md:w-auto">
+                  <Link to="/app-builder/create">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create New
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
 

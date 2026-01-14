@@ -16,6 +16,10 @@ export class CreateDefinitionDto {
   @IsString()
   @IsNotEmpty()
   serverIp: string;
+
+  @IsString()
+  @IsNotEmpty()
+  companyCode: string;
 }
 
 export class UpdateDefinitionDto {
@@ -34,6 +38,10 @@ export class UpdateDefinitionDto {
   @IsString()
   @IsOptional()
   serverIp?: string;
+
+  @IsString()
+  @IsOptional()
+  companyCode?: string;
 }
 
 export class UploadGoogleServicesDto {

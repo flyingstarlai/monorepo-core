@@ -39,6 +39,7 @@ import { Route as AuthenticatedAppBuilderSystemStatusRouteImport } from './route
 import { Route as AuthenticatedAppBuilderSettingsRouteImport } from './routes/_authenticated/app-builder/settings'
 import { Route as AuthenticatedAppBuilderIdentifierRouteImport } from './routes/_authenticated/app-builder.identifier'
 import { Route as AuthenticatedAppBuilderCreateRouteImport } from './routes/_authenticated/app-builder.create'
+import { Route as AuthenticatedAppBuilderCompaniesRouteImport } from './routes/_authenticated/app-builder.companies'
 import { Route as AuthenticatedAppsIdIndexRouteImport } from './routes/_authenticated/apps.$id.index'
 import { Route as AuthenticatedUsersIdViewRouteImport } from './routes/_authenticated/users.$id.view'
 import { Route as AuthenticatedUsersIdEditRouteImport } from './routes/_authenticated/users.$id.edit'
@@ -214,6 +215,12 @@ const AuthenticatedAppBuilderCreateRoute =
     path: '/app-builder/create',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAppBuilderCompaniesRoute =
+  AuthenticatedAppBuilderCompaniesRouteImport.update({
+    id: '/app-builder/companies',
+    path: '/app-builder/companies',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAppsIdIndexRoute =
   AuthenticatedAppsIdIndexRouteImport.update({
     id: '/',
@@ -278,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof AuthenticatedDocumentsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/users': typeof AuthenticatedUsersRouteWithChildren
+  '/app-builder/companies': typeof AuthenticatedAppBuilderCompaniesRoute
   '/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
   '/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
   '/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
@@ -315,6 +323,7 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
+  '/app-builder/companies': typeof AuthenticatedAppBuilderCompaniesRoute
   '/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
   '/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
   '/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
@@ -356,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/documents': typeof AuthenticatedDocumentsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRouteWithChildren
+  '/_authenticated/app-builder/companies': typeof AuthenticatedAppBuilderCompaniesRoute
   '/_authenticated/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
   '/_authenticated/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
   '/_authenticated/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/settings'
     | '/users'
+    | '/app-builder/companies'
     | '/app-builder/create'
     | '/app-builder/identifier'
     | '/app-builder/settings'
@@ -435,6 +446,7 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/dashboard'
     | '/settings'
+    | '/app-builder/companies'
     | '/app-builder/create'
     | '/app-builder/identifier'
     | '/app-builder/settings'
@@ -475,6 +487,7 @@ export interface FileRouteTypes {
     | '/_authenticated/documents'
     | '/_authenticated/settings'
     | '/_authenticated/users'
+    | '/_authenticated/app-builder/companies'
     | '/_authenticated/app-builder/create'
     | '/_authenticated/app-builder/identifier'
     | '/_authenticated/app-builder/settings'
@@ -726,6 +739,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppBuilderCreateRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app-builder/companies': {
+      id: '/_authenticated/app-builder/companies'
+      path: '/app-builder/companies'
+      fullPath: '/app-builder/companies'
+      preLoaderRoute: typeof AuthenticatedAppBuilderCompaniesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/apps/$id/': {
       id: '/_authenticated/apps/$id/'
       path: '/'
@@ -906,6 +926,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRouteWithChildren
+  AuthenticatedAppBuilderCompaniesRoute: typeof AuthenticatedAppBuilderCompaniesRoute
   AuthenticatedAppBuilderCreateRoute: typeof AuthenticatedAppBuilderCreateRoute
   AuthenticatedAppBuilderIdentifierRoute: typeof AuthenticatedAppBuilderIdentifierRoute
   AuthenticatedAppBuilderSettingsRoute: typeof AuthenticatedAppBuilderSettingsRoute
@@ -926,6 +947,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRouteWithChildren,
+  AuthenticatedAppBuilderCompaniesRoute: AuthenticatedAppBuilderCompaniesRoute,
   AuthenticatedAppBuilderCreateRoute: AuthenticatedAppBuilderCreateRoute,
   AuthenticatedAppBuilderIdentifierRoute:
     AuthenticatedAppBuilderIdentifierRoute,

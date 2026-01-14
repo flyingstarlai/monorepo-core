@@ -27,6 +27,7 @@ import {
   MoreVertical,
   CheckCircle,
   Loader2,
+  Building2,
 } from 'lucide-react';
 import type { MobileAppDefinition } from '../types';
 import { formatDistanceToNow } from 'date-fns';
@@ -101,6 +102,17 @@ export function DefinitionCard({
         <div className="space-y-4">
           {/* App Metadata */}
           <dl className="space-y-3">
+            {definition.company && (
+              <div className="rounded-md border border-blue-200 bg-blue-50 p-3 space-y-1">
+                <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-blue-700">
+                  <Building2 className="w-4 h-4" />
+                  Company
+                </dt>
+                <dd className="text-sm font-medium text-blue-900">
+                  {definition.company.companyName}
+                </dd>
+              </div>
+            )}
             <div className="rounded-md border border-border/60 bg-muted/40 p-3 space-y-1">
               <dt className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 <Package className="w-4 h-4" />

@@ -4,21 +4,7 @@ import { useAuthStore } from '@/features/auth/store.ts';
 import { isTokenExpired } from '@/features/auth/utils.ts';
 import { toast } from 'sonner';
 
-function isLocalAccess(): boolean {
-  const hostname = window.location.hostname;
-  return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('10.') ||
-    hostname.endsWith('.local')
-  );
-}
-
 function getBaseUrl(): string {
-  if (isLocalAccess()) {
-    return import.meta.env.VITE_BASE_LOCAL ?? 'http://localhost:3000';
-  }
   return import.meta.env.VITE_BASE_PUBLIC ?? 'http://ls-acm-api.twsbp.com';
 }
 

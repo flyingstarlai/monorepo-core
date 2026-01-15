@@ -128,7 +128,7 @@ function AppBuilderBuildPage() {
     isFetching: stagesFetching,
     error: stagesError,
     refetch: refetchStages,
-  } = useBuildStages(monitoredBuild?.id, monitoredBuild?.status);
+  } = useBuildStages(monitoredBuild?.id || '', monitoredBuild?.status);
 
   const shouldFetchConsole = Boolean(
     monitoredBuild?.id && monitoredBuild.status === 'failed',
@@ -139,7 +139,7 @@ function AppBuilderBuildPage() {
     isFetching: consoleFetching,
     error: consoleError,
     refetch: refetchConsole,
-  } = useBuildConsole(monitoredBuild?.id, shouldFetchConsole);
+  } = useBuildConsole(monitoredBuild?.id || '', shouldFetchConsole);
 
   const consoleErrorMessage = consoleError
     ? consoleError instanceof Error

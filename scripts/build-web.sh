@@ -60,17 +60,21 @@ fi
 
 # Build the image
 echo "📦 Building Docker image..."
-BUILD_ARGS=""
 if [ -n "$COMPANY" ]; then
-    BUILD_ARGS="--build-arg COMPANY_ID=${COMPANY}"
+    echo "📝 Using .env.${COMPANY} for build"
+    cp "apps/web/.env.${COMPANY}" "apps/web/.env"
 fi
 
 docker build \
     -f "${DOCKERFILE}" \
-    ${BUILD_ARGS} \
     -t "${IMAGE_LATEST}" \
     -t "${IMAGE_VERSIONED}" \
     "${BUILD_CONTEXT}"
+
+if [ -n "$COMPANY" ]; then
+    rm -f "apps/web/.env"
+    echo "🧹 Cleaned up .env file"
+fi
 
 echo "✅ Build completed successfully!"
 echo ""
@@ -82,43 +86,15 @@ echo "Size: ${IMAGE_SIZE}"
 docker images | grep "${IMAGE_NAME}" || echo "No images found"
 echo ""
 
-# Check for auto-push flag
-if [ "$2" = "--auto-push" ]; then
-    AUTO_PUSH=true
-else
-    AUTO_PUSH=false
-fi
-
 # Push images
-if [ "$AUTO_PUSH" = true ]; then
-    echo "📤 Auto-pushing images to Docker Hub..."
-    echo "🚀 Pushing ${IMAGE_LATEST}..."
-    docker push "${IMAGE_LATEST}"
-    
-    echo "🚀 Pushing ${IMAGE_VERSIONED}..."
-    docker push "${IMAGE_VERSIONED}"
-    
-    echo "✅ Images pushed successfully!"
-else
-    # Ask for confirmation before pushing
-    read -p "📤 Push images to Docker Hub? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "🚀 Pushing ${IMAGE_LATEST}..."
-        docker push "${IMAGE_LATEST}"
-        
-        echo "🚀 Pushing ${IMAGE_VERSIONED}..."
-        docker push "${IMAGE_VERSIONED}"
-        
-        echo "✅ Images pushed successfully!"
-        echo ""
-        echo "🔗 Available images:"
-        echo "  - ${IMAGE_LATEST}"
-        echo "  - ${IMAGE_VERSIONED}"
-    else
-        echo "❌ Push cancelled. Images built locally only."
-    fi
-fi
+echo "📤 Pushing images to Docker Hub..."
+echo "🚀 Pushing ${IMAGE_VERSIONED}..."
+docker push "${IMAGE_VERSIONED}"
+
+echo "✅ Images pushed successfully!"
+echo ""
+echo "🔗 Available image:"
+echo "  - ${IMAGE_VERSIONED}"
 
 echo ""
 echo "🎉 Build script completed!"

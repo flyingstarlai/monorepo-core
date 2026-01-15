@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
+import { useMutation } from '@tanstack/react-query';
 import {
   useCompanies,
   useCreateCompany,
-  useUpdateCompany,
 } from '@/features/app-builder/hooks/use-app-builder';
+import { api } from '@/lib/api-client';
 import { CompanyDataTable } from '@/features/app-builder/components/company-data-table';
 import { createCompanyTableColumns } from '@/features/app-builder/components/company-table-columns';
 import { useCompanyTableActions } from '@/features/app-builder/components/company-table-actions';
 import { CompanyForm } from '@/features/app-builder/components/company-form';
-import type { Company, UpdateCompanyData } from '@/lib/types';
+import type {
+  Company,
+  UpdateCompanyData,
+  CreateCompanyData,
+} from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,32 +33,51 @@ export const Route = createFileRoute('/_authenticated/app-builder/companies')({
 function CompaniesPage() {
   const { data: companies, isLoading, error, refetch } = useCompanies();
   const createCompany = useCreateCompany();
-  const updateCompany = useUpdateCompany('');
+  const updateCompanyMutation = useMutation({
+    mutationFn: async ({
+      companyCode,
+      data,
+    }: {
+      companyCode: string;
+      data: UpdateCompanyData;
+    }): Promise<Company> => {
+      const response = await api.put<Company>(
+        `/app-builder/companies/${companyCode}`,
+        data,
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
 
-  interface CompanyFormData {
-    companyCode: string;
-    companyName: string;
-    isActive?: boolean;
-  }
+  const [formData, setFormData] = useState<
+    CreateCompanyData | UpdateCompanyData
+  >({
+    companyCode: '',
+    companyName: '',
+    isActive: true,
+  });
 
-  const [formData, setFormData] = useState<CompanyFormData | UpdateCompanyData>(
-    {
-      companyCode: '',
-      companyName: '',
-      isActive: true,
-    },
-  );
+  const dummyCompany: Company = {
+    companyCode: '',
+    companyName: '',
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 
   const { handleEdit, DeleteDialog } = useCompanyTableActions({
+    company: dummyCompany,
     onRefresh: refetch,
     onEdit: (company) => {
       setEditingCompany(company);
       setFormData({
-        companyCode: company.companyCode,
         companyName: company.companyName,
         isActive: company.isActive,
       });
@@ -69,7 +93,12 @@ function CompaniesPage() {
 
   const handleCreate = async () => {
     try {
-      await createCompany.mutateAsync(formData);
+      const createData: CreateCompanyData = {
+        companyCode: (formData as CreateCompanyData).companyCode || '',
+        companyName: (formData as CreateCompanyData).companyName || '',
+        isActive: formData.isActive,
+      };
+      await createCompany.mutateAsync(createData);
       setIsCreateOpen(false);
       setFormData({
         companyCode: '',
@@ -85,27 +114,16 @@ function CompaniesPage() {
     if (!editingCompany) return;
     try {
       const updateData: UpdateCompanyData = {
-        companyName: formData.companyName,
+        companyName:
+          typeof formData.companyName === 'string'
+            ? formData.companyName
+            : undefined,
         isActive: formData.isActive,
       };
-
-      await updateCompany.mutateAsync(editingCompany.companyCode, updateData);
-      setIsEditOpen(false);
-      setEditingCompany(null);
-    } catch (error) {
-      console.error('Failed to update company:', error);
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!editingCompany) return;
-    try {
-      const updateData: UpdateCompanyData = {
-        companyName: formData.companyName,
-        isActive: formData.isActive,
-      };
-
-      await updateCompany.mutateAsync(editingCompany.companyCode, updateData);
+      await updateCompanyMutation.mutateAsync({
+        companyCode: editingCompany.companyCode,
+        data: updateData,
+      });
       setIsEditOpen(false);
       setEditingCompany(null);
     } catch (error) {

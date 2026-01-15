@@ -49,7 +49,7 @@ services:
         max-file: '3'
 
   web:
-    image: twsbpnac/acm:latest
+    image: twsbpmac/acm:latest
     container_name: account-manager-web-prod
     ports:
       - '80:80'
@@ -89,7 +89,7 @@ networks:
     name: account-manager-prod-network
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.25.0.0/16
 
 volumes:
   document-uploads:

@@ -18,10 +18,6 @@ COPY packages/ui/package.json ./packages/ui/
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Copy company-specific .env file (build-time variables)
-ARG COMPANY_ID=default
-COPY apps/web/.env.${COMPANY_ID} ./apps/web/.env 2>/dev/null || true
-
 # Copy source code
 COPY apps/web ./apps/web
 COPY packages/api ./packages/api

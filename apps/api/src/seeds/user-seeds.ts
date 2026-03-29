@@ -8,8 +8,6 @@ const users = [
     username: 'admin',
     password: 'nimda', // Will be hashed below
     fullName: 'System Administrator',
-    deptNo: 'SYS001',
-    deptName: 'System Administration',
     role: 'admin',
     isActive: true,
   },
@@ -17,8 +15,6 @@ const users = [
     username: 'manager',
     password: 'manager', // Will be hashed below
     fullName: 'Manager User',
-    deptNo: 'MGR001',
-    deptName: 'Management',
     role: 'manager',
     isActive: true,
   },
@@ -26,8 +22,6 @@ const users = [
     username: 'user',
     password: 'user', // Will be hashed below
     fullName: 'Regular User',
-    deptNo: 'USR001',
-    deptName: 'General Operations',
     role: 'user',
     isActive: true,
   },

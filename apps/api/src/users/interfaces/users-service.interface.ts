@@ -1,21 +1,17 @@
-import { PaginatedLoginHistoryDto } from '../../mobile-apps/dto/paginated-login-history.dto';
-import { LoginHistoryQueryDto } from '../../mobile-apps/dto/login-history-query.dto';
-import { DepartmentDto } from '../dto/department.dto';
-
 export interface IUsersService {
-  findLoginHistoryByDeviceId(
-    appId: string,
-    query: LoginHistoryQueryDto,
-  ): Promise<PaginatedLoginHistoryDto>;
-
-  getFactoryDepartments(): Promise<DepartmentDto[]>;
-  findAllDepartments(): Promise<DepartmentDto[]>;
-  findOneDepartment(deptNo: string): Promise<DepartmentDto>;
-  createDepartment(createDepartmentDto: any): Promise<DepartmentDto>;
-  updateDepartment(
-    deptNo: string,
-    updateDepartmentDto: any,
-  ): Promise<DepartmentDto>;
-  toggleDepartmentActive(deptNo: string): Promise<DepartmentDto>;
-  removeDepartment(deptNo: string): Promise<void>;
+  findById(id: string): Promise<any>;
+  findByUsername(username: string): Promise<any>;
+  create(createUserDto: any, creatorRole?: string): Promise<any>;
+  update(id: string, updateUserDto: any, updaterRole?: string): Promise<any>;
+  delete(id: string): Promise<void>;
+  findAll(): Promise<any>;
+  validateUserCredentials(username: string, password: string): Promise<any>;
+  login(user: any): Promise<any>;
+  findRawById(id: string): Promise<any>;
+  findWithFilters(filters: any): Promise<{ users: any[]; total: number }>;
+  findOne(id: string): Promise<any>;
+  searchUsers(query: string): Promise<any>;
+  updateProfile(id: string, updateProfileDto: any): Promise<any>;
+  changePassword(id: string, changePasswordDto: any): Promise<void>;
+  remove(id: string): Promise<void>;
 }

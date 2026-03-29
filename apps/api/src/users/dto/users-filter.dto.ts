@@ -15,10 +15,6 @@ export class UsersFilterDto {
   isActive?: 'true' | 'false';
 
   @IsOptional()
-  @IsString()
-  deptNo?: string;
-
-  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -32,7 +28,7 @@ export class UsersFilterDto {
   limit?: number = 10;
 
   @IsOptional()
-  @IsEnum(['username', 'fullName', 'deptName', 'createdAt', 'lastLoginAt'])
+  @IsEnum(['username', 'fullName', 'createdAt', 'lastLoginAt'])
   sortBy?: string = 'createdAt';
 
   @IsOptional()

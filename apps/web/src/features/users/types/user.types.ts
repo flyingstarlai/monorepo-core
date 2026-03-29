@@ -2,48 +2,34 @@ export interface User {
   id: string;
   username: string;
   fullName: string;
-  email?: string;
-  signLevel?: number;
-  deptNo: string;
-  deptName: string;
-  role: 'admin' | 'manager' | 'user';
-  isActive: boolean;
-  lastLoginAt?: Date;
-  lastMobileLoginAt?: Date;
-  lastMobileDeviceId?: string;
-  lastMobileAppName?: string;
-  lastMobileAppVersion?: string;
-  lastMobileAppModule?: string;
+  role: 'admin' | 'user';
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type UserRole = 'admin' | 'user';
+
+export const UserRole = {
+  ADMIN: 'admin',
+  USER: 'user',
+} as const;
 
 export interface CreateUserData {
   username: string;
   password: string;
   fullName: string;
-  email?: string;
-  signLevel?: number;
-  deptNo: string;
-  deptName: string;
-  role?: User['role'];
-  isActive?: boolean;
+  role?: UserRole;
 }
 
 export interface UpdateUserData {
   fullName?: string;
-  email?: string;
-  signLevel?: number;
-  deptNo?: string;
-  deptName?: string;
-  role?: User['role'];
-  isActive?: boolean;
+  password?: string;
+  role?: UserRole;
 }
 
 export interface UsersFilters {
   search?: string;
-  role?: User['role'];
-  isActive?: boolean;
+  role?: UserRole;
   page?: number;
   limit?: number;
 }
@@ -59,48 +45,4 @@ export interface UsersResponse {
 export interface FactoryUser {
   username: string;
   fullName: string;
-  deptNo: string;
-  deptName: string;
-}
-
-export interface FactoryDepartment {
-  deptNo: string;
-  deptName: string;
-}
-
-export interface Department {
-  deptNo: string;
-  deptName: string;
-  parentDeptNo: string | null;
-  deptLevel: number;
-  managerId: string | null;
-  isActive: boolean;
-  createdAt: Date | null;
-  updatedAt: Date | null;
-}
-
-export interface CreateDepartmentData {
-  deptNo: string;
-  deptName: string;
-  parentDeptNo?: string;
-  deptLevel?: number;
-  managerId?: string;
-  isActive?: boolean;
-}
-
-export interface UpdateDepartmentData {
-  deptName?: string;
-  parentDeptNo?: string;
-  deptLevel?: number;
-  managerId?: string;
-  isActive?: boolean;
-}
-
-export interface UpdateDepartmentData {
-  deptNo?: string;
-  deptName?: string;
-  parentDeptNo?: string;
-  deptLevel?: number;
-  managerId?: string;
-  isActive?: boolean;
 }

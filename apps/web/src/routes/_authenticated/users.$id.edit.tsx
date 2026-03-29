@@ -63,9 +63,8 @@ function UserEdit() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl flex-1">
-      <div className="max-w-2xl space-y-4">
-        {/* Back Button */}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
         <Link to="/users/$id/view" params={{ id }} replace preload="intent">
           <Button
             variant="outline"
@@ -76,16 +75,15 @@ function UserEdit() {
             <span>返回用戶</span>
           </Button>
         </Link>
-
-        {/* User Form */}
-        <UserForm
-          user={user} // Pass user data for edit mode
-          onSubmit={handleSubmit}
-          isLoading={updateUserMutation.isPending}
-          currentUserRole={currentUser?.role}
-          title="編輯用戶"
-        />
       </div>
+
+      <UserForm
+        user={user}
+        onSubmit={handleSubmit}
+        isLoading={updateUserMutation.isPending}
+        currentUserRole={currentUser?.role}
+        title="編輯用戶"
+      />
     </div>
   );
 }

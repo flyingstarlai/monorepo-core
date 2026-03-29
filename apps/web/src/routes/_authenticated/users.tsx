@@ -11,7 +11,7 @@ import { Plus } from 'lucide-react';
 
 export const Route = createFileRoute('/_authenticated/users')({
   beforeLoad: ({ context, location }) => {
-    if (!context.auth.hasAnyRole(['admin', 'manager'])) {
+    if (!context.auth.hasAnyRole(['admin'])) {
       throw redirect({
         to: '/unauthorized',
         search: {

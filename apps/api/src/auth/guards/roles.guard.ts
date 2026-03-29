@@ -1,8 +1,8 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { ONLYOFFICE_AUTHORIZED_KEY } from '../decorators/onlyoffice-authorized.decorator';
+import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class RolesGuard extends AuthGuard('jwt') {
@@ -11,16 +11,7 @@ export class RolesGuard extends AuthGuard('jwt') {
   }
 
   canActivate(context: ExecutionContext): boolean {
-    const isOnlyofficeAuthorized = this.reflector.getAllAndOverride<boolean>(
-      ONLYOFFICE_AUTHORIZED_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-
-    if (isOnlyofficeAuthorized) {
-      return true;
-    }
-
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+    const requiredRoles = this.reflector.getAllAndOverride<User['role']>(
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
@@ -29,7 +20,12 @@ export class RolesGuard extends AuthGuard('jwt') {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role === role);
+    const { user } = context.switchToHttp().getRequest().user as { user: User };
+
+    if (!user) {
+      return false;
+    }
+
+    return requiredRoles.includes(user.role);
   }
 }

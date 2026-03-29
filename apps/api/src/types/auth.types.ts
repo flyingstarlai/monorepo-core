@@ -26,5 +26,4 @@ export interface ChangePasswordResponse {
  */
 export interface AuthenticatedRequest extends Request {
   user?: User;
-  onlyofficeAuthorized?: boolean;
 }

@@ -22,10 +22,10 @@ interface UserSearchDrawerProps {
 }
 
 export function UserSearchDrawer({
-                                   isOpen,
-                                   onClose,
-                                   onUserSelect,
-                                 }: UserSearchDrawerProps) {
+  isOpen,
+  onClose,
+  onUserSelect,
+}: UserSearchDrawerProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const {
     data: factoryUsers = [],
@@ -38,9 +38,7 @@ export function UserSearchDrawer({
   const filteredUsers = factoryUsers.filter(
     (user) =>
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.deptNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.deptName.toLowerCase().includes(searchTerm.toLowerCase()),
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Handle keyboard events (Escape closes drawer)
@@ -147,8 +145,6 @@ export function UserSearchDrawer({
                       <TableRow>
                         <TableHead>用戶名</TableHead>
                         <TableHead>全名</TableHead>
-                        <TableHead>部門代碼</TableHead>
-                        <TableHead>部門名稱</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -166,8 +162,6 @@ export function UserSearchDrawer({
                             {user.username}
                           </TableCell>
                           <TableCell>{user.fullName}</TableCell>
-                          <TableCell>{user.deptNo}</TableCell>
-                          <TableCell>{user.deptName}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

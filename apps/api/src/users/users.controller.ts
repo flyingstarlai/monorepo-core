@@ -4,9 +4,8 @@ import {
   Post,
   Body,
   Param,
-  Delete,
   Put,
-  Patch,
+  Delete,
   Query,
   BadRequestException,
   NotFoundException,
@@ -19,11 +18,7 @@ import { UsersFilterDto } from './dto/users-filter.dto';
 import { FactoryUserDto } from './dto/factory-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
-import { MobileLoginHistoryDto } from './dto/mobile-login-history.dto';
 import { RoleService } from './role.service';
-import { UserGroupResponseDto } from './dto/user-group-response.dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { User } from './entities/user.entity';
@@ -43,7 +38,6 @@ export class UsersController {
   findAll(@Query() filters: UsersFilterDto, @Request() req: { user: User }) {
     const userRole = req.user?.role;
 
-    // Check if user can access user management
     if (!RoleService.canAccessUserManagement(userRole)) {
       throw new BadRequestException(
         'Insufficient permissions to access user management',
@@ -76,7 +70,6 @@ export class UsersController {
     if (!req.user) {
       throw new NotFoundException('User profile not found');
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = req.user;
     return result;
   }
@@ -145,28 +138,6 @@ export class UsersController {
     }
   }
 
-  @Patch(':id/status')
-  async toggleStatus(@Param('id') id: string, @Request() req: { user: User }) {
-    try {
-      const userRole = req.user?.role;
-      const permissions = RoleService.getPermissions(userRole);
-
-      if (!permissions.canToggleUserStatus) {
-        throw new BadRequestException(
-          'Insufficient permissions to toggle user status',
-        );
-      }
-
-      const user = await this.usersService.toggleUserStatus(id);
-      return {
-        message: `User status updated to ${user.isActive ? 'active' : 'inactive'}`,
-        user,
-      };
-    } catch {
-      throw new BadRequestException('Failed to toggle user status');
-    }
-  }
-
   @Delete(':id')
   async remove(@Param('id') id: string, @Request() req: { user: User }) {
     try {
@@ -177,12 +148,10 @@ export class UsersController {
         throw new NotFoundException('User not found');
       }
 
-      // Prevent users from deleting themselves
       if (req.user?.id === id) {
         throw new BadRequestException('Cannot delete your own account');
       }
 
-      // Check if deleter can delete user with specific role
       if (!RoleService.canDeleteUserWithRole(deleterRole, user.role)) {
         throw new BadRequestException(
           `Insufficient permissions to delete users with role '${user.role}'`,
@@ -203,54 +172,5 @@ export class UsersController {
         error instanceof Error ? error.message : 'Failed to delete user',
       );
     }
-  }
-
-  @Get(':id/login-history')
-  async getLoginHistory(
-    @Param('id') id: string,
-    @Query('limit') limit?: number,
-  ): Promise<{
-    items: MobileLoginHistoryDto[];
-  }> {
-    const user = await this.usersService.findOne(id);
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    return this.usersService.findLoginHistoryByUserId(
-      id,
-      limit ? Number(limit) : 100,
-    );
-  }
-
-  @Get(':id/groups')
-  @ApiOperation({ summary: 'Get groups for a specific user' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of user groups',
-    type: [UserGroupResponseDto],
-  })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - insufficient permissions',
-  })
-  async getUserGroups(
-    @Param('id') id: string,
-    @Request() req: { user: User },
-  ): Promise<UserGroupResponseDto[]> {
-    // Check if user exists
-    const targetUser = await this.usersService.findOne(id);
-    if (!targetUser) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    // Check permissions: users can only see their own groups, admins can see anyone's groups
-    const requestingUser = req.user;
-    if (requestingUser.role !== 'admin' && requestingUser.id !== id) {
-      throw new BadRequestException('You can only view your own groups');
-    }
-
-    return this.usersService.getUserGroups(id);
   }
 }

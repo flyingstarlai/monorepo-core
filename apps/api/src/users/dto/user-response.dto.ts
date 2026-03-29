@@ -1,46 +1,16 @@
 import { IsString, IsOptional } from 'class-validator';
-
 export class UserResponseDto {
   @IsString()
   id: string;
-
   @IsString()
   username: string;
-
   @IsString()
   fullName: string;
-
-  @IsString()
-  role: 'admin' | 'manager' | 'user';
-
-  @IsString()
-  deptNo: string;
-
-  @IsString()
-  deptName: string;
-
-  isActive: boolean;
-
-  @IsString()
-  @IsOptional()
-  lastLoginAt?: string | null;
-
+  role: 'admin' | 'user';
   @IsString()
   @IsOptional()
   createdAt?: string | null;
-
   @IsString()
   @IsOptional()
   updatedAt?: string | null;
-
-  @IsString()
-  @IsOptional()
-  email?: string | null;
-
-  @IsString()
-  @IsOptional()
-  managerId?: string | null;
-
-  @IsOptional()
-  signLevel?: number;
 }

@@ -152,15 +152,6 @@ export function DashboardHeader() {
       }
     }
 
-    // Departments
-    else if (first === 'departments') {
-      breadcrumbs.push({
-        label: '部門',
-        href: '/departments',
-        isCurrentPage: normalizedSegments.length === 1,
-      });
-    }
-
     // Groups
     else if (first === 'groups') {
       breadcrumbs.push({

@@ -83,9 +83,6 @@ export function DeleteUserDialog({
                 <strong>用戶名：</strong> {user.username}
               </p>
               <p>
-                <strong>部門：</strong> {user.deptName}
-              </p>
-              <p>
                 <strong>角色：</strong> {user.role}
               </p>
             </div>

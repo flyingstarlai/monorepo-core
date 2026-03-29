@@ -8,8 +8,6 @@ import {
   getUserDisplayName,
   getRoleVariant,
   getRoleColor,
-  getStatusVariant,
-  formatLastLogin,
 } from '../utils/user-transformers';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
@@ -22,20 +20,10 @@ export interface UserCardProps {
   isLoading?: boolean;
 }
 
-// Helper function to check if current user can delete target user
 const canDeleteUser = (currentUser: User | null, targetUser: User): boolean => {
   if (!currentUser) return false;
-
-  // Cannot delete yourself
   if (currentUser.id === targetUser.id) return false;
-
-  // Admin can delete anyone
   if (currentUser.role === 'admin') return true;
-
-  // Manager can only delete regular users
-  if (currentUser.role === 'manager' && targetUser.role === 'user') return true;
-
-  // Regular users cannot delete anyone
   return false;
 };
 
@@ -52,16 +40,14 @@ export function UserCard({
   const initials = getUserInitials(user);
 
   return (
-    <Card className="">
+    <Card>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {/* User Avatar */}
             <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-lg">{initials}</span>
             </div>
 
-            {/* User Info */}
             <div>
               <h3 className="font-semibold text-slate-900 text-lg">
                 {displayName}
@@ -70,9 +56,6 @@ export function UserCard({
                 @{user.username || 'unknown'}
               </p>
               <div className="flex items-center space-x-3 mt-2">
-                <span className="text-sm text-slate-500">
-                  {user.deptName || '未指定'} ({user.deptNo || '未指定'})
-                </span>
                 <Badge
                   variant={getRoleVariant(user.role || 'user')}
                   style={{
@@ -83,17 +66,10 @@ export function UserCard({
                 >
                   {user.role || 'user'}
                 </Badge>
-                <Badge variant={getStatusVariant(user.isActive ?? false)}>
-                  {user.isActive ? '啟用' : '停用'}
-                </Badge>
-              </div>
-              <div className="text-xs text-slate-400 mt-1">
-                最後登入：{formatLastLogin(user.lastLoginAt)}
               </div>
             </div>
           </div>
 
-          {/* Actions */}
           {showActions && (
             <div className="flex items-center space-x-2">
               {onView && (

@@ -1,14 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useDeleteUser, useToggleUserStatus } from '../hooks/use-users';
+import { useDeleteUser } from '../hooks/use-users';
 import { DeleteUserDialog } from './delete-user-dialog';
 import type { User } from '../types/user.types';
 
-interface UserTableActionsProps {
-  onRefresh?: () => void;
-}
-
-export function useUserTableActions({ onRefresh }: UserTableActionsProps = {}) {
+export function useUserTableActions() {
   const navigate = useNavigate();
   const [deleteDialog, setDeleteDialog] = useState<{
     user: User | null;
@@ -19,7 +15,6 @@ export function useUserTableActions({ onRefresh }: UserTableActionsProps = {}) {
   });
 
   const deleteUserMutation = useDeleteUser();
-  const toggleStatusMutation = useToggleUserStatus();
 
   const handleView = (user: User) => {
     navigate({ to: '/users/$id/view', params: { id: user.id } });
@@ -33,24 +28,11 @@ export function useUserTableActions({ onRefresh }: UserTableActionsProps = {}) {
     setDeleteDialog({ user, isOpen: true });
   };
 
-  const handleToggleStatus = async (user: User, isActive: boolean) => {
-    try {
-      await toggleStatusMutation.mutateAsync({
-        id: user.id,
-        isActive,
-      });
-      onRefresh?.();
-    } catch (error) {
-      console.error('Toggle user status failed:', error);
-    }
-  };
-
   const confirmDelete = async (user: User) => {
     try {
       await deleteUserMutation.mutateAsync(user.id);
 
       setDeleteDialog({ user: null, isOpen: false });
-      // No need to call onRefresh since useDeleteUser already invalidates queries
     } catch (error) {
       console.error('Delete user failed:', error);
     }
@@ -70,8 +52,6 @@ export function useUserTableActions({ onRefresh }: UserTableActionsProps = {}) {
     handleView,
     handleEdit,
     handleDelete,
-    handleToggleStatus,
     DeleteDialog,
-    isTogglingStatus: toggleStatusMutation.isPending,
   };
 }

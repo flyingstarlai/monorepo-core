@@ -12,7 +12,7 @@ import {
   useDashboardStats,
   useRecentActivity,
 } from '../hooks/use-dashboard-data';
-import { TrendingUp, Users, Smartphone, Activity, Package } from 'lucide-react';
+import { TrendingUp, User, Users } from 'lucide-react';
 
 const formatDateTime = (date: Date | string): string => {
   const d = date instanceof Date ? date : new Date(date);
@@ -94,34 +94,18 @@ export function DashboardOverview() {
   }
   const statCards = [
     {
-      title: '應用程式總數',
-      value: stats.totalApps.toLocaleString(),
-      change: `+${stats.newAppsThisMonth} 本月新增`,
-      icon: Smartphone,
+      title: '總用戶數',
+      value: stats.totalUsers.toLocaleString(),
+      change: `${stats.adminCount} 管理員`,
+      icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
     {
-      title: '活躍設備',
-      value: stats.activeDevices.toLocaleString(),
-      change: '設備總數',
-      icon: Activity,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: '版本更新',
-      value: stats.versionUpdates.toLocaleString(),
-      change: `${stats.versionGrowthRate}% 版本增長`,
-      icon: Package,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: '獨特用戶',
-      value: stats.uniqueUsers.toLocaleString(),
-      change: '應用程式用戶',
-      icon: Users,
+      title: '一般用戶',
+      value: (stats.totalUsers - stats.adminCount).toLocaleString(),
+      change: '總用戶數減去管理員',
+      icon: User,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
     },
@@ -130,7 +114,7 @@ export function DashboardOverview() {
   return (
     <div className="mx-auto w-full max-w-7xl flex-1">
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
@@ -187,8 +171,7 @@ export function DashboardOverview() {
                       <p className="text-sm text-slate-600">
                         {activity.action === 'created'
                           ? '新增帳戶'
-                          : '更新個人資料'}{' '}
-                        • {activity.deptName}
+                          : '更新個人資料'}
                       </p>
                       <p className="text-xs text-slate-500">
                         @{activity.username}

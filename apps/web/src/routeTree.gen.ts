@@ -15,40 +15,15 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users.index'
-import { Route as AuthenticatedGroupsIndexRouteImport } from './routes/_authenticated/groups.index'
-import { Route as AuthenticatedDocumentsIndexRouteImport } from './routes/_authenticated/documents.index'
-import { Route as AuthenticatedDocumentStagesIndexRouteImport } from './routes/_authenticated/document-stages.index'
-import { Route as AuthenticatedDepartmentsIndexRouteImport } from './routes/_authenticated/departments.index'
-import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps.index'
-import { Route as AuthenticatedAppBuilderIndexRouteImport } from './routes/_authenticated/app-builder.index'
 import { Route as AuthenticatedUsersGroupsRouteImport } from './routes/_authenticated/users/groups'
 import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenticated/users.create'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings.account'
-import { Route as AuthenticatedGroupsCreateRouteImport } from './routes/_authenticated/groups/create'
-import { Route as AuthenticatedGroupsIdRouteImport } from './routes/_authenticated/groups.$id'
-import { Route as AuthenticatedDocumentsStagesRouteImport } from './routes/_authenticated/documents.stages'
-import { Route as AuthenticatedDocumentsCreateRouteImport } from './routes/_authenticated/documents.create'
-import { Route as AuthenticatedAppsIdRouteImport } from './routes/_authenticated/apps.$id'
-import { Route as AuthenticatedAppBuilderSystemStatusRouteImport } from './routes/_authenticated/app-builder.system-status'
-import { Route as AuthenticatedAppBuilderSettingsRouteImport } from './routes/_authenticated/app-builder/settings'
-import { Route as AuthenticatedAppBuilderIdentifierRouteImport } from './routes/_authenticated/app-builder.identifier'
-import { Route as AuthenticatedAppBuilderCreateRouteImport } from './routes/_authenticated/app-builder.create'
-import { Route as AuthenticatedAppBuilderCompaniesRouteImport } from './routes/_authenticated/app-builder.companies'
-import { Route as AuthenticatedAppsIdIndexRouteImport } from './routes/_authenticated/apps.$id.index'
 import { Route as AuthenticatedUsersIdViewRouteImport } from './routes/_authenticated/users.$id.view'
 import { Route as AuthenticatedUsersIdEditRouteImport } from './routes/_authenticated/users.$id.edit'
-import { Route as AuthenticatedDocumentsIdOfficeRouteImport } from './routes/_authenticated/documents.$id.office'
-import { Route as AuthenticatedDocumentsIdEditRouteImport } from './routes/_authenticated/documents.$id.edit'
-import { Route as AuthenticatedAppsIdLoginsRouteImport } from './routes/_authenticated/apps.$id.logins'
-import { Route as AuthenticatedAppBuilderIdHistoryRouteImport } from './routes/_authenticated/app-builder.$id.history'
-import { Route as AuthenticatedAppBuilderIdBuildRouteImport } from './routes/_authenticated/app-builder.$id.build'
-import { Route as AuthenticatedAppBuilderIdHistoryBuildIdRouteImport } from './routes/_authenticated/app-builder.$id.history.$buildId'
 
 const UnauthorizedRoute = UnauthorizedRouteImport.update({
   id: '/unauthorized',
@@ -79,19 +54,9 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
-  id: '/apps',
-  path: '/apps',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
@@ -99,41 +64,6 @@ const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedUsersRoute,
 } as any)
-const AuthenticatedGroupsIndexRoute =
-  AuthenticatedGroupsIndexRouteImport.update({
-    id: '/groups/',
-    path: '/groups/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedDocumentsIndexRoute =
-  AuthenticatedDocumentsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedDocumentsRoute,
-  } as any)
-const AuthenticatedDocumentStagesIndexRoute =
-  AuthenticatedDocumentStagesIndexRouteImport.update({
-    id: '/document-stages/',
-    path: '/document-stages/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedDepartmentsIndexRoute =
-  AuthenticatedDepartmentsIndexRouteImport.update({
-    id: '/departments/',
-    path: '/departments/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppsIndexRoute = AuthenticatedAppsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedAppsRoute,
-} as any)
-const AuthenticatedAppBuilderIndexRoute =
-  AuthenticatedAppBuilderIndexRouteImport.update({
-    id: '/app-builder/',
-    path: '/app-builder/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedUsersGroupsRoute =
   AuthenticatedUsersGroupsRouteImport.update({
     id: '/groups',
@@ -163,70 +93,6 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
-const AuthenticatedGroupsCreateRoute =
-  AuthenticatedGroupsCreateRouteImport.update({
-    id: '/groups/create',
-    path: '/groups/create',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedGroupsIdRoute = AuthenticatedGroupsIdRouteImport.update({
-  id: '/groups/$id',
-  path: '/groups/$id',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDocumentsStagesRoute =
-  AuthenticatedDocumentsStagesRouteImport.update({
-    id: '/stages',
-    path: '/stages',
-    getParentRoute: () => AuthenticatedDocumentsRoute,
-  } as any)
-const AuthenticatedDocumentsCreateRoute =
-  AuthenticatedDocumentsCreateRouteImport.update({
-    id: '/create',
-    path: '/create',
-    getParentRoute: () => AuthenticatedDocumentsRoute,
-  } as any)
-const AuthenticatedAppsIdRoute = AuthenticatedAppsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AuthenticatedAppsRoute,
-} as any)
-const AuthenticatedAppBuilderSystemStatusRoute =
-  AuthenticatedAppBuilderSystemStatusRouteImport.update({
-    id: '/app-builder/system-status',
-    path: '/app-builder/system-status',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppBuilderSettingsRoute =
-  AuthenticatedAppBuilderSettingsRouteImport.update({
-    id: '/app-builder/settings',
-    path: '/app-builder/settings',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppBuilderIdentifierRoute =
-  AuthenticatedAppBuilderIdentifierRouteImport.update({
-    id: '/app-builder/identifier',
-    path: '/app-builder/identifier',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppBuilderCreateRoute =
-  AuthenticatedAppBuilderCreateRouteImport.update({
-    id: '/app-builder/create',
-    path: '/app-builder/create',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppBuilderCompaniesRoute =
-  AuthenticatedAppBuilderCompaniesRouteImport.update({
-    id: '/app-builder/companies',
-    path: '/app-builder/companies',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppsIdIndexRoute =
-  AuthenticatedAppsIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedAppsIdRoute,
-  } as any)
 const AuthenticatedUsersIdViewRoute =
   AuthenticatedUsersIdViewRouteImport.update({
     id: '/view',
@@ -239,83 +105,22 @@ const AuthenticatedUsersIdEditRoute =
     path: '/edit',
     getParentRoute: () => AuthenticatedUsersIdRoute,
   } as any)
-const AuthenticatedDocumentsIdOfficeRoute =
-  AuthenticatedDocumentsIdOfficeRouteImport.update({
-    id: '/$id/office',
-    path: '/$id/office',
-    getParentRoute: () => AuthenticatedDocumentsRoute,
-  } as any)
-const AuthenticatedDocumentsIdEditRoute =
-  AuthenticatedDocumentsIdEditRouteImport.update({
-    id: '/$id/edit',
-    path: '/$id/edit',
-    getParentRoute: () => AuthenticatedDocumentsRoute,
-  } as any)
-const AuthenticatedAppsIdLoginsRoute =
-  AuthenticatedAppsIdLoginsRouteImport.update({
-    id: '/logins',
-    path: '/logins',
-    getParentRoute: () => AuthenticatedAppsIdRoute,
-  } as any)
-const AuthenticatedAppBuilderIdHistoryRoute =
-  AuthenticatedAppBuilderIdHistoryRouteImport.update({
-    id: '/app-builder/$id/history',
-    path: '/app-builder/$id/history',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppBuilderIdBuildRoute =
-  AuthenticatedAppBuilderIdBuildRouteImport.update({
-    id: '/app-builder/$id/build',
-    path: '/app-builder/$id/build',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAppBuilderIdHistoryBuildIdRoute =
-  AuthenticatedAppBuilderIdHistoryBuildIdRouteImport.update({
-    id: '/$buildId',
-    path: '/$buildId',
-    getParentRoute: () => AuthenticatedAppBuilderIdHistoryRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/documents': typeof AuthenticatedDocumentsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/users': typeof AuthenticatedUsersRouteWithChildren
-  '/app-builder/companies': typeof AuthenticatedAppBuilderCompaniesRoute
-  '/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
-  '/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
-  '/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
-  '/app-builder/system-status': typeof AuthenticatedAppBuilderSystemStatusRoute
-  '/apps/$id': typeof AuthenticatedAppsIdRouteWithChildren
-  '/documents/create': typeof AuthenticatedDocumentsCreateRoute
-  '/documents/stages': typeof AuthenticatedDocumentsStagesRoute
-  '/groups/$id': typeof AuthenticatedGroupsIdRoute
-  '/groups/create': typeof AuthenticatedGroupsCreateRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/users/groups': typeof AuthenticatedUsersGroupsRoute
-  '/app-builder': typeof AuthenticatedAppBuilderIndexRoute
-  '/apps/': typeof AuthenticatedAppsIndexRoute
-  '/departments': typeof AuthenticatedDepartmentsIndexRoute
-  '/document-stages': typeof AuthenticatedDocumentStagesIndexRoute
-  '/documents/': typeof AuthenticatedDocumentsIndexRoute
-  '/groups': typeof AuthenticatedGroupsIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
-  '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
-  '/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
-  '/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
-  '/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
-  '/documents/$id/office': typeof AuthenticatedDocumentsIdOfficeRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
-  '/apps/$id/': typeof AuthenticatedAppsIdIndexRoute
-  '/app-builder/$id/history/$buildId': typeof AuthenticatedAppBuilderIdHistoryBuildIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -323,36 +128,14 @@ export interface FileRoutesByTo {
   '/unauthorized': typeof UnauthorizedRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
-  '/app-builder/companies': typeof AuthenticatedAppBuilderCompaniesRoute
-  '/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
-  '/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
-  '/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
-  '/app-builder/system-status': typeof AuthenticatedAppBuilderSystemStatusRoute
-  '/documents/create': typeof AuthenticatedDocumentsCreateRoute
-  '/documents/stages': typeof AuthenticatedDocumentsStagesRoute
-  '/groups/$id': typeof AuthenticatedGroupsIdRoute
-  '/groups/create': typeof AuthenticatedGroupsCreateRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/users/groups': typeof AuthenticatedUsersGroupsRoute
-  '/app-builder': typeof AuthenticatedAppBuilderIndexRoute
-  '/apps': typeof AuthenticatedAppsIndexRoute
-  '/departments': typeof AuthenticatedDepartmentsIndexRoute
-  '/document-stages': typeof AuthenticatedDocumentStagesIndexRoute
-  '/documents': typeof AuthenticatedDocumentsIndexRoute
-  '/groups': typeof AuthenticatedGroupsIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
-  '/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
-  '/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
-  '/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
-  '/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
-  '/documents/$id/office': typeof AuthenticatedDocumentsIdOfficeRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
-  '/apps/$id': typeof AuthenticatedAppsIdIndexRoute
-  '/app-builder/$id/history/$buildId': typeof AuthenticatedAppBuilderIdHistoryBuildIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -360,42 +143,17 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/documents': typeof AuthenticatedDocumentsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/users': typeof AuthenticatedUsersRouteWithChildren
-  '/_authenticated/app-builder/companies': typeof AuthenticatedAppBuilderCompaniesRoute
-  '/_authenticated/app-builder/create': typeof AuthenticatedAppBuilderCreateRoute
-  '/_authenticated/app-builder/identifier': typeof AuthenticatedAppBuilderIdentifierRoute
-  '/_authenticated/app-builder/settings': typeof AuthenticatedAppBuilderSettingsRoute
-  '/_authenticated/app-builder/system-status': typeof AuthenticatedAppBuilderSystemStatusRoute
-  '/_authenticated/apps/$id': typeof AuthenticatedAppsIdRouteWithChildren
-  '/_authenticated/documents/create': typeof AuthenticatedDocumentsCreateRoute
-  '/_authenticated/documents/stages': typeof AuthenticatedDocumentsStagesRoute
-  '/_authenticated/groups/$id': typeof AuthenticatedGroupsIdRoute
-  '/_authenticated/groups/create': typeof AuthenticatedGroupsCreateRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
   '/_authenticated/users/groups': typeof AuthenticatedUsersGroupsRoute
-  '/_authenticated/app-builder/': typeof AuthenticatedAppBuilderIndexRoute
-  '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
-  '/_authenticated/departments/': typeof AuthenticatedDepartmentsIndexRoute
-  '/_authenticated/document-stages/': typeof AuthenticatedDocumentStagesIndexRoute
-  '/_authenticated/documents/': typeof AuthenticatedDocumentsIndexRoute
-  '/_authenticated/groups/': typeof AuthenticatedGroupsIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
-  '/_authenticated/app-builder/$id/build': typeof AuthenticatedAppBuilderIdBuildRoute
-  '/_authenticated/app-builder/$id/history': typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
-  '/_authenticated/apps/$id/logins': typeof AuthenticatedAppsIdLoginsRoute
-  '/_authenticated/documents/$id/edit': typeof AuthenticatedDocumentsIdEditRoute
-  '/_authenticated/documents/$id/office': typeof AuthenticatedDocumentsIdOfficeRoute
   '/_authenticated/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/_authenticated/users/$id/view': typeof AuthenticatedUsersIdViewRoute
-  '/_authenticated/apps/$id/': typeof AuthenticatedAppsIdIndexRoute
-  '/_authenticated/app-builder/$id/history/$buildId': typeof AuthenticatedAppBuilderIdHistoryBuildIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -403,42 +161,17 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/unauthorized'
-    | '/apps'
     | '/dashboard'
-    | '/documents'
     | '/settings'
     | '/users'
-    | '/app-builder/companies'
-    | '/app-builder/create'
-    | '/app-builder/identifier'
-    | '/app-builder/settings'
-    | '/app-builder/system-status'
-    | '/apps/$id'
-    | '/documents/create'
-    | '/documents/stages'
-    | '/groups/$id'
-    | '/groups/create'
     | '/settings/account'
     | '/settings/profile'
     | '/users/$id'
     | '/users/create'
     | '/users/groups'
-    | '/app-builder'
-    | '/apps/'
-    | '/departments'
-    | '/document-stages'
-    | '/documents/'
-    | '/groups'
     | '/users/'
-    | '/app-builder/$id/build'
-    | '/app-builder/$id/history'
-    | '/apps/$id/logins'
-    | '/documents/$id/edit'
-    | '/documents/$id/office'
     | '/users/$id/edit'
     | '/users/$id/view'
-    | '/apps/$id/'
-    | '/app-builder/$id/history/$buildId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -446,78 +179,31 @@ export interface FileRouteTypes {
     | '/unauthorized'
     | '/dashboard'
     | '/settings'
-    | '/app-builder/companies'
-    | '/app-builder/create'
-    | '/app-builder/identifier'
-    | '/app-builder/settings'
-    | '/app-builder/system-status'
-    | '/documents/create'
-    | '/documents/stages'
-    | '/groups/$id'
-    | '/groups/create'
     | '/settings/account'
     | '/settings/profile'
     | '/users/$id'
     | '/users/create'
     | '/users/groups'
-    | '/app-builder'
-    | '/apps'
-    | '/departments'
-    | '/document-stages'
-    | '/documents'
-    | '/groups'
     | '/users'
-    | '/app-builder/$id/build'
-    | '/app-builder/$id/history'
-    | '/apps/$id/logins'
-    | '/documents/$id/edit'
-    | '/documents/$id/office'
     | '/users/$id/edit'
     | '/users/$id/view'
-    | '/apps/$id'
-    | '/app-builder/$id/history/$buildId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
     | '/unauthorized'
-    | '/_authenticated/apps'
     | '/_authenticated/dashboard'
-    | '/_authenticated/documents'
     | '/_authenticated/settings'
     | '/_authenticated/users'
-    | '/_authenticated/app-builder/companies'
-    | '/_authenticated/app-builder/create'
-    | '/_authenticated/app-builder/identifier'
-    | '/_authenticated/app-builder/settings'
-    | '/_authenticated/app-builder/system-status'
-    | '/_authenticated/apps/$id'
-    | '/_authenticated/documents/create'
-    | '/_authenticated/documents/stages'
-    | '/_authenticated/groups/$id'
-    | '/_authenticated/groups/create'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/profile'
     | '/_authenticated/users/$id'
     | '/_authenticated/users/create'
     | '/_authenticated/users/groups'
-    | '/_authenticated/app-builder/'
-    | '/_authenticated/apps/'
-    | '/_authenticated/departments/'
-    | '/_authenticated/document-stages/'
-    | '/_authenticated/documents/'
-    | '/_authenticated/groups/'
     | '/_authenticated/users/'
-    | '/_authenticated/app-builder/$id/build'
-    | '/_authenticated/app-builder/$id/history'
-    | '/_authenticated/apps/$id/logins'
-    | '/_authenticated/documents/$id/edit'
-    | '/_authenticated/documents/$id/office'
     | '/_authenticated/users/$id/edit'
     | '/_authenticated/users/$id/view'
-    | '/_authenticated/apps/$id/'
-    | '/_authenticated/app-builder/$id/history/$buildId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -571,25 +257,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/documents': {
-      id: '/_authenticated/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/apps': {
-      id: '/_authenticated/apps'
-      path: '/apps'
-      fullPath: '/apps'
-      preLoaderRoute: typeof AuthenticatedAppsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/users/': {
@@ -598,48 +270,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/users/'
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
       parentRoute: typeof AuthenticatedUsersRoute
-    }
-    '/_authenticated/groups/': {
-      id: '/_authenticated/groups/'
-      path: '/groups'
-      fullPath: '/groups'
-      preLoaderRoute: typeof AuthenticatedGroupsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/documents/': {
-      id: '/_authenticated/documents/'
-      path: '/'
-      fullPath: '/documents/'
-      preLoaderRoute: typeof AuthenticatedDocumentsIndexRouteImport
-      parentRoute: typeof AuthenticatedDocumentsRoute
-    }
-    '/_authenticated/document-stages/': {
-      id: '/_authenticated/document-stages/'
-      path: '/document-stages'
-      fullPath: '/document-stages'
-      preLoaderRoute: typeof AuthenticatedDocumentStagesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/departments/': {
-      id: '/_authenticated/departments/'
-      path: '/departments'
-      fullPath: '/departments'
-      preLoaderRoute: typeof AuthenticatedDepartmentsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/apps/': {
-      id: '/_authenticated/apps/'
-      path: '/'
-      fullPath: '/apps/'
-      preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
-      parentRoute: typeof AuthenticatedAppsRoute
-    }
-    '/_authenticated/app-builder/': {
-      id: '/_authenticated/app-builder/'
-      path: '/app-builder'
-      fullPath: '/app-builder'
-      preLoaderRoute: typeof AuthenticatedAppBuilderIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/users/groups': {
       id: '/_authenticated/users/groups'
@@ -676,83 +306,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
-    '/_authenticated/groups/create': {
-      id: '/_authenticated/groups/create'
-      path: '/groups/create'
-      fullPath: '/groups/create'
-      preLoaderRoute: typeof AuthenticatedGroupsCreateRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/groups/$id': {
-      id: '/_authenticated/groups/$id'
-      path: '/groups/$id'
-      fullPath: '/groups/$id'
-      preLoaderRoute: typeof AuthenticatedGroupsIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/documents/stages': {
-      id: '/_authenticated/documents/stages'
-      path: '/stages'
-      fullPath: '/documents/stages'
-      preLoaderRoute: typeof AuthenticatedDocumentsStagesRouteImport
-      parentRoute: typeof AuthenticatedDocumentsRoute
-    }
-    '/_authenticated/documents/create': {
-      id: '/_authenticated/documents/create'
-      path: '/create'
-      fullPath: '/documents/create'
-      preLoaderRoute: typeof AuthenticatedDocumentsCreateRouteImport
-      parentRoute: typeof AuthenticatedDocumentsRoute
-    }
-    '/_authenticated/apps/$id': {
-      id: '/_authenticated/apps/$id'
-      path: '/$id'
-      fullPath: '/apps/$id'
-      preLoaderRoute: typeof AuthenticatedAppsIdRouteImport
-      parentRoute: typeof AuthenticatedAppsRoute
-    }
-    '/_authenticated/app-builder/system-status': {
-      id: '/_authenticated/app-builder/system-status'
-      path: '/app-builder/system-status'
-      fullPath: '/app-builder/system-status'
-      preLoaderRoute: typeof AuthenticatedAppBuilderSystemStatusRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/app-builder/settings': {
-      id: '/_authenticated/app-builder/settings'
-      path: '/app-builder/settings'
-      fullPath: '/app-builder/settings'
-      preLoaderRoute: typeof AuthenticatedAppBuilderSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/app-builder/identifier': {
-      id: '/_authenticated/app-builder/identifier'
-      path: '/app-builder/identifier'
-      fullPath: '/app-builder/identifier'
-      preLoaderRoute: typeof AuthenticatedAppBuilderIdentifierRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/app-builder/create': {
-      id: '/_authenticated/app-builder/create'
-      path: '/app-builder/create'
-      fullPath: '/app-builder/create'
-      preLoaderRoute: typeof AuthenticatedAppBuilderCreateRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/app-builder/companies': {
-      id: '/_authenticated/app-builder/companies'
-      path: '/app-builder/companies'
-      fullPath: '/app-builder/companies'
-      preLoaderRoute: typeof AuthenticatedAppBuilderCompaniesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/apps/$id/': {
-      id: '/_authenticated/apps/$id/'
-      path: '/'
-      fullPath: '/apps/$id/'
-      preLoaderRoute: typeof AuthenticatedAppsIdIndexRouteImport
-      parentRoute: typeof AuthenticatedAppsIdRoute
-    }
     '/_authenticated/users/$id/view': {
       id: '/_authenticated/users/$id/view'
       path: '/view'
@@ -767,98 +320,8 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersIdEditRouteImport
       parentRoute: typeof AuthenticatedUsersIdRoute
     }
-    '/_authenticated/documents/$id/office': {
-      id: '/_authenticated/documents/$id/office'
-      path: '/$id/office'
-      fullPath: '/documents/$id/office'
-      preLoaderRoute: typeof AuthenticatedDocumentsIdOfficeRouteImport
-      parentRoute: typeof AuthenticatedDocumentsRoute
-    }
-    '/_authenticated/documents/$id/edit': {
-      id: '/_authenticated/documents/$id/edit'
-      path: '/$id/edit'
-      fullPath: '/documents/$id/edit'
-      preLoaderRoute: typeof AuthenticatedDocumentsIdEditRouteImport
-      parentRoute: typeof AuthenticatedDocumentsRoute
-    }
-    '/_authenticated/apps/$id/logins': {
-      id: '/_authenticated/apps/$id/logins'
-      path: '/logins'
-      fullPath: '/apps/$id/logins'
-      preLoaderRoute: typeof AuthenticatedAppsIdLoginsRouteImport
-      parentRoute: typeof AuthenticatedAppsIdRoute
-    }
-    '/_authenticated/app-builder/$id/history': {
-      id: '/_authenticated/app-builder/$id/history'
-      path: '/app-builder/$id/history'
-      fullPath: '/app-builder/$id/history'
-      preLoaderRoute: typeof AuthenticatedAppBuilderIdHistoryRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/app-builder/$id/build': {
-      id: '/_authenticated/app-builder/$id/build'
-      path: '/app-builder/$id/build'
-      fullPath: '/app-builder/$id/build'
-      preLoaderRoute: typeof AuthenticatedAppBuilderIdBuildRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/app-builder/$id/history/$buildId': {
-      id: '/_authenticated/app-builder/$id/history/$buildId'
-      path: '/$buildId'
-      fullPath: '/app-builder/$id/history/$buildId'
-      preLoaderRoute: typeof AuthenticatedAppBuilderIdHistoryBuildIdRouteImport
-      parentRoute: typeof AuthenticatedAppBuilderIdHistoryRoute
-    }
   }
 }
-
-interface AuthenticatedAppsIdRouteChildren {
-  AuthenticatedAppsIdLoginsRoute: typeof AuthenticatedAppsIdLoginsRoute
-  AuthenticatedAppsIdIndexRoute: typeof AuthenticatedAppsIdIndexRoute
-}
-
-const AuthenticatedAppsIdRouteChildren: AuthenticatedAppsIdRouteChildren = {
-  AuthenticatedAppsIdLoginsRoute: AuthenticatedAppsIdLoginsRoute,
-  AuthenticatedAppsIdIndexRoute: AuthenticatedAppsIdIndexRoute,
-}
-
-const AuthenticatedAppsIdRouteWithChildren =
-  AuthenticatedAppsIdRoute._addFileChildren(AuthenticatedAppsIdRouteChildren)
-
-interface AuthenticatedAppsRouteChildren {
-  AuthenticatedAppsIdRoute: typeof AuthenticatedAppsIdRouteWithChildren
-  AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
-}
-
-const AuthenticatedAppsRouteChildren: AuthenticatedAppsRouteChildren = {
-  AuthenticatedAppsIdRoute: AuthenticatedAppsIdRouteWithChildren,
-  AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
-}
-
-const AuthenticatedAppsRouteWithChildren =
-  AuthenticatedAppsRoute._addFileChildren(AuthenticatedAppsRouteChildren)
-
-interface AuthenticatedDocumentsRouteChildren {
-  AuthenticatedDocumentsCreateRoute: typeof AuthenticatedDocumentsCreateRoute
-  AuthenticatedDocumentsStagesRoute: typeof AuthenticatedDocumentsStagesRoute
-  AuthenticatedDocumentsIndexRoute: typeof AuthenticatedDocumentsIndexRoute
-  AuthenticatedDocumentsIdEditRoute: typeof AuthenticatedDocumentsIdEditRoute
-  AuthenticatedDocumentsIdOfficeRoute: typeof AuthenticatedDocumentsIdOfficeRoute
-}
-
-const AuthenticatedDocumentsRouteChildren: AuthenticatedDocumentsRouteChildren =
-  {
-    AuthenticatedDocumentsCreateRoute: AuthenticatedDocumentsCreateRoute,
-    AuthenticatedDocumentsStagesRoute: AuthenticatedDocumentsStagesRoute,
-    AuthenticatedDocumentsIndexRoute: AuthenticatedDocumentsIndexRoute,
-    AuthenticatedDocumentsIdEditRoute: AuthenticatedDocumentsIdEditRoute,
-    AuthenticatedDocumentsIdOfficeRoute: AuthenticatedDocumentsIdOfficeRoute,
-  }
-
-const AuthenticatedDocumentsRouteWithChildren =
-  AuthenticatedDocumentsRoute._addFileChildren(
-    AuthenticatedDocumentsRouteChildren,
-  )
 
 interface AuthenticatedSettingsRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
@@ -905,64 +368,16 @@ const AuthenticatedUsersRouteChildren: AuthenticatedUsersRouteChildren = {
 const AuthenticatedUsersRouteWithChildren =
   AuthenticatedUsersRoute._addFileChildren(AuthenticatedUsersRouteChildren)
 
-interface AuthenticatedAppBuilderIdHistoryRouteChildren {
-  AuthenticatedAppBuilderIdHistoryBuildIdRoute: typeof AuthenticatedAppBuilderIdHistoryBuildIdRoute
-}
-
-const AuthenticatedAppBuilderIdHistoryRouteChildren: AuthenticatedAppBuilderIdHistoryRouteChildren =
-  {
-    AuthenticatedAppBuilderIdHistoryBuildIdRoute:
-      AuthenticatedAppBuilderIdHistoryBuildIdRoute,
-  }
-
-const AuthenticatedAppBuilderIdHistoryRouteWithChildren =
-  AuthenticatedAppBuilderIdHistoryRoute._addFileChildren(
-    AuthenticatedAppBuilderIdHistoryRouteChildren,
-  )
-
 interface AuthenticatedRouteChildren {
-  AuthenticatedAppsRoute: typeof AuthenticatedAppsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRouteWithChildren
-  AuthenticatedAppBuilderCompaniesRoute: typeof AuthenticatedAppBuilderCompaniesRoute
-  AuthenticatedAppBuilderCreateRoute: typeof AuthenticatedAppBuilderCreateRoute
-  AuthenticatedAppBuilderIdentifierRoute: typeof AuthenticatedAppBuilderIdentifierRoute
-  AuthenticatedAppBuilderSettingsRoute: typeof AuthenticatedAppBuilderSettingsRoute
-  AuthenticatedAppBuilderSystemStatusRoute: typeof AuthenticatedAppBuilderSystemStatusRoute
-  AuthenticatedGroupsIdRoute: typeof AuthenticatedGroupsIdRoute
-  AuthenticatedGroupsCreateRoute: typeof AuthenticatedGroupsCreateRoute
-  AuthenticatedAppBuilderIndexRoute: typeof AuthenticatedAppBuilderIndexRoute
-  AuthenticatedDepartmentsIndexRoute: typeof AuthenticatedDepartmentsIndexRoute
-  AuthenticatedDocumentStagesIndexRoute: typeof AuthenticatedDocumentStagesIndexRoute
-  AuthenticatedGroupsIndexRoute: typeof AuthenticatedGroupsIndexRoute
-  AuthenticatedAppBuilderIdBuildRoute: typeof AuthenticatedAppBuilderIdBuildRoute
-  AuthenticatedAppBuilderIdHistoryRoute: typeof AuthenticatedAppBuilderIdHistoryRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAppsRoute: AuthenticatedAppsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDocumentsRoute: AuthenticatedDocumentsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedUsersRoute: AuthenticatedUsersRouteWithChildren,
-  AuthenticatedAppBuilderCompaniesRoute: AuthenticatedAppBuilderCompaniesRoute,
-  AuthenticatedAppBuilderCreateRoute: AuthenticatedAppBuilderCreateRoute,
-  AuthenticatedAppBuilderIdentifierRoute:
-    AuthenticatedAppBuilderIdentifierRoute,
-  AuthenticatedAppBuilderSettingsRoute: AuthenticatedAppBuilderSettingsRoute,
-  AuthenticatedAppBuilderSystemStatusRoute:
-    AuthenticatedAppBuilderSystemStatusRoute,
-  AuthenticatedGroupsIdRoute: AuthenticatedGroupsIdRoute,
-  AuthenticatedGroupsCreateRoute: AuthenticatedGroupsCreateRoute,
-  AuthenticatedAppBuilderIndexRoute: AuthenticatedAppBuilderIndexRoute,
-  AuthenticatedDepartmentsIndexRoute: AuthenticatedDepartmentsIndexRoute,
-  AuthenticatedDocumentStagesIndexRoute: AuthenticatedDocumentStagesIndexRoute,
-  AuthenticatedGroupsIndexRoute: AuthenticatedGroupsIndexRoute,
-  AuthenticatedAppBuilderIdBuildRoute: AuthenticatedAppBuilderIdBuildRoute,
-  AuthenticatedAppBuilderIdHistoryRoute:
-    AuthenticatedAppBuilderIdHistoryRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

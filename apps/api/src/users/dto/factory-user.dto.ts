@@ -8,12 +8,4 @@ export class FactoryUserDto {
   @IsString()
   @IsNotEmpty()
   fullName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  deptNo: string;
-
-  @IsString()
-  @IsNotEmpty()
-  deptName: string;
 }

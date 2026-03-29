@@ -170,18 +170,6 @@ export function UserProfile() {
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-2">
-                部門
-              </label>
-              <p className="text-base text-slate-900">{user.deptName}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700 block mb-2">
-                部門代碼
-              </label>
-              <p className="text-base text-slate-900">{user.deptNo}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700 block mb-2">
                 角色
               </label>
               <Badge

@@ -1,7 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,8 +15,6 @@ import {
   getUserDisplayName,
   getRoleVariant,
   getRoleColor,
-  getStatusVariant,
-  formatLastLogin,
   formatDate,
 } from '../utils/user-transformers';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -26,23 +23,12 @@ interface UserTableColumnsProps {
   onView?: (user: User) => void;
   onEdit?: (user: User) => void;
   onDelete?: (user: User) => void;
-  onToggleStatus?: (user: User, isActive: boolean) => void;
 }
 
-// Helper function to check if current user can delete target user
 const canDeleteUser = (currentUser: User | null, targetUser: User): boolean => {
   if (!currentUser) return false;
-
-  // Cannot delete yourself
   if (currentUser.id === targetUser.id) return false;
-
-  // Admin can delete anyone
   if (currentUser.role === 'admin') return true;
-
-  // Manager can only delete regular users
-  if (currentUser.role === 'manager' && targetUser.role === 'user') return true;
-
-  // Regular users cannot delete anyone
   return false;
 };
 
@@ -50,7 +36,6 @@ export function createUserTableColumns({
   onView,
   onEdit,
   onDelete,
-  onToggleStatus,
 }: UserTableColumnsProps): ColumnDef<User>[] {
   const { user: currentUser } = useAuth();
   return [
@@ -78,35 +63,6 @@ export function createUserTableColumns({
       },
     },
     {
-      accessorKey: 'email',
-      header: '電子郵件',
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <div>
-            <div className="text-sm text-slate-900">
-              {user.email || '未指定'}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'deptName',
-      header: '部門',
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <div>
-            <div className="font-medium">{user.deptName || '未指定'}</div>
-            <div className="text-sm text-slate-500">
-              {user.deptNo || '未指定'}
-            </div>
-          </div>
-        );
-      },
-    },
-    {
       accessorKey: 'role',
       header: '角色',
       cell: ({ row }) => {
@@ -126,49 +82,6 @@ export function createUserTableColumns({
       },
     },
     {
-      accessorKey: 'isActive',
-      header: '狀態',
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={user.isActive ?? false}
-              onCheckedChange={(checked) => onToggleStatus?.(user, checked)}
-              disabled={!onToggleStatus}
-            />
-            <Badge variant={getStatusVariant(user.isActive ?? false)}>
-              {user.isActive ? '啟用' : '停用'}
-            </Badge>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'signLevel',
-      header: '簽署等級',
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <div className="text-sm text-slate-600">
-            {user.signLevel ?? '未指定'}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: 'lastLoginAt',
-      header: '最後登入',
-      cell: ({ row }) => {
-        const user = row.original;
-        return (
-          <div className="text-sm text-slate-600">
-            {formatLastLogin(user.lastLoginAt)}
-          </div>
-        );
-      },
-    },
-    {
       accessorKey: 'createdAt',
       header: '建立時間',
       cell: ({ row }) => {
@@ -182,40 +95,41 @@ export function createUserTableColumns({
     },
     {
       id: 'actions',
-      header: '操作',
+      header: '',
       cell: ({ row }) => {
         const user = row.original;
 
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">開啟選單</span>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {onView && (
                 <DropdownMenuItem onClick={() => onView(user)}>
-                  <Eye className="mr-2 h-4 w-4" />
+                  <Eye className="h-4 w-4 mr-2" />
                   查看詳情
                 </DropdownMenuItem>
               )}
               {onEdit && (
                 <DropdownMenuItem onClick={() => onEdit(user)}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  編輯用戶
+                  <Edit className="h-4 w-4 mr-2" />
+                  編輯
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
               {onDelete && canDeleteUser(currentUser, user) && (
-                <DropdownMenuItem
-                  onClick={() => onDelete(user)}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  刪除用戶
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => onDelete(user)}
+                    className="text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    刪除
+                  </DropdownMenuItem>
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

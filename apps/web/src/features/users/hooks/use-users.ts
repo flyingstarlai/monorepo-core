@@ -1,11 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
-import type {
-  User,
-  CreateUserData,
-  UpdateUserData,
-  FactoryUser,
-} from '../types/user.types';
+import type { User, CreateUserData, UpdateUserData } from '../types/user.types';
 
 export const useUsers = () => {
   return useQuery({
@@ -106,18 +101,5 @@ export const useDeleteUser = () => {
       console.error('Error response:', error?.response?.data);
       console.error('Error status:', error?.response?.status);
     },
-  });
-};
-
-export const useFactoryUsers = () => {
-  return useQuery({
-    queryKey: ['factory-users'],
-    queryFn: async (): Promise<FactoryUser[]> => {
-      const response = await api.get('/users/factory');
-      return response.data as FactoryUser[];
-    },
-    staleTime: 1000 * 60 * 5,
-    retry: 2,
-    retryDelay: 1000,
   });
 };

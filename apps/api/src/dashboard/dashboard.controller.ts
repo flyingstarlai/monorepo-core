@@ -1,10 +1,11 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { ActivityDto } from './dto/activity.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('dashboard')
-// @UseGuards(JwtAuthGuard) // Temporarily disabled for testing
+@UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
@@ -15,11 +16,6 @@ export class DashboardController {
 
   @Get('activity')
   async getActivity(): Promise<ActivityDto[]> {
-    return this.dashboardService.getRecentActivity();
-  }
-
-  @Get('test-activity')
-  async testActivity(): Promise<ActivityDto[]> {
     return this.dashboardService.getRecentActivity();
   }
 }

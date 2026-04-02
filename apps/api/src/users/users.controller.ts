@@ -15,7 +15,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersFilterDto } from './dto/users-filter.dto';
-import { FactoryUserDto } from './dto/factory-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
@@ -55,21 +54,12 @@ export class UsersController {
     return this.usersService.searchUsers(query);
   }
 
-  @Get('factory')
-  async getFactoryUsers(): Promise<FactoryUserDto[]> {
-    try {
-      return await this.usersService.getFactoryUsers();
-    } catch (error) {
-      console.error('Factory users endpoint error:', error);
-      throw error;
-    }
-  }
-
   @Get('profile')
   async getProfile(@Request() req) {
     if (!req.user) {
       throw new NotFoundException('User profile not found');
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = req.user;
     return result;
   }

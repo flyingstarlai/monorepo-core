@@ -41,8 +41,3 @@ export interface UsersResponse {
   limit: number;
   totalPages: number;
 }
-
-export interface FactoryUser {
-  username: string;
-  fullName: string;
-}

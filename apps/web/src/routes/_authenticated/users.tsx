@@ -34,7 +34,7 @@ function UsersLayout() {
 
   // Determine create user link based on role
   const getCreateUserLink = () => {
-    if (user?.role === 'admin' || user?.role === 'manager') {
+    if (user?.role === 'admin') {
       return '/users/create';
     }
     return undefined;

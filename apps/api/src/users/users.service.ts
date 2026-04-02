@@ -10,17 +10,12 @@ import { User, UserRole } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
-import { FactoryUserDto } from './dto/factory-user.dto';
 import { formatDateUTC8 } from '../utils/date-formatter';
 import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
+import { IdGenerator } from '../utils/id-generator';
 import * as bcrypt from 'bcrypt';
-
-interface UserFactoryData {
-  username: string;
-  full_name: string;
-}
 
 @Injectable()
 export class UsersService {
@@ -50,6 +45,7 @@ export class UsersService {
     const finalPassword = await this.processPassword(password);
 
     const user = this.usersRepository.create({
+      id: IdGenerator.generateUserId(),
       username,
       password: finalPassword,
       fullName,
@@ -250,10 +246,6 @@ export class UsersService {
       })
       .getMany();
     return users.map((user) => this.mapToResponseDto(user));
-  }
-
-  async getFactoryUsers(): Promise<FactoryUserDto[]> {
-    return [];
   }
 
   async validateUserCredentials(

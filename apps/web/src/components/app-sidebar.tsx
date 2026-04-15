@@ -25,7 +25,7 @@ export function AppSidebar() {
     await logoutMutation.mutateAsync();
   };
 
-  const isAdmin = user?.role === 'admin';
+  const isAdminOrManager = user?.role === 'admin' || user?.role === 'manager';
 
   const navigation = [
     {
@@ -34,7 +34,7 @@ export function AppSidebar() {
       icon: LayoutDashboard,
       isActive: location.pathname === '/dashboard',
     },
-    ...(isAdmin
+    ...(isAdminOrManager
       ? [
           {
             title: '用戶管理',

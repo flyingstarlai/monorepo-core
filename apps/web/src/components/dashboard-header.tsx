@@ -49,7 +49,6 @@ export function DashboardHeader() {
 
     const first: string = normalizedSegments[0] || '';
     const second: string = normalizedSegments[1] || '';
-    const third: string = normalizedSegments[2] || '';
 
     // Dashboard and subpages
     if (first === 'dashboard') {
@@ -63,107 +62,6 @@ export function DashboardHeader() {
         breadcrumbs.push({
           label: '個人資料',
           href: '/dashboard/profile',
-          isCurrentPage: true,
-        });
-      }
-    }
-
-    // Users Groups
-    else if (first === 'users' && second === 'groups') {
-      breadcrumbs.push({
-        label: '用戶管理',
-        href: '/users',
-        isCurrentPage: false,
-      });
-      breadcrumbs.push({
-        label: '用戶群組',
-        href: '/users/groups',
-        isCurrentPage: true,
-      });
-    }
-
-    // App Builder
-    else if (first === 'app-builder') {
-      breadcrumbs.push({
-        label: 'App Builder',
-        href: '/app-builder',
-        isCurrentPage: normalizedSegments.length === 1,
-      });
-
-      if (second === 'create') {
-        breadcrumbs.push({
-          label: 'Create Definition',
-          href: '/app-builder/create',
-          isCurrentPage: true,
-        });
-      } else if (second === 'identifier') {
-        breadcrumbs.push({
-          label: 'Identifiers',
-          href: '/app-builder/identifier',
-          isCurrentPage: true,
-        });
-      } else if (second && third === 'build') {
-        breadcrumbs.push({
-          label: 'Build',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      } else if (second && third === 'history') {
-        breadcrumbs.push({
-          label: 'History',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      }
-    }
-
-    // Documents
-    else if (first === 'documents') {
-      breadcrumbs.push({
-        label: '文檔',
-        href: '/documents',
-        isCurrentPage: normalizedSegments.length === 1,
-      });
-
-      if (second === 'create') {
-        breadcrumbs.push({
-          label: '新增文檔',
-          href: '/documents/create',
-          isCurrentPage: true,
-        });
-      } else if (second && third === 'edit') {
-        breadcrumbs.push({
-          label: '編輯文檔',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      } else if (second && third === 'office') {
-        breadcrumbs.push({
-          label: '文檔編輯器',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      } else if (second) {
-        breadcrumbs.push({
-          label: '文檔詳情',
-          href: location.pathname,
-          isCurrentPage: true,
-        });
-      }
-    }
-
-    // Groups
-    else if (first === 'groups') {
-      breadcrumbs.push({
-        label: '群組',
-        href: '/groups',
-        isCurrentPage: normalizedSegments.length === 1,
-      });
-
-      if (second) {
-        breadcrumbs.push({
-          label: '群組成員管理',
-          href: location.pathname,
           isCurrentPage: true,
         });
       }
@@ -190,15 +88,6 @@ export function DashboardHeader() {
           isCurrentPage: true,
         });
       }
-    }
-
-    // Apps (mobile apps management)
-    else if (first === 'apps') {
-      breadcrumbs.push({
-        label: '行動應用管理',
-        href: '/apps',
-        isCurrentPage: true,
-      });
     }
 
     // Fallback: show first segment as current page

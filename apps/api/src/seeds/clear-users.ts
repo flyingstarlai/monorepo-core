@@ -1,5 +1,5 @@
 import { AppDataSource } from '../data-source';
-import { User } from '../users/entities/user.entity';
+import { User } from '@repo/api';
 
 async function clearUsers() {
   try {

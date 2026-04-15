@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
-import { User } from './users/entities/user.entity';
-import { LoginHistory } from './users/entities/login-history.entity';
+import { User, LoginHistory } from '@repo/api';
 
 export const AppDataSource = new DataSource({
   type: 'mssql',
@@ -8,7 +7,7 @@ export const AppDataSource = new DataSource({
   port: parseInt(process.env.DB_PORT || '1433'),
   username: process.env.DB_USERNAME || 'sa',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'AccountManager',
+  database: process.env.DB_DATABASE || 'MonoCore',
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
   entities: [User, LoginHistory],

@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import { useAuthIsAuthenticated } from '@/features/auth/store';
 import type { DashboardStats, RecentActivity } from '../types/dashboard.types';
-import type { QueryRetryError } from '@/lib/types/errors';
+
+type QueryRetryError = { response?: { status?: number } };
 
 export const useDashboardStats = () => {
   const isAuthenticated = useAuthIsAuthenticated();

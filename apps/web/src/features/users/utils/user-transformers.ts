@@ -1,4 +1,4 @@
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 import { RoleService } from '@/lib/role.service';
 
 export const getUserInitials = (

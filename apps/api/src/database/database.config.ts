@@ -1,8 +1,7 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../users/entities/user.entity';
-import { LoginHistory } from '../users/entities/login-history.entity';
+import { User, LoginHistory } from '@repo/api';
 
 @Module({
   imports: [
@@ -14,7 +13,7 @@ import { LoginHistory } from '../users/entities/login-history.entity';
         port: parseInt(configService.get<string>('DB_PORT') || '1433'),
         username: configService.get<string>('DB_USERNAME') || 'sa',
         password: configService.get<string>('DB_PASSWORD') || '',
-        database: configService.get<string>('DB_DATABASE') || 'AccountManager',
+        database: configService.get<string>('DB_DATABASE') || 'MonoCore',
         entities: [User, LoginHistory],
         synchronize: false,
         logging: configService.get<string>('NODE_ENV') === 'development',

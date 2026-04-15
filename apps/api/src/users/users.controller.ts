@@ -12,15 +12,17 @@ import {
   Request,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UsersFilterDto } from './dto/users-filter.dto';
-import { UserResponseDto } from './dto/user-response.dto';
+import {
+  User,
+  CreateUserDto,
+  UpdateUserDto,
+  UsersFilterDto,
+  UserResponseDto,
+} from '@repo/api';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
-import { User } from './entities/user.entity';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)

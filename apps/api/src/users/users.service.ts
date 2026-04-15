@@ -6,12 +6,15 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserRole } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { UserResponseDto } from './dto/user-response.dto';
+import {
+  User,
+  UserRole,
+  CreateUserDto,
+  UpdateUserDto,
+  UserResponseDto,
+  UsersFilterDto,
+} from '@repo/api';
 import { formatDateUTC8 } from '../utils/date-formatter';
-import { UsersFilterDto } from './dto/users-filter.dto';
 import { ChangePasswordDto } from '../auth/dto/change-password.dto';
 import { RoleService } from './role.service';
 import { IdGenerator } from '../utils/id-generator';
@@ -19,15 +22,11 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  private readonly shouldHashPassword: boolean;
-
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private jwtService: JwtService,
-  ) {
-    this.shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-  }
+  ) {}
 
   async create(
     createUserDto: CreateUserDto,
@@ -76,20 +75,14 @@ export class UsersService {
   }
 
   private async processPassword(password: string): Promise<string> {
-    if (this.shouldHashPassword) {
-      return await bcrypt.hash(password, 10);
-    }
-    return password;
+    return await bcrypt.hash(password, 10);
   }
 
   private async verifyPassword(
     plainPassword: string,
     storedPassword: string,
   ): Promise<boolean> {
-    if (this.shouldHashPassword) {
-      return await bcrypt.compare(plainPassword, storedPassword);
-    }
-    return plainPassword === storedPassword;
+    return await bcrypt.compare(plainPassword, storedPassword);
   }
 
   async findOne(id: string): Promise<UserResponseDto | null> {

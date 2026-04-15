@@ -1,4 +1,4 @@
-import type { User } from '@/features/users/types/user.types';
+import type { User } from '@repo/api';
 
 export interface LoginFormData {
   username: string;

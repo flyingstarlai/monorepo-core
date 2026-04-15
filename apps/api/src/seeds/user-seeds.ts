@@ -1,5 +1,5 @@
 import { DataSource, DeepPartial } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { User } from '@repo/api';
 import { IdGenerator } from '../utils/id-generator';
 import * as bcrypt from 'bcrypt';
 
@@ -31,23 +31,14 @@ export const seedUsers = async (dataSource: DataSource) => {
   try {
     const userRepository = dataSource.getRepository(User);
 
-    // Conditionally hash passwords based on FEATURE_HASHED setting
-    const shouldHashPassword = process.env.FEATURE_HASHED === 'true';
-    console.log(
-      `FEATURE_HASHED setting: ${shouldHashPassword ? 'true (using hashed passwords)' : 'false (using plain text passwords)'}`,
-    );
-
     const processedUsers = await Promise.all(
       users.map(async (user) => ({
         ...user,
-        id: IdGenerator.generateUserId(), // Use nanoid ID generation
-        password: shouldHashPassword
-          ? await bcrypt.hash(user.password, 10)
-          : user.password,
+        id: IdGenerator.generateUserId(),
+        password: await bcrypt.hash(user.password, 10),
       })),
     );
 
-    // Check if users already exist
     const existingAdmin = await userRepository.findOne({
       where: { username: 'admin' },
     });
@@ -63,9 +54,7 @@ export const seedUsers = async (dataSource: DataSource) => {
         processedUsers[0] as DeepPartial<User>,
       );
       await userRepository.save(adminUser);
-      console.log(
-        `✅ Admin user created: admin/nimda (${shouldHashPassword ? 'hashed' : 'plain text'})`,
-      );
+      console.log('✅ Admin user created: admin/nimda (hashed)');
     }
 
     if (!existingManager) {
@@ -73,16 +62,7 @@ export const seedUsers = async (dataSource: DataSource) => {
         processedUsers[1] as DeepPartial<User>,
       );
       await userRepository.save(managerUser);
-      console.log(
-        `✅ Manager user created: manager/manager (${shouldHashPassword ? 'hashed' : 'plain text'})`,
-      );
-    } else {
-      // Update existing manager password if needed
-      if (shouldHashPassword) {
-        await userRepository.update(existingManager.id, {
-          password: processedUsers[1].password,
-        });
-      }
+      console.log('✅ Manager user created: manager/manager (hashed)');
     }
 
     if (!existingUser) {
@@ -90,19 +70,9 @@ export const seedUsers = async (dataSource: DataSource) => {
         processedUsers[2] as DeepPartial<User>,
       );
       await userRepository.save(regularUser);
-      console.log(
-        `✅ Regular user created: user/user (${shouldHashPassword ? 'hashed' : 'plain text'})`,
-      );
-    } else {
-      // Update existing user password if needed
-      if (shouldHashPassword) {
-        await userRepository.update(existingUser.id, {
-          password: processedUsers[2].password,
-        });
-      }
+      console.log('✅ Regular user created: user/user (hashed)');
     }
 
-    // Return user ID mapping for membership seeding
     const userIdMap: { [username: string]: string } = {
       admin: processedUsers[0].id,
       manager: processedUsers[1].id,

@@ -2,7 +2,7 @@ import { Injectable, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { ROLES_KEY } from '../decorators/roles.decorator';
-import { User } from '../../users/entities/user.entity';
+import { User } from '@repo/api';
 
 @Injectable()
 export class RolesGuard extends AuthGuard('jwt') {

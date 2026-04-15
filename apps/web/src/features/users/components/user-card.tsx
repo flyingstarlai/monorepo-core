@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Edit, Trash2, Eye } from 'lucide-react';
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 import {
   getUserInitials,
   getUserDisplayName,

@@ -8,8 +8,7 @@ export class AppController {
 
   @Get()
   getRoot(@Res() res: Response) {
-    // Redirect root to health endpoint
-    return res.redirect(302, '/health');
+    return res.redirect(302, '/api/health');
   }
 
   @Get('health')

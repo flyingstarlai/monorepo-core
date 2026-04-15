@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { User } from '@repo/api';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { ActivityDto } from './dto/activity.dto';
 import { formatDateUTC8, parseUTC8Date } from '../utils/date-formatter';

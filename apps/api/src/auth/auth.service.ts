@@ -1,9 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import type { User } from '../users/entities/user.entity';
+import { type User, CreateUserDto, UserResponseDto } from '@repo/api';
 import { UsersService } from '../users/users.service';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { UserResponseDto } from '../users/dto/user-response.dto';
 import { formatDateUTC8 } from '../utils/date-formatter';
 
 @Injectable()

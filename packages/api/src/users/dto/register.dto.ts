@@ -13,6 +13,6 @@ export class RegisterDto {
   @MinLength(2)
   fullName: string;
 
-  @IsIn(['admin', 'user'])
-  role: 'admin' | 'user';
+  @IsIn(['admin', 'manager', 'user'])
+  role: 'admin' | 'manager' | 'user';
 }

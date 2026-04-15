@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 
 export interface DeleteUserDialogProps {
   user: User | null;

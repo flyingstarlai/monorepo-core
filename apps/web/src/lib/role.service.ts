@@ -1,7 +1,8 @@
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'manager' | 'user';
 
 export const UserRole = {
   ADMIN: 'admin',
+  MANAGER: 'manager',
   USER: 'user',
 } as const;
 
@@ -10,29 +11,43 @@ export interface RolePermissions {
   canCreateRoles: UserRole[];
   canEditUsers: boolean;
   canDeleteUsers: boolean;
+  canDeleteRoles: UserRole[];
   canToggleUserStatus: boolean;
   canViewUserManagement: boolean;
   canEditRoles: boolean;
 }
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  admin: 2,
+  admin: 3,
+  manager: 2,
   user: 1,
 };
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   admin: {
     canCreateUsers: true,
-    canCreateRoles: ['admin', 'user'],
+    canCreateRoles: ['admin', 'manager', 'user'],
     canEditUsers: true,
     canDeleteUsers: true,
+    canDeleteRoles: ['admin', 'manager', 'user'],
     canToggleUserStatus: true,
     canViewUserManagement: true,
     canEditRoles: true,
+  },
+  manager: {
+    canCreateUsers: true,
+    canCreateRoles: ['user'],
+    canEditUsers: true,
+    canDeleteUsers: true,
+    canDeleteRoles: ['user'],
+    canToggleUserStatus: true,
+    canViewUserManagement: true,
+    canEditRoles: false,
   },
   user: {
     canCreateUsers: false,
     canCreateRoles: [],
     canEditUsers: false,
     canDeleteUsers: false,
+    canDeleteRoles: [],
     canToggleUserStatus: false,
     canViewUserManagement: false,
     canEditRoles: false,
@@ -75,6 +90,7 @@ export const RoleService = {
   getRoleDisplayName(role: UserRole): string {
     const displayNames: Record<UserRole, string> = {
       admin: '系統管理員',
+      manager: '維護員',
       user: '一般用戶',
     };
     return displayNames[role] || role;
@@ -82,6 +98,7 @@ export const RoleService = {
   getRoleDescription(role: UserRole): string {
     const descriptions: Record<UserRole, string> = {
       admin: '完整系統權限 - 可管理所有用戶和設定',
+      manager: '可管理用戶但權限受限',
       user: '基本用戶權限 - 只能管理個人資料',
     };
     return descriptions[role] || '未知角色';
@@ -98,6 +115,8 @@ export const RoleService = {
     switch (role) {
       case 'admin':
         return '#9333ea';
+      case 'manager':
+        return '#2563eb';
       case 'user':
         return '#6b7280';
       default:

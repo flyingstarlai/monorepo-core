@@ -12,6 +12,6 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
-  @IsIn(['admin', 'user'])
-  role?: 'admin' | 'user';
+  @IsIn(['admin', 'manager', 'user'])
+  role?: 'admin' | 'manager' | 'user';
 }

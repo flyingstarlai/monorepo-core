@@ -17,7 +17,6 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users.index'
-import { Route as AuthenticatedUsersGroupsRouteImport } from './routes/_authenticated/users/groups'
 import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenticated/users.create'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
@@ -64,12 +63,6 @@ const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedUsersRoute,
 } as any)
-const AuthenticatedUsersGroupsRoute =
-  AuthenticatedUsersGroupsRouteImport.update({
-    id: '/groups',
-    path: '/groups',
-    getParentRoute: () => AuthenticatedUsersRoute,
-  } as any)
 const AuthenticatedUsersCreateRoute =
   AuthenticatedUsersCreateRouteImport.update({
     id: '/create',
@@ -117,7 +110,6 @@ export interface FileRoutesByFullPath {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/users/create': typeof AuthenticatedUsersCreateRoute
-  '/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
@@ -132,7 +124,6 @@ export interface FileRoutesByTo {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/users/create': typeof AuthenticatedUsersCreateRoute
-  '/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/users/$id/view': typeof AuthenticatedUsersIdViewRoute
@@ -150,7 +141,6 @@ export interface FileRoutesById {
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRouteWithChildren
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
-  '/_authenticated/users/groups': typeof AuthenticatedUsersGroupsRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/users/$id/edit': typeof AuthenticatedUsersIdEditRoute
   '/_authenticated/users/$id/view': typeof AuthenticatedUsersIdViewRoute
@@ -168,7 +158,6 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/users/$id'
     | '/users/create'
-    | '/users/groups'
     | '/users/'
     | '/users/$id/edit'
     | '/users/$id/view'
@@ -183,7 +172,6 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/users/$id'
     | '/users/create'
-    | '/users/groups'
     | '/users'
     | '/users/$id/edit'
     | '/users/$id/view'
@@ -200,7 +188,6 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/profile'
     | '/_authenticated/users/$id'
     | '/_authenticated/users/create'
-    | '/_authenticated/users/groups'
     | '/_authenticated/users/'
     | '/_authenticated/users/$id/edit'
     | '/_authenticated/users/$id/view'
@@ -269,13 +256,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/users/'
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
-      parentRoute: typeof AuthenticatedUsersRoute
-    }
-    '/_authenticated/users/groups': {
-      id: '/_authenticated/users/groups'
-      path: '/groups'
-      fullPath: '/users/groups'
-      preLoaderRoute: typeof AuthenticatedUsersGroupsRouteImport
       parentRoute: typeof AuthenticatedUsersRoute
     }
     '/_authenticated/users/create': {
@@ -354,14 +334,12 @@ const AuthenticatedUsersIdRouteWithChildren =
 interface AuthenticatedUsersRouteChildren {
   AuthenticatedUsersIdRoute: typeof AuthenticatedUsersIdRouteWithChildren
   AuthenticatedUsersCreateRoute: typeof AuthenticatedUsersCreateRoute
-  AuthenticatedUsersGroupsRoute: typeof AuthenticatedUsersGroupsRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
 
 const AuthenticatedUsersRouteChildren: AuthenticatedUsersRouteChildren = {
   AuthenticatedUsersIdRoute: AuthenticatedUsersIdRouteWithChildren,
   AuthenticatedUsersCreateRoute: AuthenticatedUsersCreateRoute,
-  AuthenticatedUsersGroupsRoute: AuthenticatedUsersGroupsRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
 }
 

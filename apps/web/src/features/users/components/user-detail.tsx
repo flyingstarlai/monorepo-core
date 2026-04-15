@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Trash2, User as UserIcon } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 import { getUserInitials, getRoleColor } from '../utils/user-transformers';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 

@@ -5,13 +5,29 @@ import { Repository } from 'typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { LoginHistory } from './entities/login-history.entity';
+import { User } from '@repo/api';
 import { formatDateUTC8 } from '../utils/date-formatter';
+
+jest.mock('../utils/id-generator', () => ({
+  IdGenerator: {
+    generateUserId: () => 'user_mockid12345',
+    generateCustomId: (prefix: string) => `${prefix}_mockid12345`,
+  },
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
-  let loginHistoryRepo: jest.Mocked<Repository<LoginHistory>>;
+  let userRepo: jest.Mocked<Repository<User>>;
+
+  const mockUser: Partial<User> = {
+    id: 'user_abc123',
+    username: 'testuser',
+    password: '$2b$10$hashedpassword',
+    fullName: 'Test User',
+    role: 'user',
+    createdAt: new Date('2024-01-15T10:30:00Z'),
+    updatedAt: new Date('2024-01-15T10:30:00Z'),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,177 +41,98 @@ describe('UsersService', () => {
             save: jest.fn(),
             findOne: jest.fn(),
             find: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
+            remove: jest.fn(),
             createQueryBuilder: jest.fn(),
-          },
-        },
-        {
-          provide: getRepositoryToken(LoginHistory),
-          useValue: {
-            findOne: jest.fn(),
-            find: jest.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    loginHistoryRepo = module.get(getRepositoryToken(LoginHistory));
+    userRepo = module.get(getRepositoryToken(User));
   });
 
-  describe('getLatestMobileLoginForUser', () => {
-    it('should return null values when no login history exists', async () => {
-      loginHistoryRepo.findOne.mockResolvedValue(null);
+  describe('findOne', () => {
+    it('should return a user response DTO when user exists', async () => {
+      userRepo.findOne.mockResolvedValue(mockUser as User);
 
-      const result = await (service as any).getLatestMobileLoginForUser(
-        'user123',
-      );
+      const result = await service.findOne('user_abc123');
 
       expect(result).toEqual({
-        lastMobileLoginAt: null,
-        lastMobileDeviceId: null,
-        lastMobileAppName: null,
-        lastMobileAppVersion: null,
-        lastMobileAppModule: null,
-      });
-      expect(loginHistoryRepo.findOne).toHaveBeenCalledWith({
-        where: { accountId: 'user123' },
-        order: { loginAt: 'DESC' },
-        select: ['loginAt', 'appId', 'appName', 'appVersion', 'appModule'],
+        id: 'user_abc123',
+        username: 'testuser',
+        fullName: 'Test User',
+        role: 'user',
+        createdAt: formatDateUTC8(mockUser.createdAt!),
+        updatedAt: formatDateUTC8(mockUser.updatedAt!),
       });
     });
 
-    it('should return formatted latest login data when history exists', async () => {
-      const mockLoginHistory = {
-        key: 'log1',
-        loginAt: new Date('2024-01-15T10:30:00Z'),
-        appId: 'device123',
-        appName: 'TestApp',
-        appVersion: '1.0.0',
-        appModule: 'auth',
-        username: 'user123',
-        accountId: 'user123',
-      } as LoginHistory;
-      loginHistoryRepo.findOne.mockResolvedValue(mockLoginHistory);
+    it('should return null when user does not exist', async () => {
+      userRepo.findOne.mockResolvedValue(null);
 
-      const result = await (service as any).getLatestMobileLoginForUser(
-        'user123',
-      );
+      const result = await service.findOne('nonexistent');
 
-      expect(result).toEqual({
-        lastMobileLoginAt: formatDateUTC8(mockLoginHistory.loginAt),
-        lastMobileDeviceId: 'device123',
-        lastMobileAppName: 'TestApp',
-        lastMobileAppVersion: '1.0.0',
-        lastMobileAppModule: 'auth',
-      });
+      expect(result).toBeNull();
     });
   });
 
-  describe('findLoginHistoryByUserId', () => {
-    it('should return empty items when no login history exists', async () => {
-      loginHistoryRepo.find.mockResolvedValue([]);
+  describe('findByUsername', () => {
+    it('should return user entity when found', async () => {
+      userRepo.findOne.mockResolvedValue(mockUser as User);
 
-      const result = await service.findLoginHistoryByUserId('user123', 10);
+      const result = await service.findByUsername('testuser');
 
-      expect(result).toEqual({ items: [] });
-      expect(loginHistoryRepo.find).toHaveBeenCalledWith({
-        where: { accountId: 'user123' },
-        order: { loginAt: 'DESC' },
-        take: 10,
-        select: [
-          'key',
-          'loginAt',
-          'success',
-          'failureReason',
-          'appId',
-          'appName',
-          'appVersion',
-          'appModule',
-        ],
-      });
+      expect(result).toEqual(mockUser);
     });
 
-    it('should return paginated login history with correct mapping', async () => {
-      const mockHistory: LoginHistory[] = [
-        {
-          key: 'log1',
-          loginAt: new Date('2024-01-15T10:30:00Z'),
-          success: true,
-          failureReason: null,
-          appId: 'device1',
-          appName: 'TestApp',
-          appVersion: '1.0.0',
-          appModule: 'auth',
-          username: 'user123',
-          accountId: 'user123',
-        },
-        {
-          key: 'log2',
-          loginAt: new Date('2024-01-14T09:20:00Z'),
-          success: false,
-          failureReason: 'Invalid credentials',
-          appId: 'device2',
-          appName: 'TestApp',
-          appVersion: '1.0.0',
-          appModule: 'auth',
-          username: 'user123',
-          accountId: 'user123',
-        },
-      ];
-      loginHistoryRepo.find.mockResolvedValue(mockHistory);
+    it('should return null when not found', async () => {
+      userRepo.findOne.mockResolvedValue(null);
 
-      const result = await service.findLoginHistoryByUserId('user123', 50);
+      const result = await service.findByUsername('nobody');
 
-      expect(result.items).toHaveLength(2);
-      expect(result.items[0]).toEqual({
-        userId: 'user123',
-        logId: 'log1',
-        loginAt: formatDateUTC8(mockHistory[0].loginAt),
-        success: true,
-        failureReason: null,
-        deviceId: 'device1',
-        appName: 'TestApp',
-        appVersion: '1.0.0',
-        appModule: 'auth',
-      });
-      expect(result.items[1]).toEqual({
-        userId: 'user123',
-        logId: 'log2',
-        loginAt: formatDateUTC8(mockHistory[1].loginAt),
-        success: false,
-        failureReason: 'Invalid credentials',
-        deviceId: 'device2',
-        appName: 'TestApp',
-        appVersion: '1.0.0',
-        appModule: 'auth',
-      });
-      expect(loginHistoryRepo.find).toHaveBeenCalledWith({
-        where: { accountId: 'user123' },
-        order: { loginAt: 'DESC' },
-        take: 50,
-        select: [
-          'key',
-          'loginAt',
-          'success',
-          'failureReason',
-          'appId',
-          'appName',
-          'appVersion',
-          'appModule',
-        ],
-      });
+      expect(result).toBeNull();
     });
+  });
 
-    it('should limit to minimum 1 when invalid limit provided', async () => {
-      loginHistoryRepo.find.mockResolvedValue([]);
+  describe('findAll', () => {
+    it('should return mapped user response DTOs', async () => {
+      userRepo.find.mockResolvedValue([mockUser as User]);
 
-      await service.findLoginHistoryByUserId('user123', 0);
+      const result = await service.findAll();
 
-      expect(loginHistoryRepo.find).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 1 }),
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe('user_abc123');
+      expect(result[0].username).toBe('testuser');
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove user when found', async () => {
+      userRepo.findOne.mockResolvedValue(mockUser as User);
+      userRepo.remove.mockResolvedValue(mockUser as User);
+
+      await service.remove('user_abc123');
+
+      expect(userRepo.remove).toHaveBeenCalledWith(mockUser);
+    });
+  });
+
+  describe('searchUsers', () => {
+    it('should search by username and fullName', async () => {
+      const queryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([mockUser]),
+      };
+      userRepo.createQueryBuilder.mockReturnValue(queryBuilder as any);
+
+      const result = await service.searchUsers('test');
+
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'user.username LIKE :query OR user.fullName LIKE :query',
+        { query: '%test%' },
       );
+      expect(result).toHaveLength(1);
     });
   });
 });

@@ -30,7 +30,7 @@ export class AppService {
       timestamp: formatCurrentTimeUTC8(),
       uptime: process.uptime(),
       version: this.version,
-      service: 'acm-api',
+      service: 'mono-core-api',
     };
   }
 }

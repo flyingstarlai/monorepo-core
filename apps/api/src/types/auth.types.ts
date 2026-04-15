@@ -2,7 +2,7 @@
  * Shared types used across the API
  */
 
-import type { User } from '../users/entities/user.entity';
+import type { User } from '@repo/api';
 import type { Request } from 'express';
 
 export interface JwtPayload {

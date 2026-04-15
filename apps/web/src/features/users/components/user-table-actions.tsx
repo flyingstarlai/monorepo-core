@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useDeleteUser } from '../hooks/use-users';
 import { DeleteUserDialog } from './delete-user-dialog';
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 
 export function useUserTableActions() {
   const navigate = useNavigate();

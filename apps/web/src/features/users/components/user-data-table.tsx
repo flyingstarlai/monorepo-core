@@ -32,7 +32,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from 'lucide-react';
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 
 export interface UserDataTableProps {
   data?: User[];

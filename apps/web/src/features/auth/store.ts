@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 import { api } from '@/lib/api-client';
 import { isTokenExpired } from '@/features/auth/utils';
-import type { User } from '@/features/users/types/user.types';
+import type { User } from '@repo/api';
 import type { LoginFormData } from '@/features/auth/types/auth.types';
 import type { UpdateUserData } from '@/features/users/types/user.types';
 

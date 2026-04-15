@@ -25,17 +25,14 @@ import {
 } from '@/components/ui/select';
 import { LoadingOverlay } from '@/components/ui/loading';
 
-import type {
-  User,
-  CreateUserData,
-  UpdateUserData,
-} from '../types/user.types';
+import type { User } from '@repo/api';
+import type { CreateUserData, UpdateUserData } from '../types/user.types';
 
 const userFormSchema = z.object({
   username: z.string().min(3, '用戶名長度至少需要3個字元'),
   password: z.string().optional(),
   fullName: z.string().min(2, '全名長度至少需要2個字元'),
-  role: z.enum(['admin', 'user']),
+  role: z.enum(['admin', 'manager', 'user']),
 });
 
 export interface UserFormProps {
@@ -194,7 +191,9 @@ export function UserForm({
                         <Select
                           value={field.state.value}
                           onValueChange={(value) =>
-                            field.handleChange(value as 'admin' | 'user')
+                            field.handleChange(
+                              value as 'admin' | 'manager' | 'user',
+                            )
                           }
                           disabled={isEdit && !isAdmin}
                         >
@@ -203,6 +202,7 @@ export function UserForm({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="user">一般用戶</SelectItem>
+                            <SelectItem value="manager">維護員</SelectItem>
                             <SelectItem value="admin">系統管理員</SelectItem>
                           </SelectContent>
                         </Select>

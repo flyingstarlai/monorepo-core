@@ -11,8 +11,7 @@ import {
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import type { User } from '../users/entities/user.entity';
+import { type User, CreateUserDto } from '@repo/api';
 
 @Controller('auth')
 export class AuthController {

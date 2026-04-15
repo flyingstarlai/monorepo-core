@@ -5,7 +5,7 @@ import { isTokenExpired } from '@/features/auth/utils.ts';
 import { toast } from 'sonner';
 
 function getBaseUrl(): string {
-  return import.meta.env.VITE_BASE_PUBLIC ?? 'http://localhost:3000';
+  return import.meta.env.VITE_BASE_API ?? '/api';
 }
 
 export const api = axios.create({

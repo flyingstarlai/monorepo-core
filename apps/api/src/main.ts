@@ -11,6 +11,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.enableCors(corsConfig(configService));
+  app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe());
 
   // Serve static files from uploads directory

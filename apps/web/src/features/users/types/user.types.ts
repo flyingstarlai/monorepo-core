@@ -1,18 +1,6 @@
-export interface User {
-  id: string;
-  username: string;
-  fullName: string;
-  role: 'admin' | 'user';
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { User, UserRole } from '@repo/api';
 
-export type UserRole = 'admin' | 'user';
-
-export const UserRole = {
-  ADMIN: 'admin',
-  USER: 'user',
-} as const;
+export type { User, UserRole };
 
 export interface CreateUserData {
   username: string;

@@ -21,7 +21,7 @@ export class User {
   fullName: string;
 
   @Column({ type: 'nvarchar', length: 20, default: "'user'", name: 'role' })
-  role: 'admin' | 'user';
+  role: 'admin' | 'manager' | 'user';
 
   @CreateDateColumn({
     type: 'datetime2',
@@ -38,9 +38,10 @@ export class User {
   updatedAt: Date;
 }
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'manager' | 'user';
 
 export const UserRole = {
   ADMIN: 'admin',
+  MANAGER: 'manager',
   USER: 'user',
 } as const;

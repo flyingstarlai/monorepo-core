@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react';
-import type { User } from '../types/user.types';
+import type { User } from '@repo/api';
 import {
   getUserInitials,
   getUserDisplayName,

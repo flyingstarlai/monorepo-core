@@ -6,7 +6,7 @@ module.exports = new DataSource({
   port: parseInt(process.env.DB_PORT || '1433'),
   username: process.env.DB_USERNAME || 'sa',
   password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_DATABASE || 'AccountManager',
+  database: process.env.DB_DATABASE || 'MonoCore',
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
   entities: ['src/users/entities/*.entity.ts'],

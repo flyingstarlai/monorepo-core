@@ -1,8 +1,8 @@
 {
-  "name": "acm",
+  "name": "mono-core",
   "version": "0.1.0",
   "private": true,
-  "description": "ACM - Account Manager Application",
+  "description": "Mono-Core - Core Starter Application",
   "author": "",
   "license": "UNLICENSED",
   "scripts": {
@@ -12,14 +12,11 @@
     "test:e2e": "turbo run test:e2e",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "docker:build": "./scripts/build-all.sh",
-    "docker:build:api": "./scripts/build-api.sh",
-    "docker:build:web": "./scripts/build-web.sh",
+    "docker:build": "./scripts/build-and-push.sh",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "docker:dev": "docker-compose up",
-    "docker:prod": "docker-compose -f docker-compose.prod.yml up -d",
     "docker:clean": "docker-compose down -v --remove-orphans"
   },
   "devDependencies": {

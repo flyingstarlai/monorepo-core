@@ -33,6 +33,7 @@ import {
   ChevronsRight,
 } from 'lucide-react';
 import type { User } from '@repo/api';
+import { DataTableSkeleton } from '@/components/ui/data-table-skeleton';
 
 export interface UserDataTableProps {
   data?: User[];
@@ -92,9 +93,14 @@ export function UserDataTable({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse rounded-md bg-slate-200 h-64 w-full" />
-      </div>
+      <DataTableSkeleton
+        columns={columns.length}
+        rows={8}
+        showSearch
+        showFilter
+        showPagination
+        columnWidths={['w-32', 'w-40', 'w-24', 'w-36', 'w-24']}
+      />
     );
   }
 

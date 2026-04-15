@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   api:
-    image: mono-core-api:latest
+    image: twsbpmac/monocore-api:latest
     container_name: mono-core-api
     restart: unless-stopped
     environment:
@@ -35,7 +35,7 @@ services:
       start_period: 5s
 
   web:
-    image: mono-core-web:latest
+    image: twsbpmac/monocore:latest
     container_name: mono-core-web
     restart: unless-stopped
     ports:

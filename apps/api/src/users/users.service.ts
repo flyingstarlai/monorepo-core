@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import {
   User,
   UserRole,
+  LoginHistory,
   CreateUserDto,
   UpdateUserDto,
   UserResponseDto,
@@ -25,6 +26,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(LoginHistory)
+    private loginHistoryRepository: Repository<LoginHistory>,
     private jwtService: JwtService,
   ) {}
 
@@ -89,7 +92,8 @@ export class UsersService {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) return null;
 
-    return this.mapToResponseDto(user);
+    const lastLoginAt = await this.getLastLoginAt(user.id);
+    return this.mapToResponseDto(user, lastLoginAt);
   }
 
   async findByUsername(username: string): Promise<User | null> {
@@ -262,7 +266,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
-  private mapToResponseDto(user: User): UserResponseDto {
+  private mapToResponseDto(
+    user: User,
+    lastLoginAt: Date | null = null,
+  ): UserResponseDto {
     return {
       id: user.id,
       username: user.username,
@@ -270,6 +277,15 @@ export class UsersService {
       role: user.role,
       createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
       updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+      lastLoginAt: lastLoginAt ? formatDateUTC8(lastLoginAt) : null,
     };
+  }
+
+  private async getLastLoginAt(userId: string): Promise<Date | null> {
+    const lastLogin = await this.loginHistoryRepository.findOne({
+      where: { userId },
+      order: { loginAt: 'DESC' },
+    });
+    return lastLogin?.loginAt || null;
   }
 }

@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { UsersService } from './users.service';
-import { User } from '@repo/api';
+import { User, LoginHistory } from '@repo/api';
 import { formatDateUTC8 } from '../utils/date-formatter';
 
 jest.mock('../utils/id-generator', () => ({
@@ -45,6 +45,12 @@ describe('UsersService', () => {
             createQueryBuilder: jest.fn(),
           },
         },
+        {
+          provide: getRepositoryToken(LoginHistory),
+          useValue: {
+            findOne: jest.fn().mockResolvedValue(null),
+          },
+        },
       ],
     }).compile();
 
@@ -65,6 +71,7 @@ describe('UsersService', () => {
         role: 'user',
         createdAt: formatDateUTC8(mockUser.createdAt!),
         updatedAt: formatDateUTC8(mockUser.updatedAt!),
+        lastLoginAt: null,
       });
     });
 

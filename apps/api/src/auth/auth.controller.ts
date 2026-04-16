@@ -12,10 +12,14 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { type User, CreateUserDto } from '@repo/api';
+import { UsersService } from '../users/users.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Post('create-user')
   async createUser(@Body() createUserDto: CreateUserDto) {
@@ -72,7 +76,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   async getProfile(@Request() req: { user: User }) {
-    return req.user;
+    return this.usersService.findOne(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)

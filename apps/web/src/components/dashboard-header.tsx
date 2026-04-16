@@ -90,6 +90,23 @@ export function DashboardHeader() {
       }
     }
 
+    // Users
+    else if (first === 'users') {
+      breadcrumbs.push({
+        label: '用戶管理',
+        href: '/users',
+        isCurrentPage: normalizedSegments.length === 1,
+      });
+
+      if (second === 'create') {
+        breadcrumbs.push({
+          label: '新增用戶',
+          href: '/users/create',
+          isCurrentPage: true,
+        });
+      }
+    }
+
     // Fallback: show first segment as current page
     else {
       const firstSegment =

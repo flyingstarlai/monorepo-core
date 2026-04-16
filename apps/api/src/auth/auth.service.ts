@@ -1,6 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { type User, CreateUserDto, UserResponseDto } from '@repo/api';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  type User,
+  CreateUserDto,
+  UserResponseDto,
+  LoginHistory,
+} from '@repo/api';
 import { UsersService } from '../users/users.service';
 import { formatDateUTC8 } from '../utils/date-formatter';
 
@@ -9,6 +16,8 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    @InjectRepository(LoginHistory)
+    private loginHistoryRepo: Repository<LoginHistory>,
   ) {}
 
   async validateUser(
@@ -25,6 +34,16 @@ export class AuthService {
       role: user.role,
     };
 
+    await this.loginHistoryRepo.insert({
+      userId: user.id,
+      loginAt: new Date(),
+    });
+
+    const lastLogin = await this.loginHistoryRepo.findOne({
+      where: { userId: user.id },
+      order: { loginAt: 'DESC' },
+    });
+
     return {
       access_token: await this.jwtService.signAsync(payload),
       refresh_token: await this.jwtService.signAsync(
@@ -37,6 +56,8 @@ export class AuthService {
         fullName: user.fullName,
         role: user.role,
         createdAt: user.createdAt ? formatDateUTC8(user.createdAt) : null,
+        updatedAt: user.updatedAt ? formatDateUTC8(user.updatedAt) : null,
+        lastLoginAt: lastLogin ? formatDateUTC8(lastLogin.loginAt) : null,
       } as UserResponseDto,
     };
   }

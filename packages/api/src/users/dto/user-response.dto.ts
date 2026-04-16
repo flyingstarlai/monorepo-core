@@ -19,4 +19,8 @@ export class UserResponseDto {
   @IsString()
   @IsOptional()
   updatedAt?: string | null;
+
+  @IsString()
+  @IsOptional()
+  lastLoginAt?: string | null;
 }

@@ -51,12 +51,10 @@ COPY --from=builder /app/packages/api/package.json ./packages/api/
 # Copy built workspace packages first (fix for module resolution)
 COPY --from=builder --chown=nestjs:nodejs /app/packages/api ./packages/api
 
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --prod
-
-# Copy built application
+# Copy built application and pre-installed node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/dist ./apps/api/dist
 COPY --from=builder --chown=nestjs:nodejs /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 
 # Create upload directory with proper permissions
 RUN mkdir -p /app/uploads && \

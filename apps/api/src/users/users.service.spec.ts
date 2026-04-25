@@ -1,7 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule } from '@nestjs/config';
 import { UsersService } from './users.service';
@@ -127,11 +127,13 @@ describe('UsersService', () => {
 
   describe('searchUsers', () => {
     it('should search by username and fullName', async () => {
-      const queryBuilder = {
+      const queryBuilder: Partial<SelectQueryBuilder<User>> = {
         where: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue([mockUser]),
       };
-      userRepo.createQueryBuilder.mockReturnValue(queryBuilder as any);
+      userRepo.createQueryBuilder.mockReturnValue(
+        queryBuilder as SelectQueryBuilder<User>,
+      );
 
       const result = await service.searchUsers('test');
 

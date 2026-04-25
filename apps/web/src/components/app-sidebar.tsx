@@ -13,6 +13,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, Users, Settings, LogOut } from 'lucide-react';
 
@@ -20,6 +21,7 @@ export function AppSidebar() {
   const { user } = useAuthContext();
   const location = useLocation();
   const logoutMutation = useLogout();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -58,7 +60,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link to="/dashboard">
+              <Link to="/dashboard" onClick={() => isMobile && setOpenMobile(false)}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <LayoutDashboard className="size-4" />
                 </div>
@@ -84,6 +86,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild={!!item.url}
                     isActive={item.isActive}
+                    onClick={() => isMobile && setOpenMobile(false)}
                   >
                     {item.url ? (
                       <Link to={item.url}>
